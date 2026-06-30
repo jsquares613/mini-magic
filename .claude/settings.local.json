@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($ports = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -in @\\(11576,14732,18888,21688\\) } | Select-Object LocalPort, OwningProcess -Unique; $ports | Format-Table -AutoSize)",
+      "Bash(npx next *)",
+      "Bash(npm run *)",
+      "Bash(ls node_modules/.bin/eslint*)",
+      "Bash(ls -d node_modules/eslint-config-next)",
+      "Bash(cd /c/ && echo \"moved out\")",
+      "Read(//c//**)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s https://bfuqoxyuuvdtzglnewxh.supabase.co/rest/v1/categories?select=id,name,slug,image,banner_image -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmdXFveHl1dXZkdHpnbG5ld3hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MzMzNzUsImV4cCI6MjA5NzUwOTM3NX0.dXSmd0qnCpfJcgC5nqB8rgQkW7XrARKVHg7ANR248bU' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmdXFveHl1dXZkdHpnbG5ld3hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MzMzNzUsImV4cCI6MjA5NzUwOTM3NX0.dXSmd0qnCpfJcgC5nqB8rgQkW7XrARKVHg7ANR248bU')",
+      "Bash(npx tsc *)",
+      "Bash(node verify-crop.js)"
+    ]
+  }
+}

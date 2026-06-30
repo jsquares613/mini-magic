@@ -1,0 +1,36 @@
+# Version control
+.git
+.gitignore
+
+# Node dependencies (re-installed inside the image)
+node_modules
+
+# Next.js build output (built fresh inside the image)
+.next
+
+# Local env files – never bake secrets into the image
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production.local
+
+# Dev / docs
+README.md
+SUPABASE_SETUP.md
+docs/
+scripts/
+supabase/
+
+# Editor & OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+ecr-push.sh

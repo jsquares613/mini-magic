@@ -1,0 +1,336 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import Hero from '@/components/Hero'
+import StatCounter from '@/components/StatCounter'
+import SafeImage from '@/components/SafeImage'
+import { getAboutContent, getAboutGallery, getAboutHero, getAboutSeo, getAboutStatistics, getTeamMembers, getTestimonials } from '@/lib/about'
+
+const FALLBACK_TITLE = 'About Us - Minimagic | Our Story, Mission & Team'
+const FALLBACK_DESCRIPTION =
+  'Learn the story behind Minimagic — a family-run brand making everyday moments magical with safe, joyful and affordable toys, stationery and essentials for every age.'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getAboutSeo()
+  const title = seo.title ?? FALLBACK_TITLE
+  const description = seo.description ?? FALLBACK_DESCRIPTION
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: 'website' },
+  }
+}
+
+const WHY_CHOOSE = [
+  { icon: '✓', title: 'Safe & Certified', desc: '100% non-toxic, BIS-certified products you can trust.', bg: 'bg-green-50' },
+  { icon: '💰', title: 'Honest Pricing', desc: 'Premium quality at prices that respect your budget.', bg: 'bg-yellow-50' },
+  { icon: '🎁', title: 'Huge Range', desc: 'Thousands of toys, games & essentials for every age.', bg: 'bg-blue-50' },
+  { icon: '🚚', title: 'Reliable Delivery', desc: 'Fast, careful shipping right across the country.', bg: 'bg-purple-50' },
+  { icon: '🤝', title: 'Caring Support', desc: 'A friendly team that treats you like family.', bg: 'bg-orange-50' },
+  { icon: '⭐', title: 'Loved by Kids', desc: 'Products chosen and approved by the toughest critics.', bg: 'bg-red-50' },
+]
+
+const TEAM_FALLBACK_BG = ['bg-blue-100', 'bg-pink-100', 'bg-yellow-100', 'bg-green-100', 'bg-purple-100', 'bg-orange-100']
+
+export default async function AboutPage() {
+  const [heroSlides, content, statistics, team, gallery, testimonials] = await Promise.all([
+    getAboutHero(),
+    getAboutContent(),
+    getAboutStatistics(),
+    getTeamMembers(),
+    getAboutGallery(),
+    getTestimonials(),
+  ])
+
+  const values = [
+    { icon: '🎯', title: 'Our Mission', desc: content.mission, bg: 'bg-yellow-50' },
+    { icon: '🔭', title: 'Our Vision', desc: content.vision, bg: 'bg-blue-50' },
+    { icon: '💛', title: 'Our Values', desc: content.valuesText, bg: 'bg-pink-50' },
+  ]
+
+  return (
+    <>
+      <Header />
+
+      <main className="min-h-screen bg-[#FFFFEC]">
+        {/* 1. Hero — reuses the shared, size-consistent Hero component */}
+        <Hero slides={heroSlides} />
+
+        {/* 2. Our Story */}
+        <section id="our-story" className="scroll-mt-24 px-4 py-16 md:px-8">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 md:grid-cols-2 md:gap-16">
+            <div>
+              <span className="mb-4 inline-block rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-600">
+                Our Story
+              </span>
+              <h2 className="mb-6 text-4xl font-bold leading-tight text-gray-900">
+                {content.storyTitle || (
+                  <>
+                    Born from a love of <span className="text-orange-500">play</span>
+                  </>
+                )}
+              </h2>
+              <div className="space-y-4 text-gray-600">
+                <p>{content.story}</p>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-8">
+                <div>
+                  <p className="text-3xl font-bold text-blue-900">2014</p>
+                  <p className="text-sm text-gray-500">Founded</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-blue-900">10+</p>
+                  <p className="text-sm text-gray-500">Years of smiles</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-blue-900">100%</p>
+                  <p className="text-sm text-gray-500">Family owned</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              {content.storyImage ? (
+                <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
+                  <SafeImage
+                    src={content.storyImage}
+                    alt="The Minimagic story"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="flex aspect-[4/3] items-center justify-center rounded-3xl bg-gradient-to-br from-yellow-200 to-yellow-100 text-[10rem]">
+                  🧸
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 3. Mission & Vision & Values */}
+        <section className="bg-white px-4 py-16 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-12 text-center">
+              <h2 className="text-4xl font-bold text-gray-900">What Drives Us</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+                The principles that guide every decision we make, from the products we stock to the way we serve you.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {values.map((v) => (
+                <div
+                  key={v.title}
+                  className={`${v.bg} rounded-2xl border-2 border-gray-200 p-8 text-center transition hover:-translate-y-1 hover:shadow-lg`}
+                >
+                  <div className="mb-4 text-5xl">{v.icon}</div>
+                  <h3 className="mb-3 text-2xl font-bold text-gray-900">{v.title}</h3>
+                  <p className="leading-relaxed text-gray-600">{v.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Why Choose Us */}
+        <section id="why-choose-us" className="scroll-mt-24 px-4 py-16 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-12 text-center">
+              <h2 className="text-4xl font-bold text-gray-900">Why Choose Minimagic?</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+                Six reasons families keep coming back to us, year after year.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {WHY_CHOOSE.map((item) => (
+                <div
+                  key={item.title}
+                  className={`${item.bg} group flex items-start gap-4 rounded-2xl border border-gray-200 p-6 transition hover:-translate-y-1 hover:shadow-lg`}
+                >
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white text-2xl shadow-sm transition-transform group-hover:scale-110">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h3 className="mb-1 text-lg font-bold text-gray-900">{item.title}</h3>
+                    <p className="text-sm leading-relaxed text-gray-600">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 5. Statistics / Achievements */}
+        {statistics.length > 0 && (
+          <section className="px-4 py-16 md:px-8">
+            <div className="mx-auto max-w-7xl">
+              <div className="rounded-3xl bg-blue-900 px-6 py-14 md:px-12">
+                <h2 className="mb-12 text-center text-3xl font-bold text-white md:text-4xl">
+                  A Decade of Magical Moments
+                </h2>
+                <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+                  {statistics.map((stat) => (
+                    <div key={stat.id} className="text-center">
+                      <p className="text-4xl font-bold text-yellow-400 md:text-5xl">
+                        {Number.isInteger(stat.value) ? (
+                          <StatCounter value={stat.value} suffix={stat.suffix} />
+                        ) : (
+                          <>
+                            {stat.value}
+                            {stat.suffix}
+                          </>
+                        )}
+                      </p>
+                      <p className="mt-2 text-sm text-blue-100 md:text-base">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 6. What Families Say */}
+        {testimonials.length > 0 && (
+          <section className="bg-white px-4 py-16 md:px-8">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-12 text-center">
+                <h2 className="text-4xl font-bold text-gray-900">What Families Say</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+                  Real words from the parents and kids who make Minimagic feel like home.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {testimonials.map((t) => (
+                  <div key={t.id} className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+                    {t.rating != null && (
+                      <p className="mb-3 text-yellow-500">{'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}</p>
+                    )}
+                    <p className="mb-4 text-sm leading-relaxed text-gray-700">&ldquo;{t.quote}&rdquo;</p>
+                    <div className="flex items-center gap-3">
+                      {t.image ? (
+                        <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                          <SafeImage src={t.image} alt={t.authorName} sizes="40px" />
+                        </div>
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-lg">🙂</div>
+                      )}
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{t.authorName}</p>
+                        {t.authorRole && <p className="text-xs text-gray-500">{t.authorRole}</p>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 7. Team */}
+        {team.length > 0 && (
+          <section className="bg-white px-4 py-16 md:px-8">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-12 text-center">
+                <h2 className="text-4xl font-bold text-gray-900">Meet the Team</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+                  The friendly faces working hard behind the scenes to bring a little magic to your day.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+                {team.map((member, index) => (
+                  <div
+                    key={member.id}
+                    className="group overflow-hidden rounded-2xl border border-gray-200 bg-white text-center transition hover:shadow-lg"
+                  >
+                    {member.image ? (
+                      <div className="relative aspect-square overflow-hidden">
+                        <SafeImage
+                          src={member.image}
+                          alt={member.name}
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+                    ) : (
+                      <div className={`${TEAM_FALLBACK_BG[index % TEAM_FALLBACK_BG.length]} flex aspect-square items-center justify-center`}>
+                        <span className="text-7xl transition-transform duration-300 group-hover:scale-110">🧑</span>
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <h3 className="font-bold text-gray-900">{member.name}</h3>
+                      <p className="text-sm text-blue-700">{member.designation}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 8. Gallery / Experience */}
+        {gallery.length > 0 && (
+          <section className="px-4 py-16 md:px-8">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-12 text-center">
+                <h2 className="text-4xl font-bold text-gray-900">Inside the Minimagic World</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+                  A glimpse of the colourful experiences waiting for you in-store and online.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {gallery.map((item, index) => (
+                  <div
+                    key={`${item.image}-${index}`}
+                    className="group relative aspect-square overflow-hidden rounded-2xl transition hover:shadow-lg"
+                  >
+                    <SafeImage
+                      src={item.image}
+                      alt={item.label}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                    {item.label && (
+                      <span className="absolute bottom-3 left-3 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-gray-700">
+                        {item.label}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 9. Call to Action */}
+        <section className="px-4 pb-20 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-3xl bg-gradient-to-r from-yellow-300 to-yellow-200 px-6 py-14 text-center md:px-12">
+              <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl">Come Find Your Joy</h2>
+              <p className="mx-auto mb-8 max-w-2xl text-gray-700">
+                Explore our collection, visit the play area, or say hello — there is a little magic here for everyone.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/categories"
+                  className="transform rounded-full bg-blue-900 px-8 py-3 font-bold text-white transition hover:scale-105 hover:bg-blue-800"
+                >
+                  Explore Products
+                </Link>
+                <Link
+                  href="/play-area"
+                  className="rounded-full border-2 border-blue-900 px-8 py-3 font-bold text-blue-900 transition hover:bg-blue-900 hover:text-white"
+                >
+                  Visit Play Area
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </>
+  )
+}
