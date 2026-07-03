@@ -13,10 +13,6 @@ import {
 const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
 const label = 'mb-1 block text-sm font-medium text-gray-700'
 
-function pairListToText(value: unknown): string {
-  const pairs = (value as { label: string; value: string }[]) ?? []
-  return pairs.map((p) => `${p.label} | ${p.value}`).join('\n')
-}
 
 export default async function PlayAreaAdminPage() {
   const supabase = createServerSupabase()
@@ -30,7 +26,7 @@ export default async function PlayAreaAdminPage() {
     <div className="space-y-8 p-4 md:p-8">
       <h1 className="text-2xl font-bold text-gray-900">Play Area</h1>
 
-      {/* Hero, SEO, Timings, Pricing, Rules — one settings row */}
+      {/* Hero, SEO, Rules — one settings row */}
       <ActionForm action={updatePlayAreaSettings} successMessage="Play Area settings saved successfully">
         <div className="space-y-5">
           <section className="rounded-2xl border border-gray-200 bg-white p-6">
@@ -50,21 +46,6 @@ export default async function PlayAreaAdminPage() {
                 />
               </div>
               <ImageUploadField bucket="play-area" name="hero_image" label="Hero image" defaultUrl={playArea?.hero_image ?? null} />
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-1 font-bold text-gray-900">Timings &amp; Pricing</h2>
-            <p className="mb-4 text-sm text-gray-500">One per line, format: Label | Value — e.g. "Mon–Fri | 10am – 8pm"</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={label}>Timings</label>
-                <textarea name="timings" rows={4} defaultValue={pairListToText(playArea?.timings)} className={input} />
-              </div>
-              <div>
-                <label className={label}>Pricing</label>
-                <textarea name="pricing" rows={4} defaultValue={pairListToText(playArea?.pricing)} className={input} />
-              </div>
             </div>
           </section>
 

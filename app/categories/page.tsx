@@ -46,9 +46,6 @@ export default async function CategoriesPage() {
 
             <div className="hidden flex-col items-end md:flex">
               <div className="flex gap-3">
-                <div className="rounded-full bg-yellow-500 px-4 py-2 font-bold text-white">
-                  {allProducts.length} Products
-                </div>
                 <div className="rounded-full bg-blue-900 px-4 py-2 font-bold text-white">
                   {categories.length} Categories
                 </div>

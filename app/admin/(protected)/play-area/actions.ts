@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
-import { str, int, bool, lineList, pairList } from '@/lib/admin/form'
+import { str, int, lineList } from '@/lib/admin/form'
 
 function revalidatePlayArea() {
   revalidatePath('/admin/play-area')
@@ -22,8 +22,6 @@ export async function updatePlayAreaSettings(formData: FormData) {
       hero_title: str(formData, 'hero_title'),
       hero_description: str(formData, 'hero_description'),
       hero_image: str(formData, 'hero_image'),
-      timings: pairList(formData, 'timings'),
-      pricing: pairList(formData, 'pricing'),
       rules: lineList(formData, 'rules'),
       seo_title: str(formData, 'seo_title'),
       seo_description: str(formData, 'seo_description'),

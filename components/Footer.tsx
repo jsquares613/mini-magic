@@ -19,16 +19,16 @@ export default async function Footer() {
   ])
 
   return (
-    <footer className="bg-blue-900 px-4 py-10 text-white md:px-8 md:py-16">
+    <footer className="bg-blue-900 px-4 py-6 text-white md:px-8 md:py-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 grid grid-cols-2 gap-6 md:mb-12 md:grid-cols-4 md:gap-8">
+        <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {/* Brand — full width on mobile */}
           <div className="col-span-2 md:col-span-1">
-            <div className="mb-3 md:mb-4">
-              <h3 className="mb-1 text-xl font-bold md:mb-2 md:text-2xl">{siteConfig.wordmark}</h3>
-              <p className="text-sm text-blue-100">{footerText ?? siteConfig.tagline}</p>
+            <div className="mb-2">
+              <h3 className="mb-0.5 text-base font-bold">{siteConfig.wordmark}</h3>
+              <p className="text-xs text-blue-100">{footerText ?? siteConfig.tagline}</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               {siteConfig.socials.map((social) => (
                 <a
                   key={social.label}
@@ -38,7 +38,7 @@ export default async function Footer() {
                   rel="noopener noreferrer"
                   className="text-blue-100 transition hover:text-white"
                 >
-                  <svg className="h-5 w-5 md:h-6 md:w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d={social.iconPath} />
                   </svg>
                 </a>
@@ -48,8 +48,8 @@ export default async function Footer() {
 
           {/* Categories */}
           <div>
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-200 md:mb-4 md:text-lg md:font-bold md:normal-case md:tracking-normal md:text-white">Categories</h4>
-            <ul className="space-y-1.5 text-sm text-blue-100 md:space-y-2">
+            <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-blue-200">Categories</h4>
+            <ul className="space-y-1 text-xs text-blue-100">
               <li>
                 <Link href="/play-area" className="transition hover:text-white">Play Area</Link>
               </li>
@@ -65,8 +65,8 @@ export default async function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-200 md:mb-4 md:text-lg md:font-bold md:normal-case md:tracking-normal md:text-white">Quick Links</h4>
-            <ul className="space-y-1.5 text-sm text-blue-100 md:space-y-2">
+            <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-blue-200">Quick Links</h4>
+            <ul className="space-y-1 text-xs text-blue-100">
               {quickLinks.map((link) => (
                 <li key={link.id}>
                   <Link href={link.url} className="transition hover:text-white">{link.label}</Link>
@@ -77,10 +77,10 @@ export default async function Footer() {
 
           {/* Contact — full width on mobile */}
           <div className="col-span-2 md:col-span-1">
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-200 md:mb-4 md:text-lg md:font-bold md:normal-case md:tracking-normal md:text-white">Contact</h4>
-            <ul className="space-y-2 text-sm text-blue-100 md:space-y-3">
+            <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-blue-200">Contact</h4>
+            <ul className="space-y-1.5 text-xs text-blue-100">
               {contact?.phone && (
-                <li className="flex items-center gap-2">
+                <li className="flex items-center gap-1.5">
                   <span>📱</span>
                   <a href={`tel:${contact.phone}`} className="transition hover:text-white">
                     {contact.phone}
@@ -88,25 +88,25 @@ export default async function Footer() {
                 </li>
               )}
               {contact?.email && (
-                <li className="flex items-center gap-2">
+                <li className="flex items-center gap-1.5">
                   <span>✉️</span>
-                  <a href={`mailto:${contact.email}`} className="transition hover:text-white break-all">
+                  <a href={`mailto:${contact.email}`} className="break-all transition hover:text-white">
                     {contact.email}
                   </a>
                 </li>
               )}
-              <li className="flex items-start gap-2">
-                  <span>📍</span>
-                  <span>{siteConfig.contact.location}</span>
-                </li>
+              <li className="flex items-start gap-1.5">
+                <span>📍</span>
+                <span>{siteConfig.contact.location}</span>
+              </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom */}
-        <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-blue-800 pt-6 text-xs text-blue-100 md:mt-8 md:flex-row md:pt-8 md:text-sm">
+        <div className="flex flex-col items-center justify-between gap-2 border-t border-blue-800 pt-4 text-xs text-blue-100 md:flex-row">
           <p>&copy; {new Date().getFullYear()} {siteConfig.name} - All rights reserved</p>
-          <div className="flex gap-4 md:gap-6">
+          <div className="flex gap-4">
             {siteConfig.legalLinks.map((link) => (
               <Link key={link.href} href={link.href} className="transition hover:text-white">
                 {link.label}

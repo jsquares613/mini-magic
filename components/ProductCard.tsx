@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import SafeImage from '@/components/SafeImage'
+import WhatsAppCardButton from '@/components/WhatsAppCardButton'
 import type { Product } from '@/types'
 import { withPricing } from '@/lib/products'
 import { getCategoryName } from '@/lib/categories'
@@ -55,13 +56,16 @@ export default async function ProductCard({ product }: { product: Product }) {
         <div className="p-4">
           <p className="mb-2 text-xs font-semibold uppercase text-blue-700">{categoryName}</p>
           <h3 className="mb-2 line-clamp-2 min-h-[2.5rem] font-semibold text-gray-900">{product.name}</h3>
-          <div className="flex items-center gap-2">
-            <span className={`font-bold ${isOnSale ? 'text-green-600' : 'text-blue-900'}`}>
-              {formatPrice(effectivePrice)}
-            </span>
-            {isOnSale && (
-              <span className="text-sm text-gray-400 line-through">{formatPrice(product.price)}</span>
-            )}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className={`font-bold ${isOnSale ? 'text-green-600' : 'text-blue-900'}`}>
+                {formatPrice(effectivePrice)}
+              </span>
+              {isOnSale && (
+                <span className="text-sm text-gray-400 line-through">{formatPrice(product.price)}</span>
+              )}
+            </div>
+            <WhatsAppCardButton productName={product.name} />
           </div>
         </div>
       </div>

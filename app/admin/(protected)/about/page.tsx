@@ -11,8 +11,6 @@ import {
   deleteStatistic,
   deleteTeamMember,
   toggleTeamMemberActive,
-  deleteTestimonial,
-  toggleTestimonialActive,
 } from './actions'
 import type { AboutGalleryItem } from '@/types'
 
@@ -21,11 +19,10 @@ const label = 'mb-1 block text-sm font-medium text-gray-700'
 
 export default async function AboutAdminPage() {
   const supabase = createServerSupabase()
-  const [{ data: about }, { data: statistics }, { data: team }, { data: testimonials }] = await Promise.all([
+  const [{ data: about }, { data: statistics }, { data: team }] = await Promise.all([
     supabase.from('about_page').select('*').eq('id', 1).maybeSingle(),
     supabase.from('about_statistics').select('*').order('sort_order', { ascending: true }),
     supabase.from('team_members').select('*').order('display_order', { ascending: true }),
-    supabase.from('testimonials').select('*').order('display_order', { ascending: true }),
   ])
 
   const gallery = (about?.gallery as unknown as AboutGalleryItem[]) ?? []
@@ -182,44 +179,6 @@ export default async function AboutAdminPage() {
             </div>
           ))}
           {(!team || team.length === 0) && <p className="text-sm text-gray-400">No team members yet.</p>}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-bold text-gray-900">Testimonials</h2>
-          <Link href="/admin/about/testimonials/new" className="rounded-lg bg-blue-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800">
-            + Add testimonial
-          </Link>
-        </div>
-        <div className="space-y-2">
-          {(testimonials ?? []).map((t) => (
-            <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-2">
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <span className="font-medium text-gray-900">{t.author_name}</span>{' '}
-                <span className="text-sm text-gray-500">{t.author_role}</span>
-                {!t.active && <span className="ml-2 text-xs text-gray-400">(inactive)</span>}
-                <p className="truncate text-xs text-gray-400">{t.quote}</p>
-              </div>
-              <div className="flex flex-shrink-0 gap-3">
-                <ActionForm action={toggleTestimonialActive.bind(null, t.id, !t.active)} successMessage={t.active ? 'Testimonial disabled' : 'Testimonial enabled'}>
-                  <SubmitButton pendingText="Working…" variant="link" className="text-sm text-blue-600">
-                    {t.active ? 'Disable' : 'Enable'}
-                  </SubmitButton>
-                </ActionForm>
-                <Link href={`/admin/about/testimonials/${t.id}`} className="text-sm font-medium text-blue-600 hover:underline">
-                  Edit
-                </Link>
-                <ActionForm action={deleteTestimonial.bind(null, t.id)} successMessage="Testimonial deleted successfully" confirmMessage="Delete this testimonial?">
-                  <SubmitButton pendingText="Deleting…" variant="link" className="text-sm text-red-600">
-                    Delete
-                  </SubmitButton>
-                </ActionForm>
-              </div>
-            </div>
-          ))}
-          {(!testimonials || testimonials.length === 0) && <p className="text-sm text-gray-400">No testimonials yet.</p>}
         </div>
       </section>
 

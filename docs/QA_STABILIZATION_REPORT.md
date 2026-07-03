@@ -208,3 +208,39 @@ Build ran in an isolated junction-copy (`C:\mm-build-verify`, cleaned up afterwa
 
 No RLS or schema changes were needed in either pass — the gaps were in wiring (route handler,
 data-layer mapping) and framework/caching configuration, not the database design.
+
+---
+
+## Session update — UI/content changes (2026-07-01)
+
+Not bug fixes — content/UI adjustments made this session, still uncommitted at time of writing.
+
+- **New:** [components/StarBorder.tsx](components/StarBorder.tsx) — animated glowing-border
+  wrapper component; new keyframes/classes added to [app/globals.css](app/globals.css). Applied to
+  the About page "Why Choose" cards.
+- **New:** [components/WhatsAppCardButton.tsx](components/WhatsAppCardButton.tsx) — circular
+  WhatsApp quick-contact button wired into [components/ProductCard.tsx](components/ProductCard.tsx),
+  opens a pre-filled `wa.me` chat with the product name.
+- **Removed — Testimonials feature:** storefront section and `getTestimonials()` in
+  [app/about/page.tsx](app/about/page.tsx) / [lib/about.ts](lib/about.ts); full admin CRUD block in
+  [app/admin/(protected)/about/page.tsx](app/admin/(protected)/about/page.tsx).
+- **Removed — "Plan Your Visit" section** and its `getPlayVisitInfo()` data function from
+  [app/play-area/page.tsx](app/play-area/page.tsx) / [lib/playArea.ts](lib/playArea.ts).
+- **Removed — Timings & Pricing** fields from the Play Area admin form and
+  `updatePlayAreaSettings` action ([app/admin/(protected)/play-area/page.tsx](app/admin/(protected)/play-area/page.tsx),
+  `actions.ts`).
+- **Removed:** breadcrumb nav block and feature-card emoji icons on the Play Area page; emoji
+  icons on About page's "Our Values"/"Why Choose" cards; hero badges (`✨ Our Story`,
+  `🎠 Minimagic Play Area`); Icon field from [components/admin/FeatureForm.tsx](components/admin/FeatureForm.tsx);
+  the "X Products" count badge on [app/categories/page.tsx](app/categories/page.tsx).
+- **Layout/style tweaks:**
+  - Play Area House Rules switched from a single-column list to a 3-column grid.
+  - [components/Header.tsx](components/Header.tsx) marquee now repeats messages 8x (was 2x) with
+    added spacing, and slowed from 14s to 50s — fixes a visible jump/gap in the loop.
+  - [components/Footer.tsx](components/Footer.tsx) made significantly more compact (smaller
+    padding, text sizes, gaps across all columns).
+  - [components/Hero.tsx](components/Hero.tsx) slides given a min-height (360px mobile / 440px
+    desktop).
+
+Not yet verified by execution or committed — pending build/manual check before merging into the
+main QA record above.

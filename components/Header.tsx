@@ -20,8 +20,8 @@ export default async function Header() {
       <div className="overflow-hidden bg-[#FFB800] px-4 py-2 text-sm">
         <div className="marquee">
           <div className="marquee-content">
-            {[...marqueeMessages, ...marqueeMessages].map((msg, i) => (
-              <span key={i} className="font-semibold">
+            {Array(8).fill(null).flatMap(() => marqueeMessages).map((msg, i) => (
+              <span key={i} className="px-4 font-semibold">
                 {msg}
               </span>
             ))}

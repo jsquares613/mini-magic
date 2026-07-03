@@ -45,12 +45,61 @@ html {
 
 .marquee-content {
   display: inline-flex;
-  gap: 2rem;
   white-space: nowrap;
   will-change: transform;
-  animation: mm-marquee 14s linear infinite;
+  animation: mm-marquee 50s linear infinite;
 }
 
 .marquee-content:hover {
   animation-play-state: paused;
+}
+
+/* StarBorder animated edge effect */
+.star-border-container {
+  display: block;
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.border-gradient-bottom {
+  position: absolute;
+  width: 300%;
+  height: 50%;
+  opacity: 0.7;
+  bottom: -12px;
+  right: -250%;
+  border-radius: 50%;
+  animation: star-movement-bottom linear infinite alternate;
+  z-index: 0;
+}
+
+.border-gradient-top {
+  position: absolute;
+  opacity: 0.7;
+  width: 300%;
+  height: 50%;
+  top: -12px;
+  left: -250%;
+  border-radius: 50%;
+  animation: star-movement-top linear infinite alternate;
+  z-index: 0;
+}
+
+.star-border-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: calc(1rem - 1px);
+  overflow: hidden;
+  height: 100%;
+}
+
+@keyframes star-movement-bottom {
+  0% { transform: translate(0%, 0%); opacity: 1; }
+  100% { transform: translate(-100%, 0%); opacity: 0; }
+}
+
+@keyframes star-movement-top {
+  0% { transform: translate(0%, 0%); opacity: 1; }
+  100% { transform: translate(100%, 0%); opacity: 0; }
 }

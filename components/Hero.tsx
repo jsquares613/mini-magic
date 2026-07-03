@@ -109,7 +109,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                 aria-roledescription="slide"
                 aria-label={`${index + 1} of ${count}`}
                 aria-hidden={!active}
-                className={`col-start-1 row-start-1 relative flex items-center transition-opacity duration-700 ease-in-out ${
+                className={`col-start-1 row-start-1 relative flex items-center min-h-[360px] md:min-h-[440px] transition-opacity duration-700 ease-in-out ${
                   active ? 'opacity-100' : 'pointer-events-none opacity-0'
                 }`}
               >

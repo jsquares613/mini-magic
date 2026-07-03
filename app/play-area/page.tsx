@@ -10,7 +10,6 @@ import {
   getPlayFeatures,
   getPlayRules,
   getPlaySeo,
-  getPlayVisitInfo,
   getPlayZones,
 } from '@/lib/playArea'
 
@@ -30,12 +29,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PlayAreaPage() {
-  const [heroSlides, playZones, playFeatures, playRules, playVisitInfo] = await Promise.all([
+  const [heroSlides, playZones, playFeatures, playRules] = await Promise.all([
     getPlayAreaHero(),
     getPlayZones(),
     getPlayFeatures(),
     getPlayRules(),
-    getPlayVisitInfo(),
   ])
 
   return (
@@ -45,16 +43,6 @@ export default async function PlayAreaPage() {
       <main className="min-h-screen bg-[#FFFFEC]">
         {/* Reusable hero — identical sizing/behaviour to the homepage */}
         <Hero slides={heroSlides} />
-
-        {/* Intro / breadcrumb */}
-        <section className="px-4 pt-6 md:px-8">
-          <div className="mx-auto max-w-7xl">
-            <nav className="mb-3 text-sm text-gray-500">
-              <Link href="/" className="hover:text-blue-900">Home</Link> <span className="mx-2">›</span>{' '}
-              <span className="font-semibold">Play Area</span>
-            </nav>
-          </div>
-        </section>
 
         {/* Play Zones */}
         <section id="play-zones" className="scroll-mt-24 px-4 py-16 md:px-8">
@@ -100,7 +88,6 @@ export default async function PlayAreaPage() {
                   key={f.title}
                   className={`${f.bgColor} rounded-lg border-2 border-gray-200 p-8 text-center transition hover:shadow-lg`}
                 >
-                  <div className="mb-4 text-5xl">{f.icon}</div>
                   <h3 className="mb-3 text-xl font-bold text-gray-900">{f.title}</h3>
                   <p className="text-sm leading-relaxed text-gray-600">{f.desc}</p>
                 </div>
@@ -112,11 +99,11 @@ export default async function PlayAreaPage() {
         {/* House Rules */}
         {playRules.length > 0 && (
           <section id="rules" className="scroll-mt-24 px-4 py-16 md:px-8">
-            <div className="mx-auto max-w-3xl">
+            <div className="mx-auto max-w-7xl">
               <h2 className="mb-8 text-center text-4xl font-bold text-gray-900">House Rules</h2>
-              <ul className="space-y-3">
+              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {playRules.map((rule) => (
-                  <li key={rule} className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4">
+                  <li key={rule} className="flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center">
                     <span className="text-green-600">✓</span>
                     <span className="text-sm text-gray-700">{rule}</span>
                   </li>
@@ -125,26 +112,6 @@ export default async function PlayAreaPage() {
             </div>
           </section>
         )}
-
-        {/* Plan Your Visit */}
-        <section id="plan-visit" className="scroll-mt-24 bg-white px-4 py-16 md:px-8">
-          <div className="mx-auto max-w-7xl">
-            <h2 className="mb-12 text-center text-4xl font-bold text-gray-900">Plan Your Visit</h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {playVisitInfo.map((info) => (
-                <div key={info.title} className="rounded-2xl border border-gray-200 bg-white p-8 text-center transition hover:shadow-lg">
-                  <div className="mb-4 text-5xl">{info.icon}</div>
-                  <h3 className="mb-3 text-lg font-bold text-gray-900">{info.title}</h3>
-                  {info.lines.map((line) => (
-                    <p key={line} className="text-sm text-gray-600">
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* CTA */}
         <section className="px-4 py-16 pb-20 md:px-8">

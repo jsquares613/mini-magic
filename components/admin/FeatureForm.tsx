@@ -22,10 +22,6 @@ export default function FeatureForm({
     >
       <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
         <div>
-          <label className={label}>Icon</label>
-          <input name="icon" placeholder="e.g. 🛡️" defaultValue={feature?.icon ?? ''} className={input} />
-        </div>
-        <div>
           <label className={label}>Title *</label>
           <input name="title" required defaultValue={feature?.title} className={input} />
         </div>

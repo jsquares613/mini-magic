@@ -5,7 +5,8 @@ import Footer from '@/components/Footer'
 import Hero from '@/components/Hero'
 import StatCounter from '@/components/StatCounter'
 import SafeImage from '@/components/SafeImage'
-import { getAboutContent, getAboutGallery, getAboutHero, getAboutSeo, getAboutStatistics, getTeamMembers, getTestimonials } from '@/lib/about'
+import StarBorder from '@/components/StarBorder'
+import { getAboutContent, getAboutGallery, getAboutHero, getAboutSeo, getAboutStatistics, getTeamMembers } from '@/lib/about'
 
 const FALLBACK_TITLE = 'About Us - Minimagic | Our Story, Mission & Team'
 const FALLBACK_DESCRIPTION =
@@ -23,30 +24,29 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const WHY_CHOOSE = [
-  { icon: '✓', title: 'Safe & Certified', desc: '100% non-toxic, BIS-certified products you can trust.', bg: 'bg-green-50' },
-  { icon: '💰', title: 'Honest Pricing', desc: 'Premium quality at prices that respect your budget.', bg: 'bg-yellow-50' },
-  { icon: '🎁', title: 'Huge Range', desc: 'Thousands of toys, games & essentials for every age.', bg: 'bg-blue-50' },
-  { icon: '🚚', title: 'Reliable Delivery', desc: 'Fast, careful shipping right across the country.', bg: 'bg-purple-50' },
-  { icon: '🤝', title: 'Caring Support', desc: 'A friendly team that treats you like family.', bg: 'bg-orange-50' },
-  { icon: '⭐', title: 'Loved by Kids', desc: 'Products chosen and approved by the toughest critics.', bg: 'bg-red-50' },
+  { title: 'Safe & Certified', desc: '100% non-toxic, BIS-certified products you can trust.', bg: 'bg-green-50' },
+  { title: 'Honest Pricing', desc: 'Premium quality at prices that respect your budget.', bg: 'bg-yellow-50' },
+  { title: 'Huge Range', desc: 'Thousands of toys, games & essentials for every age.', bg: 'bg-blue-50' },
+  { title: 'Reliable Delivery', desc: 'Fast, careful shipping right across the country.', bg: 'bg-purple-50' },
+  { title: 'Caring Support', desc: 'A friendly team that treats you like family.', bg: 'bg-orange-50' },
+  { title: 'Loved by Kids', desc: 'Products chosen and approved by the toughest critics.', bg: 'bg-red-50' },
 ]
 
 const TEAM_FALLBACK_BG = ['bg-blue-100', 'bg-pink-100', 'bg-yellow-100', 'bg-green-100', 'bg-purple-100', 'bg-orange-100']
 
 export default async function AboutPage() {
-  const [heroSlides, content, statistics, team, gallery, testimonials] = await Promise.all([
+  const [heroSlides, content, statistics, team, gallery] = await Promise.all([
     getAboutHero(),
     getAboutContent(),
     getAboutStatistics(),
     getTeamMembers(),
     getAboutGallery(),
-    getTestimonials(),
   ])
 
   const values = [
-    { icon: '🎯', title: 'Our Mission', desc: content.mission, bg: 'bg-yellow-50' },
-    { icon: '🔭', title: 'Our Vision', desc: content.vision, bg: 'bg-blue-50' },
-    { icon: '💛', title: 'Our Values', desc: content.valuesText, bg: 'bg-pink-50' },
+    { title: 'Our Mission', desc: content.mission, bg: 'bg-yellow-50' },
+    { title: 'Our Vision', desc: content.vision, bg: 'bg-blue-50' },
+    { title: 'Our Values', desc: content.valuesText, bg: 'bg-pink-50' },
   ]
 
   return (
@@ -124,7 +124,6 @@ export default async function AboutPage() {
                   key={v.title}
                   className={`${v.bg} rounded-2xl border-2 border-gray-200 p-8 text-center transition hover:-translate-y-1 hover:shadow-lg`}
                 >
-                  <div className="mb-4 text-5xl">{v.icon}</div>
                   <h3 className="mb-3 text-2xl font-bold text-gray-900">{v.title}</h3>
                   <p className="leading-relaxed text-gray-600">{v.desc}</p>
                 </div>
@@ -144,18 +143,12 @@ export default async function AboutPage() {
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {WHY_CHOOSE.map((item) => (
-                <div
-                  key={item.title}
-                  className={`${item.bg} group flex items-start gap-4 rounded-2xl border border-gray-200 p-6 transition hover:-translate-y-1 hover:shadow-lg`}
-                >
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white text-2xl shadow-sm transition-transform group-hover:scale-110">
-                    {item.icon}
-                  </div>
-                  <div>
+                <StarBorder key={item.title} color="#FFB800" speed="5s">
+                  <div className={`${item.bg} h-full p-6 transition hover:-translate-y-1 hover:shadow-lg`}>
                     <h3 className="mb-1 text-lg font-bold text-gray-900">{item.title}</h3>
                     <p className="text-sm leading-relaxed text-gray-600">{item.desc}</p>
                   </div>
-                </div>
+                </StarBorder>
               ))}
             </div>
           </div>
@@ -186,43 +179,6 @@ export default async function AboutPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* 6. What Families Say */}
-        {testimonials.length > 0 && (
-          <section className="bg-white px-4 py-16 md:px-8">
-            <div className="mx-auto max-w-7xl">
-              <div className="mb-12 text-center">
-                <h2 className="text-4xl font-bold text-gray-900">What Families Say</h2>
-                <p className="mx-auto mt-3 max-w-2xl text-gray-600">
-                  Real words from the parents and kids who make Minimagic feel like home.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {testimonials.map((t) => (
-                  <div key={t.id} className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
-                    {t.rating != null && (
-                      <p className="mb-3 text-yellow-500">{'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}</p>
-                    )}
-                    <p className="mb-4 text-sm leading-relaxed text-gray-700">&ldquo;{t.quote}&rdquo;</p>
-                    <div className="flex items-center gap-3">
-                      {t.image ? (
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                          <SafeImage src={t.image} alt={t.authorName} sizes="40px" />
-                        </div>
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-lg">🙂</div>
-                      )}
-                      <div>
-                        <p className="text-sm font-bold text-gray-900">{t.authorName}</p>
-                        {t.authorRole && <p className="text-xs text-gray-500">{t.authorRole}</p>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </section>

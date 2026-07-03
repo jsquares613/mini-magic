@@ -38,7 +38,6 @@ export async function getAboutHero(): Promise<HeroSlide[]> {
       id: 'about-hero',
       image: page.hero_image ?? aboutHeroSlides[0].image,
       imageAlt: page.hero_title,
-      badge: '✨ Our Story',
       title: [{ text: page.hero_title }],
       description: page.hero_description ? [{ text: page.hero_description }] : [],
       ctaLabel: 'Discover Our Story',
