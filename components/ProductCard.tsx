@@ -37,7 +37,7 @@ export default async function ProductCard({ product }: { product: Product }) {
         )}
 
         {/* Visual: real image when available, else emoji placeholder */}
-        <div className={`relative flex aspect-square items-center justify-center ${product.bg ?? 'bg-gray-50'}`}>
+        <div className={`relative flex aspect-[4/3] items-center justify-center ${product.bg ?? 'bg-gray-50'}`}>
           {hasImage ? (
             <SafeImage
               src={product.images[0]}
@@ -53,9 +53,9 @@ export default async function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* Details */}
-        <div className="p-4">
-          <p className="mb-2 text-xs font-semibold uppercase text-blue-700">{categoryName}</p>
-          <h3 className="mb-2 line-clamp-2 min-h-[2.5rem] font-semibold text-gray-900">{product.name}</h3>
+        <div className="p-3">
+          <p className="mb-1 text-xs font-semibold uppercase text-blue-700">{categoryName}</p>
+          <h3 className="mb-1 line-clamp-1 font-semibold text-gray-900">{product.name}</h3>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className={`font-bold ${isOnSale ? 'text-green-600' : 'text-blue-900'}`}>

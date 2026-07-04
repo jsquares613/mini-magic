@@ -22,14 +22,14 @@ export default async function ProductsPage() {
       <Header />
       <main className="min-h-screen bg-[#FFFFEC]">
         <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
-          <nav className="mb-3 text-sm text-gray-500">
+          <nav className="mb-2 text-sm text-gray-500">
             <Link href="/" className="hover:text-blue-900">Home</Link>{' '}
             <span className="mx-2">›</span> <span className="font-semibold">All Products</span>
           </nav>
-          <h1 className="mb-2 text-4xl font-bold md:text-5xl">
+          <h1 className="mb-1 text-2xl font-bold md:text-5xl">
             All <span className="text-orange-500">Products</span>
           </h1>
-          <p className="mb-8 max-w-xl text-gray-600">
+          <p className="mb-4 max-w-xl text-sm text-gray-600 md:text-base">
             Our complete collection — {products.length} curated products across every category.
           </p>
           <ProductGrid products={products} />
