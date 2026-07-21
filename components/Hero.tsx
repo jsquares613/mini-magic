@@ -82,7 +82,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
   if (count === 0) return null
 
   return (
-    <section className={`bg-[#FFFFEC] py-6 px-4 md:py-8 md:px-6 ${className}`}>
+    <section className={`bg-white py-6 px-4 md:py-8 md:px-6 ${className}`}>
       <div className="max-w-7xl mx-auto">
         {/*
           The slides are stacked in a single CSS grid cell (every slide uses

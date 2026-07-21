@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import { getHomeHeroSlides } from '@/lib/homepage'
@@ -8,6 +7,7 @@ import Promotions from '@/components/Promotions'
 import OffersGrid from '@/components/OffersGrid'
 import NewArrivals from '@/components/NewArrivals'
 import FeaturedProducts from '@/components/FeaturedProducts'
+import SectionHeader from '@/components/SectionHeader'
 import Footer from '@/components/Footer'
 
 /**
@@ -23,20 +23,19 @@ export default async function Home() {
   const heroSlides = await getHomeHeroSlides()
 
   return (
-    <main className="min-h-screen bg-[#FFFFEC]">
+    <main className="min-h-screen bg-white">
       <Header />
       <Hero slides={heroSlides} />
       <Categories />
       <PopularToys />
       <Promotions />
-      <section className="bg-[#FFFFEC] px-4 py-16 md:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold">Special Offers</h2>
-          <Link href="/offers" className="font-semibold text-blue-600">
-            View All →
-          </Link>
-        </div>
-        <div className="mx-auto max-w-7xl px-4">
+      <section className="bg-white px-4 py-6 md:px-8 md:py-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionHeader
+            title="Special Offers"
+            accent="from-red-400 to-rose-500"
+            viewAllHref="/offers"
+          />
           <OffersGrid limit={4} />
         </div>
       </section>

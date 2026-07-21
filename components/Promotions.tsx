@@ -17,19 +17,23 @@ export default async function Promotions() {
   if (promos.length === 0) return null
 
   return (
-    <section className="bg-[#FFFFEC] px-4 py-16 md:px-8">
+    <section className="bg-white px-4 py-6 md:px-8 md:py-8">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {promos.map((banner) => (
             <div
               key={banner.id}
-              className={`relative flex min-h-[260px] items-center overflow-hidden rounded-lg p-8 md:p-12 ${
-                banner.image ? '' : 'bg-yellow-200'
+              className={`group relative flex min-h-[260px] items-center overflow-hidden rounded-3xl p-8 shadow-md ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl md:p-12 ${
+                banner.image ? '' : 'bg-gradient-to-br from-amber-200 via-yellow-200 to-orange-200'
               }`}
             >
               {banner.image && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={banner.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <img
+                  src={banner.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
               )}
               <div className="relative">
                 <h3 className="mb-2 text-4xl font-bold text-gray-800 md:text-5xl">{banner.title}</h3>

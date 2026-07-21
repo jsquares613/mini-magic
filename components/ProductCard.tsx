@@ -23,7 +23,7 @@ export default async function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link href={`/products/${product.slug}`} className="group block">
-      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-lg">
+      <div className="relative overflow-hidden rounded-xl border-2 border-amber-400 bg-lightYellow transition hover:border-amber-500 hover:shadow-lg">
         {/* Badges */}
         <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
           {product.isNew && (
@@ -37,7 +37,7 @@ export default async function ProductCard({ product }: { product: Product }) {
         )}
 
         {/* Visual: real image when available, else emoji placeholder */}
-        <div className={`relative flex aspect-[4/3] items-center justify-center ${product.bg ?? 'bg-gray-50'}`}>
+        <div className={`relative flex aspect-[4/3] items-center justify-center ${product.bg ?? 'bg-lightYellow'}`}>
           {hasImage ? (
             <SafeImage
               src={product.images[0]}
@@ -53,8 +53,8 @@ export default async function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* Details */}
-        <div className="p-3">
-          <p className="mb-1 text-xs font-semibold uppercase text-blue-700">{categoryName}</p>
+        <div className="border-t-2 border-amber-400 bg-amber-400 p-3">
+          <p className="mb-1 text-xs font-bold uppercase text-white">{categoryName}</p>
           <h3 className="mb-1 line-clamp-1 font-semibold text-gray-900">{product.name}</h3>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
