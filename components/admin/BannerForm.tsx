@@ -33,7 +33,7 @@ export default function BannerForm({
             <input name="subtitle" defaultValue={banner?.subtitle ?? ''} className={input} />
           </div>
           <div>
-            <label className={label}>Badge (e.g. "40% Off")</label>
+            <label className={label}>Badge (e.g. &ldquo;40% Off&rdquo;)</label>
             <input name="badge_text" defaultValue={banner?.badge_text ?? ''} className={input} />
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function BannerForm({
       <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
         <div>
           <h3 className="font-bold text-gray-900">Scheduling</h3>
-          <p className="text-sm text-gray-500">Optional — leave blank to show whenever "Active" is checked.</p>
+          <p className="text-sm text-gray-500">Optional — leave blank to show whenever &ldquo;Active&rdquo; is checked.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

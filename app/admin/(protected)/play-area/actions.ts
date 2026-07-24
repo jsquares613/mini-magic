@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
+import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, lineList } from '@/lib/admin/form'
 
 function revalidatePlayArea() {
@@ -15,18 +16,23 @@ function revalidatePlayArea() {
 export async function updatePlayAreaSettings(formData: FormData) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: current } = await supabase.from('play_area').select('hero_image').eq('id', 1).maybeSingle()
+
+  const heroImage = str(formData, 'hero_image')
   const { error } = await supabase
     .from('play_area')
     .upsert({
       id: 1,
       hero_title: str(formData, 'hero_title'),
       hero_description: str(formData, 'hero_description'),
-      hero_image: str(formData, 'hero_image'),
+      hero_image: heroImage,
       rules: lineList(formData, 'rules'),
       seo_title: str(formData, 'seo_title'),
       seo_description: str(formData, 'seo_description'),
     })
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjectIfChanged(current?.hero_image, heroImage)
   revalidatePlayArea()
 }
 
@@ -47,8 +53,12 @@ export async function addGalleryImage(formData: FormData) {
 export async function deleteGalleryImage(id: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: image } = await supabase.from('play_area_gallery').select('image_url').eq('id', id).maybeSingle()
+
   const { error } = await supabase.from('play_area_gallery').delete().eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjects([image?.image_url])
   revalidatePlayArea()
 }
 

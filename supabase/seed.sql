@@ -162,6 +162,11 @@ insert into play_area_gallery (image_url, alt_text, sort_order) values
   ('/images/play area/play-area-2.png', 'Slides & Tunnels', 2),
   ('/images/play area/play-area-3.png', 'Climbing Zone', 3);
 
+-- -----------------------------------------------------------------------------
+-- Offers page banner
+-- -----------------------------------------------------------------------------
+insert into offer_banner (id) values (1) on conflict (id) do nothing;
+
 insert into play_area_features (icon, title, description, sort_order) values
   ('🛡️', 'Always Supervised', 'Trained, friendly staff watch over every zone so parents can relax.', 1),
   ('🧼', 'Sanitised Daily', 'Equipment is cleaned and sanitised throughout the day for hygienic play.', 2),

@@ -10,6 +10,7 @@ module.exports = {
         primary: '#F4C430',
         secondary: '#003DA5',
         lightYellow: '#FFFACD',
+        surface: '#FBECA6',
       },
     },
   },

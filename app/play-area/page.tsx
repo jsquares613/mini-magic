@@ -44,6 +44,49 @@ export default async function PlayAreaPage() {
         {/* Reusable hero — identical sizing/behaviour to the homepage */}
         <Hero slides={heroSlides} />
 
+        {/* CTA */}
+        <section className="px-4 py-16 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-3xl bg-blue-900 px-6 py-14 text-center text-white md:px-12">
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">Ready for a Day of Magic?</h2>
+              <p className="mx-auto mb-8 max-w-2xl text-blue-100">
+                Bring the kids down for hours of safe, supervised fun — or book the whole zone for an unforgettable birthday party.
+              </p>
+
+              <div className="mx-auto mb-8 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
+                {[
+                  { price: '₹29', duration: '20 min' },
+                  { price: '₹49', duration: '40 min' },
+                  { price: '₹69', duration: '1 hr' },
+                ].map((tier) => (
+                  <div
+                    key={tier.duration}
+                    className="rounded-2xl border border-white/20 bg-white/10 px-4 py-5"
+                  >
+                    <p className="text-2xl font-bold text-yellow-400">{tier.price}</p>
+                    <p className="text-sm text-blue-100">{tier.duration}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <EnquiryButton
+                  subject="Play Area Visit"
+                  source="play-area"
+                  label="Book a Visit"
+                  className="inline-flex items-center justify-center rounded-full bg-yellow-500 px-8 py-3 font-bold text-white transition hover:scale-105 hover:bg-yellow-600"
+                />
+                <Link
+                  href="/categories"
+                  className="rounded-full border border-white/40 px-8 py-3 font-bold text-white transition hover:bg-white/10"
+                >
+                  Shop Toys
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Play Zones */}
         <section id="play-zones" className="scroll-mt-24 px-4 py-16 md:px-8">
           <div className="mx-auto max-w-7xl">
@@ -112,32 +155,6 @@ export default async function PlayAreaPage() {
             </div>
           </section>
         )}
-
-        {/* CTA */}
-        <section className="px-4 py-16 pb-20 md:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="rounded-3xl bg-blue-900 px-6 py-14 text-center text-white md:px-12">
-              <h2 className="mb-4 text-3xl font-bold md:text-4xl">Ready for a Day of Magic?</h2>
-              <p className="mx-auto mb-8 max-w-2xl text-blue-100">
-                Bring the kids down for hours of safe, supervised fun — or book the whole zone for an unforgettable birthday party.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <EnquiryButton
-                  subject="Play Area Visit"
-                  source="play-area"
-                  label="Book a Visit"
-                  className="inline-flex items-center justify-center rounded-full bg-yellow-500 px-8 py-3 font-bold text-white transition hover:scale-105 hover:bg-yellow-600"
-                />
-                <Link
-                  href="/categories"
-                  className="rounded-full border border-white/40 px-8 py-3 font-bold text-white transition hover:bg-white/10"
-                >
-                  Shop Toys
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />

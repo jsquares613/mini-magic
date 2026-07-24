@@ -1,6 +1,8 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { siteConfig } from '@/config/site'
+import WishlistProvider from '@/components/WishlistProvider'
+import BottomNav from '@/components/BottomNav'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -24,6 +26,10 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  viewportFit: 'cover',
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -31,7 +37,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <WishlistProvider>
+          <div className="pb-32 md:pb-0">{children}</div>
+          <BottomNav />
+        </WishlistProvider>
+      </body>
     </html>
   )
 }

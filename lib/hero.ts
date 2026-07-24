@@ -175,7 +175,7 @@ export const aboutHeroSlides: HeroSlide[] = [
     id: 'about-story',
     image: HERO_IMAGES.two,
     imageAlt: 'The Minimagic team and storefront',
-    badge: '✨ Our Story',
+    badge: 'Our Story',
     title: [
       { text: 'Making', className: 'text-blue-900' },
       { text: ' Everyday', className: 'text-red-500', break: true },

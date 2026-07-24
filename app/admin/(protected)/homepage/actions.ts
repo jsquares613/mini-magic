@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
+import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, bool, dateTime } from '@/lib/admin/form'
 
 function revalidateHome() {
@@ -37,8 +38,13 @@ export async function createHeroSlide(formData: FormData) {
 export async function updateHeroSlide(id: string, formData: FormData) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
-  const { error } = await supabase.from('homepage_hero_slides').update(parseHero(formData)).eq('id', id)
+  const { data: current } = await supabase.from('homepage_hero_slides').select('image').eq('id', id).maybeSingle()
+
+  const payload = parseHero(formData)
+  const { error } = await supabase.from('homepage_hero_slides').update(payload).eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjectIfChanged(current?.image, payload.image)
   revalidateHome()
   redirect('/admin/homepage')
 }
@@ -46,7 +52,11 @@ export async function updateHeroSlide(id: string, formData: FormData) {
 export async function deleteHeroSlide(id: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: slide } = await supabase.from('homepage_hero_slides').select('image').eq('id', id).maybeSingle()
+
   await supabase.from('homepage_hero_slides').delete().eq('id', id)
+
+  await deleteStorageObjects([slide?.image])
   revalidateHome()
 }
 
@@ -97,8 +107,13 @@ export async function createBanner(formData: FormData) {
 export async function updateBanner(id: string, formData: FormData) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
-  const { error } = await supabase.from('promotional_banners').update(parseBanner(formData)).eq('id', id)
+  const { data: current } = await supabase.from('promotional_banners').select('image').eq('id', id).maybeSingle()
+
+  const payload = parseBanner(formData)
+  const { error } = await supabase.from('promotional_banners').update(payload).eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjectIfChanged(current?.image, payload.image)
   revalidateHome()
   redirect('/admin/homepage')
 }
@@ -106,7 +121,11 @@ export async function updateBanner(id: string, formData: FormData) {
 export async function deleteBanner(id: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: banner } = await supabase.from('promotional_banners').select('image').eq('id', id).maybeSingle()
+
   await supabase.from('promotional_banners').delete().eq('id', id)
+
+  await deleteStorageObjects([banner?.image])
   revalidateHome()
 }
 

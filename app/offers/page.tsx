@@ -3,7 +3,11 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
 import ProductGrid from '@/components/ProductGrid'
+import OfferBanner from '@/components/OfferBanner'
+import OfferCategoryFilter from '@/components/OfferCategoryFilter'
 import { getProductsOnOffer } from '@/lib/products'
+import { getAllCategories } from '@/lib/categories'
+import { repositories } from '@/lib/supabase'
 
 export const metadata: Metadata = {
   title: 'Special Offers - Minimagic | Deals & Discounts',
@@ -15,8 +19,29 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function OffersPage() {
-  const offers = await getProductsOnOffer()
-  const maxDiscount = offers.length ? Math.max(...offers.map((p) => p.discountPercent)) : 0
+  const [offers, banner, categories] = await Promise.all([
+    getProductsOnOffer(),
+    repositories.offers.getOfferBanner(),
+    getAllCategories(),
+  ])
+
+  const chips = categories
+    .filter((c) => offers.some((p) => p.category === c.slug))
+    .map((c) => ({ slug: c.slug, label: c.name, emoji: c.emoji }))
+
+  const groups = {
+    all: <ProductGrid products={offers} emptyMessage="No offers available at the moment." />,
+    ...Object.fromEntries(
+      chips.map((chip) => [
+        chip.slug,
+        <ProductGrid
+          key={chip.slug}
+          products={offers.filter((p) => p.category === chip.slug)}
+          emptyMessage="No offers available in this category."
+        />,
+      ]),
+    ),
+  }
 
   return (
     <>
@@ -24,30 +49,14 @@ export default async function OffersPage() {
 
       <main className="min-h-screen bg-[#FFFFEC]">
         <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
-          <div className="mb-8 flex items-start justify-between">
-            <div>
-              <nav className="mb-3 text-sm text-gray-500">
-                <Link href="/" className="hover:text-blue-900">Home</Link>{' '}
-                <span className="mx-2">›</span> <span className="font-semibold">Offers</span>
-              </nav>
-              <h1 className="text-4xl font-bold md:text-5xl">
-                Special <span className="text-orange-500">Offers</span>
-              </h1>
-              <p className="mt-3 max-w-xl text-gray-600">
-                Grab amazing deals on our handpicked selection of products with huge discounts!
-              </p>
-            </div>
+          <nav className="mb-6 text-sm text-gray-500">
+            <Link href="/" className="hover:text-blue-900">Home</Link>{' '}
+            <span className="mx-2">›</span> <span className="font-semibold">Offers</span>
+          </nav>
 
-            <div className="hidden flex-col items-end md:flex">
-              <div className="flex gap-3">
-                <div className="rounded-full bg-red-500 px-4 py-2 font-bold text-white">{offers.length} Deals</div>
-                <div className="rounded-full bg-blue-900 px-4 py-2 font-bold text-white">Save up to {maxDiscount}%</div>
-              </div>
-              <p className="mt-3 text-sm text-gray-500">Limited time offers — shop now before they're gone!</p>
-            </div>
-          </div>
+          {banner?.image && <OfferBanner image={banner.image} />}
 
-          <ProductGrid products={offers} emptyMessage="No offers available at the moment." />
+          <OfferCategoryFilter chips={chips} groups={groups} />
         </div>
       </main>
 

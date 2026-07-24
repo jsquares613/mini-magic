@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
+import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
 import { str, int, bool } from '@/lib/admin/form'
 import type { TablesInsert } from '@/lib/supabase/database.types'
@@ -52,9 +53,13 @@ export async function updateCategory(id: string, formData: FormData) {
 export async function deleteCategory(id: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: category } = await supabase.from('categories').select('image, banner_image').eq('id', id).maybeSingle()
+
   const { error } = await supabase.from('categories').delete().eq('id', id)
   // FK on products is ON DELETE RESTRICT — surface a friendly message.
   if (error) throw new Error('Cannot delete: this category still has products. Reassign them first.')
+
+  await deleteStorageObjects([category?.image, category?.banner_image])
   revalidateStorefront()
   redirect('/admin/categories')
 }
@@ -63,9 +68,13 @@ export async function deleteCategory(id: string) {
 export async function updateCategoryImage(id: string, field: 'image' | 'banner_image', url: string | null) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: current } = await supabase.from('categories').select(field).eq('id', id).maybeSingle()
+
   const patch = field === 'image' ? { image: url } : { banner_image: url }
   const { error } = await supabase.from('categories').update(patch).eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjectIfChanged(current?.[field], url)
   revalidatePath(`/admin/categories/${id}`)
   revalidateStorefront()
 }

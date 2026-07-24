@@ -24,23 +24,35 @@ export default function SectionHeader({
   viewAllLabel = 'View All',
 }: SectionHeaderProps) {
   return (
-    <div className="mb-10 flex items-end justify-between gap-4">
+    <div className="mb-3 flex items-end justify-between gap-4 md:mb-10">
       <div>
-        <span className={`mb-3 block h-1.5 w-12 rounded-full bg-gradient-to-r ${accent}`} />
-        <h2 className="flex items-center gap-2.5 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+        <span className={`mb-3 hidden h-1.5 w-12 rounded-full bg-gradient-to-r md:block ${accent}`} />
+        <h2 className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-slate-900 md:gap-2.5 md:text-3xl md:font-extrabold lg:text-4xl">
           {emoji && <span aria-hidden="true">{emoji}</span>}
           {title}
         </h2>
       </div>
 
       {viewAllHref && (
-        <Link
-          href={viewAllHref}
-          className="group inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100 transition hover:bg-blue-700 hover:text-white hover:ring-blue-700"
-        >
-          {viewAllLabel}
-          <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
-        </Link>
+        <>
+          {/* Mobile: plain "View All →" link, matching the reference design */}
+          <Link
+            href={viewAllHref}
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-gray-500 md:hidden"
+          >
+            {viewAllLabel}
+            <span aria-hidden="true">→</span>
+          </Link>
+
+          {/* Desktop: pill button */}
+          <Link
+            href={viewAllHref}
+            className="group hidden shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100 transition hover:bg-blue-700 hover:text-white hover:ring-blue-700 md:inline-flex"
+          >
+            {viewAllLabel}
+            <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
+          </Link>
+        </>
       )}
     </div>
   )

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
+import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, bool } from '@/lib/admin/form'
 import type { Json } from '@/lib/supabase/database.types'
 import type { AboutGalleryItem } from '@/types'
@@ -17,21 +18,32 @@ function revalidateAbout() {
 export async function updateAboutContent(formData: FormData) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: current } = await supabase
+    .from('about_page')
+    .select('story_image, hero_image')
+    .eq('id', 1)
+    .maybeSingle()
+
+  const storyImage = str(formData, 'story_image')
+  const heroImage = str(formData, 'hero_image')
   const { error } = await supabase.from('about_page').upsert({
     id: 1,
     story: str(formData, 'story'),
     story_title: str(formData, 'story_title'),
-    story_image: str(formData, 'story_image'),
+    story_image: storyImage,
     mission: str(formData, 'mission'),
     vision: str(formData, 'vision'),
     values_text: str(formData, 'values_text'),
     hero_title: str(formData, 'hero_title'),
     hero_description: str(formData, 'hero_description'),
-    hero_image: str(formData, 'hero_image'),
+    hero_image: heroImage,
     seo_title: str(formData, 'seo_title'),
     seo_description: str(formData, 'seo_description'),
   })
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjectIfChanged(current?.story_image, storyImage)
+  await deleteStorageObjectIfChanged(current?.hero_image, heroImage)
   revalidateAbout()
 }
 
@@ -61,9 +73,11 @@ export async function removeGalleryItem(index: number) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
   const gallery = await readGallery(supabase)
-  gallery.splice(index, 1)
+  const [removed] = gallery.splice(index, 1)
   const { error } = await supabase.from('about_page').update({ gallery: gallery as unknown as Json }).eq('id', 1)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjects([removed?.image])
   revalidateAbout()
 }
 
@@ -115,8 +129,13 @@ export async function createTeamMember(formData: FormData) {
 export async function updateTeamMember(id: string, formData: FormData) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
-  const { error } = await supabase.from('team_members').update(parseTeamMember(formData)).eq('id', id)
+  const { data: current } = await supabase.from('team_members').select('image').eq('id', id).maybeSingle()
+
+  const payload = parseTeamMember(formData)
+  const { error } = await supabase.from('team_members').update(payload).eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjectIfChanged(current?.image, payload.image)
   revalidateAbout()
   redirect('/admin/about')
 }
@@ -124,8 +143,12 @@ export async function updateTeamMember(id: string, formData: FormData) {
 export async function deleteTeamMember(id: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: member } = await supabase.from('team_members').select('image').eq('id', id).maybeSingle()
+
   const { error } = await supabase.from('team_members').delete().eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjects([member?.image])
   revalidateAbout()
 }
 
@@ -161,8 +184,13 @@ export async function createTestimonial(formData: FormData) {
 export async function updateTestimonial(id: string, formData: FormData) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
-  const { error } = await supabase.from('testimonials').update(parseTestimonial(formData)).eq('id', id)
+  const { data: current } = await supabase.from('testimonials').select('image').eq('id', id).maybeSingle()
+
+  const payload = parseTestimonial(formData)
+  const { error } = await supabase.from('testimonials').update(payload).eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjectIfChanged(current?.image, payload.image)
   revalidateAbout()
   redirect('/admin/about')
 }
@@ -170,8 +198,12 @@ export async function updateTestimonial(id: string, formData: FormData) {
 export async function deleteTestimonial(id: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: testimonial } = await supabase.from('testimonials').select('image').eq('id', id).maybeSingle()
+
   const { error } = await supabase.from('testimonials').delete().eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjects([testimonial?.image])
   revalidateAbout()
 }
 

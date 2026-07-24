@@ -25,7 +25,7 @@ export default async function SettingsPage() {
           <h2 className="mb-1 font-bold text-gray-900">Footer Tagline</h2>
           <p className="mb-5 text-sm text-gray-500">
             The tagline shown below the brand name in the footer. Defaults to{' '}
-            <span className="italic text-gray-400">"{siteConfig.tagline}"</span> when left blank.
+            <span className="italic text-gray-400">&ldquo;{siteConfig.tagline}&rdquo;</span> when left blank.
           </p>
           <div className="space-y-4">
             <div>

@@ -80,7 +80,7 @@ export default async function EditProductPage({ params }: { params: { id: string
       <section className="mt-8 max-w-2xl rounded-2xl border border-gray-200 bg-white p-6">
         <h2 className="mb-1 font-bold text-gray-900">Related Products</h2>
         <p className="mb-4 text-sm text-gray-500">
-          Shown as "You may also like" on the product page. Leave empty to fall back to other products in the same category.
+          Shown as &ldquo;You may also like&rdquo; on the product page. Leave empty to fall back to other products in the same category.
         </p>
 
         <div className="mb-6 space-y-2">

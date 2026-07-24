@@ -10,6 +10,7 @@ PostgREST/Storage/Auth with the project's real service-role and anon keys, and a
 ## Bugs found and fixed
 
 ### 1. 🔴 Critical — Enquiries never reached the database
+
 **The single most important bug.** Every "Send Enquiry" CTA (product pages, play-area, contact —
 the entire lead-generation purpose of the site) posted to `/api/enquiries`, which only
 `console.log`'d the payload and returned success. The `enquiries` table had **zero real rows**
@@ -33,6 +34,7 @@ to ever show.
 - **Files modified:** `app/api/enquiries/route.ts`, `components/EnquiryButton.tsx` (stale comment).
 
 ### 2. 🔴 High — `next/image` crashes on every Supabase Storage URL
+
 Exactly the example bug class named in the brief. `next.config.js` had no `images` config, so
 the moment any admin uploaded a hero/category/product/banner image, the page rendering it would
 throw `Invalid src prop ... hostname "<ref>.supabase.co" is not configured`.
@@ -48,12 +50,13 @@ throw `Invalid src prop ... hostname "<ref>.supabase.co" is not configured`.
   `200, 87710 bytes, image/jpeg`.
 
 ### 3. 🔴 High — `next/image` rejects every bundled (and most uploadable) SVG
+
 A second, distinct bug in the same code path. Next.js's image optimizer sniffs magic bytes via
 its own `detectContentType()` and **only recognizes SVG if the file starts with the literal
 `<?xml` declaration**. Every bundled hero SVG in this project starts directly with `<svg ...>`
 (perfectly valid SVG per spec — the XML prolog is optional), so the sniffer falls through every
-format check, returns no match, and the optimizer 400s with *"The requested resource isn't a
-valid image"* — **before** the `dangerouslyAllowSVG` check is even reached, so that flag alone
+format check, returns no match, and the optimizer 400s with _"The requested resource isn't a
+valid image"_ — **before** the `dangerouslyAllowSVG` check is even reached, so that flag alone
 cannot fix it. Every upload input (`accept="image/*"`) also permits SVG, so any admin-uploaded
 SVG logo/banner would hit the identical wall unless its export tool happened to include the XML
 prolog — not something an admin can control.
@@ -75,6 +78,7 @@ prolog — not something an admin can control.
   rendering correctly, confirmed via direct fetch of that exact URL (`200`).
 
 ### 4. 🟡 Test-methodology correction (not a product bug) — almost reported a false "privilege escalation"
+
 While testing role permissions by execution, a PATCH from an `editor`/`viewer` test session
 attempting to set their own `role` to `'admin'` returned `204` — which looks like a successful
 privilege escalation. **Verified against the actual database with the service-role key (ground
@@ -85,6 +89,7 @@ of result that looks alarming at a glance; the fix was re-testing with a request
 true row count rather than trusting the status code alone.
 
 ### 5. 🔴 Critical — Product images never appeared on any list view (cards, rails, related products, offers, category pages)
+
 A real, separate session traced this end-to-end per an explicit follow-up investigation. The
 database, storage, and upload flow were all confirmed correct — the bug was entirely in the data
 layer's list-mapping function.
@@ -113,6 +118,7 @@ layer's list-mapping function.
   confirmed before cleanup.
 
 ### 6. 🟠 Medium — Listing pages had no ISR fallback, found while verifying bug #5
+
 Discovered as a side effect of testing #5: a product inserted directly into the database (bypassing
 the app's own `revalidatePath()` calls) never appeared on `/`, `/offers`, `/products`, or
 `/categories` — **even after a full dev-server process restart** — while `/categories/[slug]` and
@@ -150,8 +156,8 @@ scripts, future integrations). Added `export const revalidate = 60` to
   activity already performed this session (hero slides 2→3, featured products 2→3, promotional
   banners 2→3 — proving Homepage admin CRUD genuinely persists).
 - **Navigation:** every static `href` cross-checked against the actual `app/**/page.tsx` file
-  tree; every dynamic `href={\`...\`}` template checked against its target dynamic route. Zero
-  dead links. No placeholder `onClick`/`href="#"` found anywhere.
+  tree; every dynamic `href={\`...\`}`template checked against its target dynamic route. Zero
+dead links. No placeholder`onClick`/`href="#"` found anywhere.
 - **Storefront pages:** `/`, `/products`, `/products/[slug]` (×2 real slugs),
   `/categories`, `/categories/[slug]` (×2), `/offers`, `/play-area`, `/contact`, `/search`
   (bare + query), `/policies`, `/about` — all `200`, live, post-fix.
@@ -182,6 +188,7 @@ npx next build     → exit 0, 23/23 pages generated, 0 errors (1 pre-existing, 
                       fine, no runtime failure observed; ESLint not installed, build skips it
                       gracefully — both noted in prior sessions, unrelated to this pass)
 ```
+
 Build ran in an isolated junction-copy (`C:\mm-build-verify`, cleaned up afterward) against the
 **live** Supabase project, with the user's own `npm run dev` left untouched throughout.
 
@@ -189,22 +196,22 @@ Build ran in an isolated junction-copy (`C:\mm-build-verify`, cleaned up afterwa
 
 ## Files changed this session
 
-| File | Change |
-|---|---|
-| `app/api/enquiries/route.ts` | **Critical fix** — actually persists to `enquiries` via the repository |
-| `next.config.js` | Added `images.remotePatterns` (Supabase host) + SVG allowlist config |
-| `components/SafeImage.tsx` | **New** — `next/image` wrapper that bypasses the SVG sniffing bug |
-| `components/Hero.tsx` | Use `SafeImage` instead of `next/image` |
-| `components/ProductCard.tsx` | Use `SafeImage` instead of `next/image` |
-| `app/products/[slug]/page.tsx` | Use `SafeImage` instead of `next/image` |
-| `app/play-area/page.tsx` | Use `SafeImage` instead of `next/image` |
-| `components/EnquiryButton.tsx` | Corrected stale "stub" comment |
-| `lib/supabase/repositories/products.ts` | **New** `getImagesByProductIds()` — batched image fetch |
-| `lib/products.ts` | **Critical fix** — `toProduct`/`toProducts` no longer hardcode `images: []`; `getProductsByCategory` and `getProductBySlug` now route images through the same path |
-| `app/page.tsx` | Added `export const revalidate = 60` (ISR fallback) |
-| `app/offers/page.tsx` | Added `export const revalidate = 60` |
-| `app/products/page.tsx` | Added `export const revalidate = 60` |
-| `app/categories/page.tsx` | Added `export const revalidate = 60` |
+| File                                    | Change                                                                                                                                                             |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app/api/enquiries/route.ts`            | **Critical fix** — actually persists to `enquiries` via the repository                                                                                             |
+| `next.config.js`                        | Added `images.remotePatterns` (Supabase host) + SVG allowlist config                                                                                               |
+| `components/SafeImage.tsx`              | **New** — `next/image` wrapper that bypasses the SVG sniffing bug                                                                                                  |
+| `components/Hero.tsx`                   | Use `SafeImage` instead of `next/image`                                                                                                                            |
+| `components/ProductCard.tsx`            | Use `SafeImage` instead of `next/image`                                                                                                                            |
+| `app/products/[slug]/page.tsx`          | Use `SafeImage` instead of `next/image`                                                                                                                            |
+| `app/play-area/page.tsx`                | Use `SafeImage` instead of `next/image`                                                                                                                            |
+| `components/EnquiryButton.tsx`          | Corrected stale "stub" comment                                                                                                                                     |
+| `lib/supabase/repositories/products.ts` | **New** `getImagesByProductIds()` — batched image fetch                                                                                                            |
+| `lib/products.ts`                       | **Critical fix** — `toProduct`/`toProducts` no longer hardcode `images: []`; `getProductsByCategory` and `getProductBySlug` now route images through the same path |
+| `app/page.tsx`                          | Added `export const revalidate = 60` (ISR fallback)                                                                                                                |
+| `app/offers/page.tsx`                   | Added `export const revalidate = 60`                                                                                                                               |
+| `app/products/page.tsx`                 | Added `export const revalidate = 60`                                                                                                                               |
+| `app/categories/page.tsx`               | Added `export const revalidate = 60`                                                                                                                               |
 
 No RLS or schema changes were needed in either pass — the gaps were in wiring (route handler,
 data-layer mapping) and framework/caching configuration, not the database design.
@@ -223,14 +230,14 @@ Not bug fixes — content/UI adjustments made this session, still uncommitted at
   opens a pre-filled `wa.me` chat with the product name.
 - **Removed — Testimonials feature:** storefront section and `getTestimonials()` in
   [app/about/page.tsx](app/about/page.tsx) / [lib/about.ts](lib/about.ts); full admin CRUD block in
-  [app/admin/(protected)/about/page.tsx](app/admin/(protected)/about/page.tsx).
+  [app/admin/(protected)/about/page.tsx](<app/admin/(protected)/about/page.tsx>).
 - **Removed — "Plan Your Visit" section** and its `getPlayVisitInfo()` data function from
   [app/play-area/page.tsx](app/play-area/page.tsx) / [lib/playArea.ts](lib/playArea.ts).
 - **Removed — Timings & Pricing** fields from the Play Area admin form and
-  `updatePlayAreaSettings` action ([app/admin/(protected)/play-area/page.tsx](app/admin/(protected)/play-area/page.tsx),
+  `updatePlayAreaSettings` action ([app/admin/(protected)/play-area/page.tsx](<app/admin/(protected)/play-area/page.tsx>),
   `actions.ts`).
 - **Removed:** breadcrumb nav block and feature-card emoji icons on the Play Area page; emoji
-  icons on About page's "Our Values"/"Why Choose" cards; hero badges (`✨ Our Story`,
+  icons on About page's "Our Values"/"Why Choose" cards; hero badges (`Our Story`,
   `🎠 Minimagic Play Area`); Icon field from [components/admin/FeatureForm.tsx](components/admin/FeatureForm.tsx);
   the "X Products" count badge on [app/categories/page.tsx](app/categories/page.tsx).
 - **Layout/style tweaks:**

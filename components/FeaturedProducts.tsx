@@ -13,7 +13,7 @@ export default async function FeaturedProducts({ limit = 4 }: { limit?: number }
   if (products.length === 0) return null
 
   return (
-    <section className="bg-white px-4 py-6 md:px-8 md:py-8">
+    <section className="px-4 py-4 md:px-8 md:py-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeader
           title="Featured"
@@ -21,7 +21,15 @@ export default async function FeaturedProducts({ limit = 4 }: { limit?: number }
           viewAllHref="/products"
         />
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+        {/* Mobile: 3 products in a single row */}
+        <div className="grid grid-cols-3 gap-2 md:hidden">
+          {products.slice(0, 3).map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+
+        {/* Desktop */}
+        <div className="hidden md:grid md:grid-cols-4 md:gap-8">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

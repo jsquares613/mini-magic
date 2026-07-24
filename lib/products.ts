@@ -121,3 +121,8 @@ export async function getRelatedProducts(slug: string, limit = 4): Promise<Produ
 export async function getAllProductSlugs(): Promise<string[]> {
   return repositories.products.getAllProductSlugs()
 }
+
+/** Products saved to a device's wishlist, most recently added first. */
+export async function getWishlistProducts(deviceId: string): Promise<Product[]> {
+  return toProducts(await repositories.wishlist.getWishlistProductRows(deviceId))
+}

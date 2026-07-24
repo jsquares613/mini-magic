@@ -1,14 +1,14 @@
 import Link from 'next/link'
 import { siteConfig } from '@/config/site'
 import SearchBar from '@/components/SearchBar'
-import MobileNav from '@/components/MobileNav'
+import WishlistHeaderIcon from '@/components/WishlistHeaderIcon'
 import { getAnnouncements, getHeaderNav } from '@/lib/settings'
 
 /**
  * Header — an `async` Server Component. Nav links and the announcement
  * marquee are admin-editable data (Phase 3); logo/site name stay brand-level
- * static config. Mobile menu interactivity lives in the `MobileNav` client
- * island so this component itself ships zero client JS.
+ * static config. On mobile, navigation lives in the fixed `BottomNav` tab bar
+ * instead of a hamburger menu, matching the reference design.
  */
 export default async function Header() {
   const [navLinks, announcements] = await Promise.all([getHeaderNav(), getAnnouncements()])
@@ -16,8 +16,8 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Top Banner */}
-      <div className="overflow-hidden bg-[#FFB800] px-4 py-2 text-sm">
+      {/* Top Banner — desktop only; the mobile reference design has no marquee */}
+      <div className="hidden overflow-hidden bg-primary px-4 py-2 text-sm md:block">
         <div className="marquee">
           <div className="marquee-content">
             {Array(8).fill(null).flatMap(() => marqueeMessages).map((msg, i) => (
@@ -29,11 +29,27 @@ export default async function Header() {
         </div>
       </div>
 
-      {/* Main Header */}
-      <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+      {/* Mobile banner: logo + tagline, wishlist icon, no cart */}
+      <div className="bg-gradient-to-b from-primary to-yellow-200 px-4 pb-3 pt-3 md:hidden">
+        <div className="mb-3 flex items-start justify-between">
+          <Link href="/">
+            {/* Logo is a static SVG; next/image can't optimize SVGs (see SafeImage). */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={siteConfig.logo} alt={`${siteConfig.name} Logo`} className="h-8 w-auto" />
+            <p className="mt-0.5 text-[10px] font-medium text-blue-900/80">{siteConfig.tagline}</p>
+          </Link>
+          <WishlistHeaderIcon />
+        </div>
+        <SearchBar size="lg" />
+      </div>
+
+      {/* Main Header (desktop) */}
+      <nav className="relative mx-auto hidden max-w-7xl items-center justify-between px-4 py-4 md:flex">
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/">
+            {/* Logo is a static SVG; next/image can't optimize SVGs (see SafeImage). */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={siteConfig.logo} alt={`${siteConfig.name} Logo`} className="h-10 w-auto" />
           </Link>
         </div>
@@ -47,13 +63,11 @@ export default async function Header() {
           ))}
         </div>
 
-        {/* Search (desktop) */}
-        <div className="hidden flex-1 justify-end md:flex">
+        {/* Search + wishlist (desktop) */}
+        <div className="hidden flex-1 items-center justify-end gap-6 md:flex">
           <SearchBar className="w-64" />
+          <WishlistHeaderIcon />
         </div>
-
-        {/* Mobile menu (interactive island) */}
-        <MobileNav navLinks={navLinks} />
       </nav>
     </header>
   )

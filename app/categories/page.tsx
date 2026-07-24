@@ -1,63 +1,64 @@
+import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import ProductGrid from '@/components/ProductGrid'
-import CategoryFilter from '@/components/CategoryFilter'
-import Link from 'next/link'
-import { getAllProducts } from '@/lib/products'
+import Hero from '@/components/Hero'
+import SafeImage from '@/components/SafeImage'
 import { getAllCategories } from '@/lib/categories'
+import { getHomeHeroSlides } from '@/lib/homepage'
 
 // ISR — see app/page.tsx for why this is needed (no dynamic function on this
 // page means Next.js would otherwise cache the rendered HTML indefinitely).
 export const revalidate = 60
 
 export default async function CategoriesPage() {
-  const [categories, allProducts] = await Promise.all([getAllCategories(), getAllProducts()])
-
-  // Pre-render one grid per category server-side; the client filter just
-  // swaps which already-rendered grid is visible (see CategoryFilter).
-  const groups: Record<string, React.ReactNode> = {
-    all: <ProductGrid products={allProducts} />,
-  }
-  for (const category of categories) {
-    groups[category.slug] = (
-      <ProductGrid products={allProducts.filter((p) => p.category === category.slug)} />
-    )
-  }
+  const [categories, heroSlides] = await Promise.all([getAllCategories(), getHomeHeroSlides()])
 
   return (
     <>
       <Header />
 
-      <main className="min-h-screen bg-[#FFFFEC]">
-        <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
-          <div className="mb-6 flex items-start justify-between">
-            <div>
-              <nav className="mb-3 text-sm text-gray-500">
-                <Link href="/" className="hover:text-blue-900">Home</Link>{' '}
-                <span className="mx-2">›</span> <span className="font-semibold">Categories</span>
-              </nav>
-              <h1 className="text-4xl font-bold md:text-5xl">
-                Explore Our <span className="text-orange-500">Collection</span>
-              </h1>
-              <p className="mt-3 max-w-xl text-gray-600">
-                Browse toys, accessories and everyday essentials for kids and families.
-              </p>
-            </div>
+      <main className="min-h-screen bg-[#FFFFEC] pb-6 md:pb-0">
+        <div className="mx-auto max-w-7xl px-4 py-4 md:py-12">
+          <nav className="mb-3 hidden text-sm text-gray-500 md:block">
+            <Link href="/" className="hover:text-blue-900">Home</Link>{' '}
+            <span className="mx-2">›</span> <span className="font-semibold">Categories</span>
+          </nav>
 
-            <div className="hidden flex-col items-end md:flex">
-              <div className="flex gap-3">
-                <div className="rounded-full bg-blue-900 px-4 py-2 font-bold text-white">
-                  {categories.length} Categories
+          <h1 className="mb-4 flex items-center gap-2 text-xl font-bold text-gray-900 md:mb-8 md:text-4xl">
+            Categories
+            <span aria-hidden="true"></span>
+          </h1>
+
+          <div className="grid grid-cols-5 gap-x-2 gap-y-4 sm:grid-cols-6 md:grid-cols-8 md:gap-x-6 md:gap-y-8 lg:grid-cols-10">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/categories/${category.slug}`}
+                className="group flex flex-col items-center gap-1.5"
+              >
+                <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                  {category.image ? (
+                    <SafeImage
+                      src={category.image}
+                      alt={category.name}
+                      sizes="(max-width: 768px) 18vw, 10vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className={`flex h-full w-full items-center justify-center ${category.color}`}>
+                      <span className="text-2xl md:text-4xl">{category.emoji}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
+                <p className="line-clamp-2 text-center text-[10px] font-semibold leading-tight text-blue-900 md:text-sm">
+                  {category.name}
+                </p>
+              </Link>
+            ))}
           </div>
-
-          <CategoryFilter
-            chips={categories.map((c) => ({ slug: c.slug, label: c.name }))}
-            groups={groups}
-          />
         </div>
+
+        <Hero slides={heroSlides} />
       </main>
 
       <Footer />

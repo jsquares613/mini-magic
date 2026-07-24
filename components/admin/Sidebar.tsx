@@ -13,6 +13,7 @@ const NAV = [
   { label: 'Products', href: '/admin/products', icon: '🧸' },
   { label: 'Categories', href: '/admin/categories', icon: '🗂️' },
   { label: 'Homepage', href: '/admin/homepage', icon: '🏠' },
+  { label: 'Offers', href: '/admin/offers', icon: '🏷️' },
   { label: 'Play Area', href: '/admin/play-area', icon: '🎪' },
   { label: 'About Us', href: '/admin/about', icon: 'ℹ️' },
   { label: 'Enquiries', href: '/admin/enquiries', icon: '📨' },

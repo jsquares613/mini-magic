@@ -270,6 +270,22 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['promotional_banners']['Insert']>
         Relationships: []
       }
+      offer_banner: {
+        Row: {
+          id: number
+          image: string | null
+          active: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          image?: string | null
+          active?: boolean
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['offer_banner']['Insert']>
+        Relationships: []
+      }
       play_area: {
         Row: {
           id: number
@@ -544,6 +560,22 @@ export interface Database {
           created_at?: string
         }
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>
+        Relationships: []
+      }
+      wishlist_items: {
+        Row: {
+          id: string
+          device_id: string
+          product_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          device_id: string
+          product_id: string
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['wishlist_items']['Insert']>
         Relationships: []
       }
       enquiries: {

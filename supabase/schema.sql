@@ -185,6 +185,14 @@ create table promotional_banners (
   display_order int not null default 0
 );
 
+-- Offers page hero banner. Singleton row, image-only (no overlay text).
+create table offer_banner (
+  id            int primary key default 1 check (id = 1),
+  image         text,
+  active        boolean not null default true,
+  updated_at    timestamptz not null default now()
+);
+
 -- =============================================================================
 -- 4. PLAY AREA TABLES
 -- =============================================================================
@@ -407,6 +415,18 @@ create table audit_log (
 );
 create index audit_log_table_idx on audit_log (table_name, created_at desc);
 
+-- Anonymous, device-scoped wishlist. No customer auth exists on the
+-- storefront, so shoppers are identified by an opaque client-generated
+-- device_id (cookie-persisted uuid) instead of auth.uid().
+create table wishlist_items (
+  id         uuid primary key default gen_random_uuid(),
+  device_id  uuid not null,
+  product_id uuid not null references products(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (device_id, product_id)
+);
+create index wishlist_items_device_idx on wishlist_items (device_id);
+
 -- =============================================================================
 -- 8. FUNCTIONS + TRIGGERS
 -- =============================================================================
@@ -427,6 +447,7 @@ create trigger t_about_touch       before update on about_page           for eac
 create trigger t_contact_touch     before update on contact_information  for each row execute function touch_updated_at();
 create trigger t_seo_pages_touch   before update on seo_pages            for each row execute function touch_updated_at();
 create trigger t_enquiries_touch   before update on enquiries            for each row execute function touch_updated_at();
+create trigger t_offer_banner_touch before update on offer_banner        for each row execute function touch_updated_at();
 
 -- Auto-create a profile row for every new auth user (default role: viewer).
 -- Promote the first admin manually after signing up, e.g.:
@@ -481,7 +502,7 @@ begin
     'homepage_featured_products','promotional_banners','play_area','play_area_gallery',
     'play_area_features','about_page','about_statistics',
     'team_members','testimonials','contact_information','business_hours',
-    'navigation_links','social_links','site_settings','seo_pages','redirects'
+    'navigation_links','social_links','site_settings','seo_pages','redirects','offer_banner'
   ]
   loop
     execute format('alter table %I enable row level security;', t);
@@ -507,6 +528,13 @@ create policy "enquiry_notes_staff_all" on enquiry_notes
 alter table audit_log enable row level security;
 create policy "audit_log_staff_all" on audit_log
   for all to authenticated using (is_staff()) with check (is_staff());
+
+-- Wishlist: anonymous, device-scoped — no auth.uid() to scope by, so access
+-- is open to anon/authenticated and every query filters by device_id at the
+-- application layer (same trust level already extended to public catalogue reads).
+alter table wishlist_items enable row level security;
+create policy "wishlist_items_anon_all" on wishlist_items
+  for all to anon, authenticated using (true) with check (true);
 
 -- Profiles: a user can read their own row; admins manage all roles.
 alter table profiles enable row level security;

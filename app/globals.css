@@ -14,7 +14,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #FFFFFF;
+  background-color: #FBECA6;
 }
 
 html {
@@ -52,6 +52,16 @@ html {
 
 .marquee-content:hover {
   animation-play-state: paused;
+}
+
+/* Horizontally scrollable rows (e.g. category chips) with no visible scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* StarBorder animated edge effect */

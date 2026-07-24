@@ -82,7 +82,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
   if (count === 0) return null
 
   return (
-    <section className={`bg-white py-6 px-4 md:py-8 md:px-6 ${className}`}>
+    <section className={`py-4 px-4 md:py-8 md:px-6 ${className}`}>
       <div className="max-w-7xl mx-auto">
         {/*
           The slides are stacked in a single CSS grid cell (every slide uses
@@ -94,7 +94,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
         <div
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="relative grid overflow-hidden rounded-2xl bg-[#FFF7D0]"
+          className="relative grid overflow-hidden rounded-2xl bg-primary"
           role="region"
           aria-roledescription="carousel"
           aria-label="Featured highlights"
@@ -109,71 +109,68 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                 aria-roledescription="slide"
                 aria-label={`${index + 1} of ${count}`}
                 aria-hidden={!active}
-                className={`col-start-1 row-start-1 relative flex items-center min-h-[360px] md:min-h-[440px] transition-opacity duration-700 ease-in-out ${
+                className={`col-start-1 row-start-1 relative flex min-h-[190px] flex-col justify-center p-4 md:min-h-[440px] md:p-10 transition-opacity duration-700 ease-in-out ${
                   active ? 'opacity-100' : 'pointer-events-none opacity-0'
                 }`}
               >
-                {/* Decorative banner artwork — object-cover keeps the aspect ratio
-                    (never stretches/distorts), it only crops. */}
-                <SafeImage
-                  src={slide.image}
-                  alt={slide.imageAlt}
-                  priority={index === 0}
-                  sizes="(max-width: 1280px) 100vw, 1280px"
-                  className="object-cover object-center"
-                />
+                {/* Artwork — full-bleed background behind the text, on both mobile and desktop. */}
+                <div className="absolute inset-0">
+                  <SafeImage
+                    src={slide.image}
+                    alt={slide.imageAlt}
+                    priority={index === 0}
+                    sizes="(max-width: 768px) 100vw, 1280px"
+                    className="object-cover object-center"
+                  />
+                </div>
 
-                {/* Readability scrim so copy stays legible over any crop. */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFF7D0]/90 via-[#FFF7D0]/50 to-transparent md:from-[#FFF7D0]/75 md:via-[#FFF7D0]/10" />
+                {/* Readability scrim, where text sits on top of the cropped image. */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/75 via-primary/10" />
 
-                {/* Content layer */}
-                <div className="relative z-10 grid w-full grid-cols-1 items-center gap-6 p-6 md:grid-cols-2 md:p-10">
-                  <div>
-                    {slide.badge && (
-                      <div className="mb-6 inline-block rounded-full bg-blue-100 px-4 py-2 font-semibold text-blue-600">
-                        {slide.badge}
+                {/* Text column */}
+                <div className="relative z-10 flex w-[30%] flex-col justify-center md:w-1/2">
+                  {slide.badge && (
+                    <p className="mb-1 text-[7px] font-bold uppercase tracking-wide text-blue-900/80 md:mb-6 md:text-sm">
+                      {slide.badge}
+                    </p>
+                  )}
+
+                  <h1 className="mb-1 text-xs font-extrabold leading-tight md:mb-4 md:text-5xl">
+                    <RichText segments={slide.title} />
+                  </h1>
+
+                  <p className="mb-2 max-w-md text-[8px] text-gray-700 md:mb-6 md:text-base">
+                    <RichText segments={slide.description} />
+                  </p>
+
+                  <div className="flex flex-wrap items-start gap-1 md:gap-6">
+                    {slide.ctaLabel &&
+                      (slide.ctaHref ? (
+                        <Link
+                          href={slide.ctaHref}
+                          className="inline-flex transform items-center gap-1 rounded-full bg-blue-900 px-2 py-1 text-[8px] font-bold text-white transition hover:scale-105 hover:bg-blue-800 md:px-6 md:py-3 md:text-base"
+                        >
+                          {slide.ctaLabel}
+                          <span aria-hidden="true">→</span>
+                        </Link>
+                      ) : (
+                        <button className="inline-flex transform items-center gap-1 rounded-full bg-blue-900 px-2 py-1 text-[8px] font-bold text-white transition hover:scale-105 hover:bg-blue-800 md:px-6 md:py-3 md:text-base">
+                          {slide.ctaLabel}
+                          <span aria-hidden="true">→</span>
+                        </button>
+                      ))}
+
+                    {highlights.length > 0 && (
+                      <div className="flex flex-col gap-1 md:gap-3">
+                        {highlights.map((h, i) => (
+                          <div key={i} className="flex items-center gap-1 md:gap-2">
+                            <span className="text-xs md:text-2xl">{h.icon}</span>
+                            <span className="text-[8px] font-medium text-gray-700 md:text-sm">{h.label}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
-
-                    <h1 className="mb-4 text-4xl font-bold leading-tight md:text-5xl">
-                      <RichText segments={slide.title} />
-                    </h1>
-
-                    <p className="mb-6 max-w-md text-base text-gray-700">
-                      <RichText segments={slide.description} />
-                    </p>
-
-                    <div className="flex flex-wrap items-start gap-6">
-                      {slide.ctaLabel &&
-                        (slide.ctaHref ? (
-                          <Link
-                            href={slide.ctaHref}
-                            className="inline-flex transform items-center gap-2 rounded-full bg-yellow-500 px-6 py-3 font-bold text-white transition hover:scale-105 hover:bg-yellow-600"
-                          >
-                            {slide.ctaLabel}
-                          </Link>
-                        ) : (
-                          <button className="inline-flex transform items-center gap-2 rounded-full bg-yellow-500 px-6 py-3 font-bold text-white transition hover:scale-105 hover:bg-yellow-600">
-                            {slide.ctaLabel}
-                          </button>
-                        ))}
-
-                      {highlights.length > 0 && (
-                        <div className="flex flex-col gap-3">
-                          {highlights.map((h, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <span className="text-2xl">{h.icon}</span>
-                              <span className="text-sm font-medium text-gray-700">{h.label}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
                   </div>
-
-                  {/* Right column is intentionally empty — the artwork's
-                      illustration shows through here on md+ screens. */}
-                  <div className="hidden md:block" aria-hidden="true" />
                 </div>
               </div>
             )
@@ -201,8 +198,8 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                 </svg>
               </button>
 
-              {/* Dots */}
-              <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+              {/* Dots (desktop) — overlaid on the image, matching the original full-bleed treatment */}
+              <div className="absolute bottom-4 left-1/2 z-20 hidden -translate-x-1/2 gap-2 md:flex">
                 {slides.map((_, idx) => (
                   <button
                     key={idx}
@@ -218,6 +215,23 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
             </>
           )}
         </div>
+
+        {/* Dots (mobile) — sit below the card on the page background, matching the reference */}
+        {count > 1 && (
+          <div className="mt-3 flex justify-center gap-1.5 md:hidden">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goTo(idx)}
+                aria-label={`Go to slide ${idx + 1}`}
+                aria-current={current === idx}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  current === idx ? 'w-4 bg-blue-900' : 'w-1.5 bg-blue-900/25'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

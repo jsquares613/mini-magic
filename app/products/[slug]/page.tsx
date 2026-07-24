@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ProductGrid from '@/components/ProductGrid'
 import EnquiryButton from '@/components/EnquiryButton'
+import WishlistButton from '@/components/WishlistButton'
 import SafeImage from '@/components/SafeImage'
 import { getProductBySlug, getRelatedProducts, withPricing } from '@/lib/products'
 import { getCategoryBySlug, getCategoryName } from '@/lib/categories'
@@ -149,12 +150,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {/* Send Enquiry CTA */}
               <div className="flex flex-wrap gap-3">
                 <EnquiryButton subject={product.name} source="product" productSlug={product.slug} />
-                <Link
-                  href={`/categories/${product.category}`}
-                  className="inline-flex items-center justify-center rounded-full border-2 border-blue-900 px-8 py-3 font-bold text-blue-900 transition hover:bg-blue-900 hover:text-white"
-                >
-                  More from {categoryName}
-                </Link>
+                <WishlistButton productId={product.id} productSlug={product.slug} productName={product.name} variant="button" />
               </div>
             </div>
           </div>

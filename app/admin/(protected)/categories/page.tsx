@@ -5,7 +5,7 @@ export default async function AdminCategoriesPage() {
   const supabase = createServerSupabase()
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, name, slug, emoji, featured, display_order')
+    .select('id, name, slug, emoji, image, featured, display_order')
     .order('display_order', { ascending: true })
 
   // product counts per category
@@ -30,6 +30,7 @@ export default async function AdminCategoriesPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-400">
             <tr>
+              <th className="px-6 py-3 font-medium"></th>
               <th className="px-6 py-3 font-medium">Category</th>
               <th className="px-6 py-3 font-medium">Slug</th>
               <th className="px-6 py-3 font-medium">Products</th>
@@ -41,10 +42,15 @@ export default async function AdminCategoriesPage() {
           <tbody>
             {(categories ?? []).map((c) => (
               <tr key={c.id} className="border-t border-gray-50 hover:bg-gray-50">
-                <td className="px-6 py-3 font-medium text-gray-900">
-                  <span className="mr-2">{c.emoji}</span>
-                  {c.name}
+                <td className="px-6 py-3">
+                  {c.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.image} alt="" className="h-9 w-9 rounded-lg object-cover" />
+                  ) : (
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 text-lg">{c.emoji}</span>
+                  )}
                 </td>
+                <td className="px-6 py-3 font-medium text-gray-900">{c.name}</td>
                 <td className="px-6 py-3 text-gray-500">{c.slug}</td>
                 <td className="px-6 py-3 text-gray-700">{counts.get(c.id) ?? 0}</td>
                 <td className="px-6 py-3">{c.featured ? '⭐' : '—'}</td>
@@ -58,7 +64,7 @@ export default async function AdminCategoriesPage() {
             ))}
             {(!categories || categories.length === 0) && (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
                   No categories yet.
                 </td>
               </tr>

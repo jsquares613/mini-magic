@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
+import { deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
 import type { TablesInsert } from '@/lib/supabase/database.types'
 
@@ -102,8 +103,12 @@ export async function updateProduct(id: string, formData: FormData) {
 export async function deleteProduct(id: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: images } = await supabase.from('product_images').select('image_url').eq('product_id', id)
+
   const { error } = await supabase.from('products').delete().eq('id', id)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjects((images ?? []).map((i) => i.image_url))
   revalidateStorefront()
   redirect('/admin/products')
 }
@@ -134,8 +139,12 @@ export async function addProductImage(productId: string, imageUrl: string, altTe
 export async function deleteProductImage(imageId: string, productId: string) {
   await requireStaff('editor')
   const supabase = createServerSupabase()
+  const { data: image } = await supabase.from('product_images').select('image_url').eq('id', imageId).maybeSingle()
+
   const { error } = await supabase.from('product_images').delete().eq('id', imageId)
   if (error) throw new Error(error.message)
+
+  await deleteStorageObjects([image?.image_url])
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }

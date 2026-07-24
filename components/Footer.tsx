@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { siteConfig } from '@/config/site'
-import { getAllCategories } from '@/lib/categories'
 import { getContactInfo, getFooterQuickLinks, getFooterText } from '@/lib/settings'
 
 /**
@@ -11,17 +10,17 @@ import { getContactInfo, getFooterQuickLinks, getFooterText } from '@/lib/settin
  * those yet (see docs/ARCHITECTURE.md scope notes).
  */
 export default async function Footer() {
-  const [categories, quickLinks, contact, footerText] = await Promise.all([
-    getAllCategories(),
+  const [quickLinks, contact, footerText] = await Promise.all([
     getFooterQuickLinks(),
     getContactInfo(),
     getFooterText(),
   ])
 
   return (
-    <footer className="bg-blue-900 px-4 py-6 text-white md:px-8 md:py-8">
+    <footer className="hidden text-white md:block">
+      <div className="bg-blue-900 px-4 py-6 md:px-8 md:py-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+        <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
           {/* Brand — full width on mobile */}
           <div className="col-span-2 md:col-span-1">
             <div className="mb-2">
@@ -44,23 +43,6 @@ export default async function Footer() {
                 </a>
               ))}
             </div>
-          </div>
-
-          {/* Categories */}
-          <div>
-            <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-blue-200">Categories</h4>
-            <ul className="space-y-1 text-xs text-blue-100">
-              <li>
-                <Link href="/play-area" className="transition hover:text-white">Play Area</Link>
-              </li>
-              {categories.map((category) => (
-                <li key={category.id}>
-                  <Link href={`/categories/${category.slug}`} className="transition hover:text-white">
-                    {category.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Quick Links */}
@@ -114,6 +96,7 @@ export default async function Footer() {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </footer>
   )
