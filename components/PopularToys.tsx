@@ -10,7 +10,7 @@ export default async function PopularToys({ limit = 3 }: { limit?: number }) {
   const products = await getPopularProducts(limit)
 
   return (
-    <section className="px-4 py-4 md:px-8 md:py-8">
+    <section className="px-4 py-2 md:px-8 md:py-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeader
           title="Most Popular"

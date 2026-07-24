@@ -45,15 +45,15 @@ export default async function PlayAreaPage() {
         <Hero slides={heroSlides} />
 
         {/* CTA */}
-        <section className="px-4 py-16 md:px-8">
+        <section className="px-4 py-8 md:px-8 md:py-16">
           <div className="mx-auto max-w-7xl">
-            <div className="rounded-3xl bg-blue-900 px-6 py-14 text-center text-white md:px-12">
-              <h2 className="mb-4 text-3xl font-bold md:text-4xl">Ready for a Day of Magic?</h2>
-              <p className="mx-auto mb-8 max-w-2xl text-blue-100">
-                Bring the kids down for hours of safe, supervised fun — or book the whole zone for an unforgettable birthday party.
+            <div className="rounded-3xl bg-blue-900 px-6 py-8 text-center text-white md:px-12 md:py-14">
+              <h2 className="mb-3 text-2xl font-bold md:mb-4 md:text-4xl">Ready for a Day of Magic?</h2>
+              <p className="mx-auto mb-5 max-w-2xl text-blue-100 md:mb-8">
+                Bring the kids down for hours of safe, supervised fun - or book the whole zone for an unforgettable birthday party.
               </p>
 
-              <div className="mx-auto mb-8 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="mx-auto mb-5 grid max-w-2xl grid-cols-3 gap-3 md:mb-8 md:gap-4">
                 {[
                   { price: '₹29', duration: '20 min' },
                   { price: '₹49', duration: '40 min' },
@@ -61,7 +61,7 @@ export default async function PlayAreaPage() {
                 ].map((tier) => (
                   <div
                     key={tier.duration}
-                    className="rounded-2xl border border-white/20 bg-white/10 px-4 py-5"
+                    className="rounded-2xl border border-white/20 bg-white/10 px-3 py-3 md:px-4 md:py-5"
                   >
                     <p className="text-2xl font-bold text-yellow-400">{tier.price}</p>
                     <p className="text-sm text-blue-100">{tier.duration}</p>
