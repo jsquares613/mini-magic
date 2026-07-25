@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import SafeImage from '@/components/SafeImage'
 import { repositories } from '@/lib/supabase'
+import { getLqip } from '@/lib/lqip'
 
 /**
  * Homepage promotional banners — sourced from `promotional_banners`, the
@@ -24,6 +26,12 @@ export default async function Promotions() {
 
   if (promos.length === 0) return null
 
+  // Generate real per-image LQIPs in parallel for banners that have images.
+  // getLqip is cached indefinitely — only the first call per URL hits Supabase.
+  const blurDataURLs = await Promise.all(
+    promos.map((b) => (b.image ? getLqip(b.image) : Promise.resolve(undefined))),
+  )
+
   return (
     <section className="px-4 py-2 md:px-8 md:py-8">
       <div className="mx-auto max-w-7xl">
@@ -38,12 +46,19 @@ export default async function Promotions() {
                 }`}
               >
                 {banner.image && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={banner.image}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  // Wrap SafeImage in a div that carries the hover-zoom transform.
+                  // SafeImage renders fill-mode next/image (span + img, both absolute).
+                  // The transform lives on the wrapping div so it is not clipped by
+                  // next/image's internal overflow:hidden span wrapper.
+                  <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
+                    <SafeImage
+                      src={banner.image}
+                      alt=""
+                      blurDataURL={blurDataURLs[i]}
+                      sizes="(max-width: 768px) 50vw, 640px"
+                      className="object-cover"
+                    />
+                  </div>
                 )}
                 <div className="relative">
                   <h3 className={`mb-1 text-lg font-bold md:text-2xl ${banner.image ? 'text-white' : style.text}`}>

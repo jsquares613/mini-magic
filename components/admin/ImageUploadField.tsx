@@ -14,7 +14,48 @@ import ImageCropModal from './ImageCropModal'
  * When `aspectRatio` is given, the picked file is cropped to that ratio
  * (via a modal) before upload, so the stored image already matches the box
  * it renders in instead of relying on CSS `object-cover` to crop it later.
+ *
+ * For non-cropped uploads (no aspectRatio), large images are resized
+ * client-side before upload so we never store 6 000 × 4 000 originals in
+ * Supabase Storage.
  */
+
+const MAX_UPLOAD_DIM = 2400 // px — longest edge cap for non-cropped uploads
+
+/**
+ * Resizes an image file so its longest edge is at most `maxDim` pixels.
+ * Files already within the limit are returned unchanged (no re-encode).
+ * Outputs JPEG at 0.85 quality to match the crop utility.
+ */
+function resizeBeforeUpload(file: File, maxDim = MAX_UPLOAD_DIM): Promise<Blob> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const img = new window.Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const { naturalWidth: w, naturalHeight: h } = img
+      if (w <= maxDim && h <= maxDim) {
+        resolve(file)
+        return
+      }
+      const scale = maxDim / Math.max(w, h)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(w * scale)
+      canvas.height = Math.round(h * scale)
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(
+        (blob) => resolve(blob ?? file),
+        'image/jpeg',
+        0.85,
+      )
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(file) // fallback: upload original on decode error
+    }
+    img.src = url
+  })
+}
 export default function ImageUploadField({
   bucket,
   name,
@@ -57,7 +98,8 @@ export default function ImageUploadField({
     if (aspectRatio) {
       setCropSrc(URL.createObjectURL(file))
     } else {
-      void uploadToBucket(`${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`, file)
+      const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`
+      resizeBeforeUpload(file).then((blob) => uploadToBucket(path, blob))
     }
   }
 

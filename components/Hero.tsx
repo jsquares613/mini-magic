@@ -31,6 +31,8 @@ export type HeroSlide = {
   ctaLabel?: string
   ctaHref?: string
   highlights?: HeroHighlight[]
+  /** Real per-image LQIP generated server-side — passed as blurDataURL to SafeImage. */
+  blurDataURL?: string
 }
 
 type HeroProps = {
@@ -119,6 +121,8 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                     src={slide.image}
                     alt={slide.imageAlt}
                     priority={index === 0}
+                    eager={index > 0 && index < 3}
+                    blurDataURL={slide.blurDataURL}
                     sizes="(max-width: 768px) 100vw, 1280px"
                     className="object-cover object-center"
                   />
