@@ -62,12 +62,15 @@ export default function ImageUploadField({
   label,
   defaultUrl = null,
   aspectRatio,
+  hint,
 }: {
   bucket: string
   name: string
   label: string
   defaultUrl?: string | null
   aspectRatio?: number
+  /** Recommended pixel dimensions shown under the label, e.g. "1600 × 900px (16:9)". */
+  hint?: string
 }) {
   const [url, setUrl] = useState<string | null>(defaultUrl)
   const [busy, setBusy] = useState(false)
@@ -111,6 +114,7 @@ export default function ImageUploadField({
   return (
     <div>
       <p className="mb-1 text-sm font-medium text-gray-700">{label}</p>
+      {hint && <p className="mb-1.5 text-xs text-gray-400">Recommended size: {hint}</p>}
       <input type="hidden" name={name} value={url ?? ''} readOnly />
       {url ? (
         <div className="relative inline-block">

@@ -14,6 +14,8 @@ type SectionHeaderProps = {
   accent?: string
   viewAllHref?: string
   viewAllLabel?: string
+  /** Hide the title text (and accent bar) on mobile, keeping only the "View All" link. */
+  hideTitleOnMobile?: boolean
 }
 
 export default function SectionHeader({
@@ -22,12 +24,17 @@ export default function SectionHeader({
   accent = 'from-amber-400 to-yellow-500',
   viewAllHref,
   viewAllLabel = 'View All',
+  hideTitleOnMobile = false,
 }: SectionHeaderProps) {
   return (
     <div className="mb-3 flex items-end justify-between gap-4 md:mb-10">
       <div>
         <span className={`mb-3 hidden h-1.5 w-12 rounded-full bg-gradient-to-r md:block ${accent}`} />
-        <h2 className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-slate-900 md:gap-2.5 md:text-3xl md:font-extrabold lg:text-4xl">
+        <h2
+          className={`items-center gap-1.5 text-lg font-bold tracking-tight text-slate-900 md:gap-2.5 md:text-3xl md:font-extrabold lg:text-4xl ${
+            hideTitleOnMobile ? 'hidden md:flex' : 'flex'
+          }`}
+        >
           {emoji && <span aria-hidden="true">{emoji}</span>}
           {title}
         </h2>

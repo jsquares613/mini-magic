@@ -99,7 +99,7 @@ export default function ImageManager({
     <section className="rounded-2xl border border-gray-200 bg-white p-6">
       <h2 className="mb-4 font-bold text-gray-900">Images</h2>
 
-      <label className="mb-4 flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 transition hover:border-blue-400 hover:text-blue-600">
+      <label className="mb-1 flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 transition hover:border-blue-400 hover:text-blue-600">
         {uploading && <Spinner className="h-4 w-4" />}
         {uploading ? 'Uploading…' : '+ Upload images'}
         <input
@@ -111,6 +111,9 @@ export default function ImageManager({
           className="hidden"
         />
       </label>
+      <p className="mb-4 text-xs text-gray-400">
+        Recommended size: 1000 × 1000px (square) — same on mobile & desktop
+      </p>
 
       {cropQueue.length > 0 && (
         <ImageCropModal

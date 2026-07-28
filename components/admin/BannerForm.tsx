@@ -41,7 +41,14 @@ export default function BannerForm({
           <label className={label}>Link</label>
           <input name="link" defaultValue={banner?.link ?? ''} placeholder="/categories/toys" className={input} />
         </div>
-        <ImageUploadField bucket="banners" name="image" label="Banner image" defaultUrl={banner?.image ?? null} aspectRatio={2} />
+        <ImageUploadField
+          bucket="banners"
+          name="image"
+          label="Banner image"
+          defaultUrl={banner?.image ?? null}
+          aspectRatio={2}
+          hint="1200 × 600px (2:1) — shown roughly square on mobile and wide on desktop; keep the subject/text centered so both crops work"
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={label}>Display order</label>

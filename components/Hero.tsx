@@ -61,10 +61,33 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
   const [current, setCurrent] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const intervalRef = useRef<number | null>(null)
+  const touchStartX = useRef<number | null>(null)
+  const touchDeltaX = useRef(0)
 
   const goTo = useCallback((i: number) => setCurrent(((i % count) + count) % count), [count])
   const prev = useCallback(() => setCurrent((c) => (c - 1 + count) % count), [count])
   const next = useCallback(() => setCurrent((c) => (c + 1) % count), [count])
+
+  const SWIPE_THRESHOLD = 40 // px — minimum horizontal drag before it counts as a swipe
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchDeltaX.current = 0
+    setIsPaused(true)
+  }, [])
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current
+  }, [])
+
+  const onTouchEnd = useCallback(() => {
+    if (touchDeltaX.current > SWIPE_THRESHOLD) prev()
+    else if (touchDeltaX.current < -SWIPE_THRESHOLD) next()
+    touchStartX.current = null
+    touchDeltaX.current = 0
+    setIsPaused(false)
+  }, [prev, next])
 
   useEffect(() => {
     if (intervalRef.current) {
@@ -96,7 +119,10 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
         <div
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="relative grid overflow-hidden rounded-2xl bg-primary"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          className="relative grid touch-pan-y overflow-hidden rounded-2xl bg-primary"
           role="region"
           aria-roledescription="carousel"
           aria-label="Featured highlights"

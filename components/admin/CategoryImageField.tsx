@@ -14,6 +14,7 @@ export default function CategoryImageField({
   label,
   current,
   aspectRatio,
+  hint,
 }: {
   categoryId: string
   field: 'image' | 'banner_image'
@@ -21,6 +22,8 @@ export default function CategoryImageField({
   current: string | null
   /** Crop the picked file to this ratio before upload (e.g. 1 for square). */
   aspectRatio: number
+  /** Recommended pixel dimensions shown under the label, e.g. "800 × 800px (square)". */
+  hint?: string
 }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -74,6 +77,7 @@ export default function CategoryImageField({
   return (
     <div>
       <p className="mb-1 text-sm font-medium text-gray-700">{label}</p>
+      {hint && <p className="mb-1.5 text-xs text-gray-400">Recommended size: {hint}</p>}
       {current ? (
         <div className="relative inline-block">
           {/* eslint-disable-next-line @next/next/no-img-element */}

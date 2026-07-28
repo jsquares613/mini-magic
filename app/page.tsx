@@ -26,10 +26,16 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-surface">
       <Header />
-      <Hero slides={heroSlides} />
-      <FadeInSection>
-        <Categories />
-      </FadeInSection>
+      <div className="flex flex-col">
+        <div className="order-2 md:order-1">
+          <Hero slides={heroSlides} />
+        </div>
+        <div className="order-1 md:order-2">
+          <FadeInSection>
+            <Categories />
+          </FadeInSection>
+        </div>
+      </div>
       <FadeInSection>
         <PopularToys />
       </FadeInSection>

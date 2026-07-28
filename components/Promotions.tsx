@@ -38,6 +38,7 @@ export default async function Promotions() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6">
           {promos.map((banner, i) => {
             const style = TILE_STYLES[i % TILE_STYLES.length]
+            const isToys = banner.title?.trim().toLowerCase() === 'toys'
             return (
               <div
                 key={banner.id}
@@ -61,25 +62,41 @@ export default async function Promotions() {
                   </div>
                 )}
                 <div className="relative">
-                  <h3 className={`mb-1 text-lg font-bold md:text-2xl ${banner.image ? 'text-white' : style.text}`}>
+                  <h3
+                    className={`mb-1 text-lg font-bold md:text-2xl ${
+                      isToys ? 'text-blue-600' : banner.image ? 'text-white' : style.text
+                    }`}
+                  >
                     {banner.title}
                   </h3>
                   {banner.badge_text && (
                     <div className="mb-2 md:mb-3">
-                      <span className={`text-base font-bold md:text-xl ${banner.image ? 'text-white' : style.text}`}>
+                      <span
+                        className={`text-base font-bold md:text-xl ${
+                          isToys ? 'text-blue-600' : banner.image ? 'text-white' : style.text
+                        }`}
+                      >
                         {banner.badge_text}
                       </span>
                     </div>
                   )}
                   {banner.subtitle && (
-                    <p className={`mb-2 text-xs md:mb-3 md:text-sm ${banner.image ? 'text-white/80' : style.sub}`}>
+                    <p
+                      className={`mb-2 text-xs md:mb-3 md:text-sm ${
+                        isToys ? 'text-blue-600' : banner.image ? 'text-white/80' : style.sub
+                      }`}
+                    >
                       {banner.subtitle}
                     </p>
                   )}
                   <Link
                     href={banner.link ?? '/categories'}
                     className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition md:text-sm ${
-                      banner.image ? 'bg-white text-gray-900 hover:bg-gray-100' : style.cta
+                      isToys
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : banner.image
+                          ? 'bg-white text-gray-900 hover:bg-gray-100'
+                          : style.cta
                     }`}
                   >
                     Shop Now

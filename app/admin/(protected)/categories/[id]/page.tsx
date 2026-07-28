@@ -41,13 +41,21 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
       <section className="mb-6 rounded-2xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 font-bold text-gray-900">Images</h2>
         <div className="flex flex-wrap gap-6">
-          <CategoryImageField categoryId={category.id} field="image" label="Card image" current={category.image} aspectRatio={1} />
+          <CategoryImageField
+            categoryId={category.id}
+            field="image"
+            label="Card image"
+            current={category.image}
+            aspectRatio={1}
+            hint="800 × 800px (square) — same on mobile & desktop"
+          />
           <CategoryImageField
             categoryId={category.id}
             field="banner_image"
             label="Banner"
             current={category.banner_image}
             aspectRatio={16 / 9}
+            hint="1600 × 900px (16:9)"
           />
         </div>
       </section>

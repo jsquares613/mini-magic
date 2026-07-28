@@ -44,7 +44,13 @@ export default function HeroSlideForm({
             <input name="button_link" defaultValue={slide?.button_link ?? ''} placeholder="/categories" className={input} />
           </div>
         </div>
-        <ImageUploadField bucket="hero" name="image" label="Slide image" defaultUrl={slide?.image ?? null} />
+        <ImageUploadField
+          bucket="hero"
+          name="image"
+          label="Slide image"
+          defaultUrl={slide?.image ?? null}
+          hint="1600 × 600px (wide banner) — fills edge-to-edge on both mobile and desktop; crops a little tighter on mobile, so keep the subject centered"
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={label}>Display order</label>

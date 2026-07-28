@@ -41,7 +41,13 @@ export default function TestimonialForm({
           <label className={label}>Quote *</label>
           <textarea name="quote" required rows={3} defaultValue={testimonial?.quote} className={input} />
         </div>
-        <ImageUploadField bucket="about" name="image" label="Photo (optional)" defaultUrl={testimonial?.image ?? null} />
+        <ImageUploadField
+          bucket="about"
+          name="image"
+          label="Photo (optional)"
+          defaultUrl={testimonial?.image ?? null}
+          hint="400 × 400px (square) — same on mobile & desktop"
+        />
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className={label}>Rating (1–5)</label>

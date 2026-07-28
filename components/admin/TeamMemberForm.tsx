@@ -36,7 +36,13 @@ export default function TeamMemberForm({
           <label className={label}>Bio</label>
           <textarea name="bio" rows={3} defaultValue={member?.bio ?? ''} className={input} />
         </div>
-        <ImageUploadField bucket="about" name="image" label="Photo" defaultUrl={member?.image ?? null} />
+        <ImageUploadField
+          bucket="about"
+          name="image"
+          label="Photo"
+          defaultUrl={member?.image ?? null}
+          hint="600 × 600px (square) — same on mobile & desktop"
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={label}>Display order</label>
