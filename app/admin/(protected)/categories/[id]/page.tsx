@@ -47,7 +47,7 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
             label="Card image"
             current={category.image}
             aspectRatio={1}
-            hint="800 × 800px (square) — same on mobile & desktop"
+            hint="400 × 400px (square) — same on mobile & desktop"
           />
           <CategoryImageField
             categoryId={category.id}
@@ -55,7 +55,7 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
             label="Banner"
             current={category.banner_image}
             aspectRatio={16 / 9}
-            hint="1600 × 900px (16:9)"
+            hint="1280 × 720px (16:9)"
           />
         </div>
       </section>

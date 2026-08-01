@@ -5,6 +5,7 @@ import Footer from '@/components/Footer'
 import Hero from '@/components/Hero'
 import EnquiryButton from '@/components/EnquiryButton'
 import SafeImage from '@/components/SafeImage'
+import { isVideo } from '@/lib/media'
 import {
   getPlayAreaHero,
   getPlayFeatures,
@@ -88,32 +89,50 @@ export default async function PlayAreaPage() {
         </section>
 
         {/* Play Zones */}
-        <section id="play-zones" className="scroll-mt-24 px-4 py-16 md:px-8">
+        <section id="play-zones" className="scroll-mt-24 bg-gray-50 px-4 py-20 md:px-8">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-12 text-center">
-              <h2 className="text-4xl font-bold text-gray-900">Our Play Zones</h2>
-              <p className="mx-auto mt-3 max-w-2xl text-gray-600">
-                Six imaginative zones designed to keep kids active, curious and smiling — all under one safe roof.
+            <div className="mb-16 text-center">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Explore</p>
+              <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">Our Play Zones</h2>
+              <p className="mx-auto mt-4 max-w-2xl text-gray-500">
+                Six imaginative zones designed to keep kids active, curious and smiling, all under one safe roof.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {playZones.map((zone) => (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {playZones.map((zone, i) => (
                 <div
                   key={zone.id}
-                  className="group overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:shadow-lg"
+                  className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-yellow-300 hover:shadow-lg"
                 >
-                  <div className="relative aspect-[16/9] overflow-hidden">
-                    <SafeImage
-                      src={zone.image}
-                      alt={zone.name}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                  <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
+                    {isVideo(zone.image) ? (
+                      <video
+                        src={zone.image}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : zone.image ? (
+                      <SafeImage
+                        src={zone.image}
+                        alt={zone.name}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="h-full bg-gradient-to-br from-yellow-50 to-amber-100" />
+                    )}
+                    <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white text-[11px] font-black text-gray-900 shadow-md">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
                   </div>
                   <div className="p-6">
-                    <h3 className="mb-2 text-xl font-bold text-gray-900">{zone.name}</h3>
-                    <p className="text-sm leading-relaxed text-gray-600">{zone.description}</p>
+                    <div className="mb-3 h-[2px] w-8 rounded-full bg-yellow-400" />
+                    <h3 className="mb-2 text-lg font-bold text-gray-900">{zone.name}</h3>
+                    <p className="text-sm leading-relaxed text-gray-500">{zone.description}</p>
                   </div>
                 </div>
               ))}
@@ -122,17 +141,26 @@ export default async function PlayAreaPage() {
         </section>
 
         {/* Why Parents Trust Us */}
-        <section className="bg-white px-4 py-16 md:px-8">
+        <section className="bg-white px-4 py-20 md:px-8">
           <div className="mx-auto max-w-7xl">
-            <h2 className="mb-12 text-center text-4xl font-bold text-gray-900">Why Parents Trust Us</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {playFeatures.map((f) => (
+            <div className="mb-14 text-center">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Safety First</p>
+              <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">Why Parents Trust Us</h2>
+              <p className="mx-auto mt-4 max-w-xl text-gray-500">
+                Every corner of our space is built around one goal: the safety and happiness of your child.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {playFeatures.map((f, i) => (
                 <div
                   key={f.title}
-                  className={`${f.bgColor} rounded-lg border-2 border-gray-200 p-8 text-center transition hover:shadow-lg`}
+                  className="group rounded-2xl border border-gray-100 bg-gray-50 p-7 transition duration-300 hover:-translate-y-1 hover:border-yellow-200 hover:bg-yellow-50 hover:shadow-md"
                 >
-                  <h3 className="mb-3 text-xl font-bold text-gray-900">{f.title}</h3>
-                  <p className="text-sm leading-relaxed text-gray-600">{f.desc}</p>
+                  <p className="mb-4 text-5xl font-black leading-none text-gray-200 transition duration-300 group-hover:text-yellow-300">
+                    {String(i + 1).padStart(2, '0')}
+                  </p>
+                  <h3 className="mb-2 text-base font-bold text-gray-900">{f.title}</h3>
+                  <p className="text-sm leading-relaxed text-gray-500">{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -141,14 +169,28 @@ export default async function PlayAreaPage() {
 
         {/* House Rules */}
         {playRules.length > 0 && (
-          <section id="rules" className="scroll-mt-24 px-4 py-16 md:px-8">
+          <section id="rules" className="scroll-mt-24 bg-gray-50 px-4 py-20 md:px-8">
             <div className="mx-auto max-w-7xl">
-              <h2 className="mb-8 text-center text-4xl font-bold text-gray-900">House Rules</h2>
-              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {playRules.map((rule) => (
-                  <li key={rule} className="flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-center">
-                    <span className="text-green-600">✓</span>
-                    <span className="text-sm text-gray-700">{rule}</span>
+              <div className="mb-12 text-center">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Guidelines</p>
+                <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">House Rules</h2>
+                <p className="mx-auto mt-4 max-w-xl text-gray-500">
+                  A few simple rules that keep our space safe, joyful and welcoming for every child.
+                </p>
+              </div>
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {playRules.map((rule, i) => (
+                  <li
+                    key={rule}
+                    className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm transition duration-200 hover:border-yellow-300 hover:shadow-md"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-400 text-[11px] font-black text-gray-900">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-sm font-medium text-gray-700">{rule}</span>
+                    <svg className="ml-auto h-4 w-4 shrink-0 text-gray-300 transition group-hover:text-yellow-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </li>
                 ))}
               </ul>

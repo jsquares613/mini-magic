@@ -1,5 +1,5 @@
 import type { Tables } from '@/lib/supabase/database.types'
-import ImageUploadField from '@/components/admin/ImageUploadField'
+import MediaUploadField from '@/components/admin/MediaUploadField'
 import ActionForm from './ActionForm'
 import SubmitButton from './SubmitButton'
 import { toDateTimeInputValue } from '@/lib/admin/form'
@@ -41,13 +41,13 @@ export default function BannerForm({
           <label className={label}>Link</label>
           <input name="link" defaultValue={banner?.link ?? ''} placeholder="/categories/toys" className={input} />
         </div>
-        <ImageUploadField
+        <MediaUploadField
           bucket="banners"
           name="image"
-          label="Banner image"
+          label="Banner media (image or video)"
           defaultUrl={banner?.image ?? null}
           aspectRatio={2}
-          hint="1200 × 600px (2:1) — shown roughly square on mobile and wide on desktop; keep the subject/text centered so both crops work"
+          hint="640 × 220px — image or MP4 video"
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

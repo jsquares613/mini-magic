@@ -30,7 +30,7 @@ export default async function ProductsPage() {
             All <span className="text-orange-500">Products</span>
           </h1>
           <p className="mb-4 max-w-xl text-sm text-gray-600 md:text-base">
-            Our complete collection — {products.length} curated products across every category.
+            Our complete collection: {products.length} curated products across every category.
           </p>
           <ProductGrid products={products} />
         </div>

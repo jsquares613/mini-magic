@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
-import ImageUploadField from '@/components/admin/ImageUploadField'
+import MediaUploadField from '@/components/admin/MediaUploadField'
 import {
   updateAboutContent,
   addGalleryItem,
@@ -36,24 +36,25 @@ export default async function AboutAdminPage() {
         <div className="space-y-5">
           <section className="rounded-2xl border border-gray-200 bg-white p-6">
             <h2 className="mb-1 font-bold text-gray-900">Hero Section</h2>
-            <p className="mb-4 text-sm text-gray-500">
-              Leave title blank to keep the default rotating hero from the codebase.
-            </p>
             <div className="space-y-4">
-              <div>
-                <label className={label}>Title</label>
-                <input name="hero_title" defaultValue={about?.hero_title ?? ''} className={input} />
-              </div>
-              <div>
-                <label className={label}>Description</label>
-                <textarea
-                  name="hero_description"
-                  rows={3}
-                  defaultValue={about?.hero_description ?? ''}
-                  className={input}
-                />
-              </div>
-              <ImageUploadField bucket="about" name="hero_image" label="Hero image" defaultUrl={about?.hero_image ?? null} />
+              <MediaUploadField bucket="about" name="hero_image" label="Hero media (image or video)" defaultUrl={about?.hero_image ?? null} hint="1280 × 440px — image or MP4 video" />
+              <details open={!!(about?.hero_title || about?.hero_description)} className="group">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
+                  <span className="text-base group-open:hidden">＋</span>
+                  <span className="hidden text-base group-open:inline">－</span>
+                  Add content (title, description)
+                </summary>
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className={label}>Title</label>
+                    <input name="hero_title" defaultValue={about?.hero_title ?? ''} className={input} />
+                  </div>
+                  <div>
+                    <label className={label}>Description</label>
+                    <textarea name="hero_description" rows={3} defaultValue={about?.hero_description ?? ''} className={input} />
+                  </div>
+                </div>
+              </details>
             </div>
           </section>
 
@@ -76,7 +77,7 @@ export default async function AboutAdminPage() {
                 <label className={label}>Story description</label>
                 <textarea name="story" rows={4} defaultValue={about?.story ?? ''} className={input} />
               </div>
-              <ImageUploadField bucket="about" name="story_image" label="Story image" defaultUrl={about?.story_image ?? null} />
+              <MediaUploadField bucket="about" name="story_image" label="Story image" defaultUrl={about?.story_image ?? null} hint="640 × 480px (4:3) — shown in the right half of the Our Story section on desktop, full-width on mobile" />
             </div>
           </section>
 
@@ -201,7 +202,7 @@ export default async function AboutAdminPage() {
           {gallery.length === 0 && <p className="text-sm text-gray-400">No images yet.</p>}
         </div>
         <ActionForm action={addGalleryItem} successMessage="Image added successfully" className="flex flex-wrap items-end gap-3 border-t border-gray-100 pt-4">
-          <ImageUploadField bucket="about" name="image" label="New image" />
+          <MediaUploadField bucket="about" name="image" label="Media (image or video)" hint="400 × 400px (square) — image or MP4 video" />
           <div className="flex-1">
             <label className={label}>Label</label>
             <input name="label" placeholder="e.g. Plush Toys" className={input} />

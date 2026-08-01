@@ -78,7 +78,7 @@ export default async function CategoryPage({ params }: PageProps) {
 
           <ProductGrid
             products={products}
-            emptyMessage="No products in this category yet — check back soon!"
+            emptyMessage="No products in this category yet. Check back soon!"
           />
         </div>
       </main>

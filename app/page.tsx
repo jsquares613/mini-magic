@@ -27,14 +27,10 @@ export default async function Home() {
     <main className="min-h-screen bg-surface">
       <Header />
       <div className="flex flex-col">
-        <div className="order-2 md:order-1">
-          <Hero slides={heroSlides} />
-        </div>
-        <div className="order-1 md:order-2">
-          <FadeInSection>
-            <Categories />
-          </FadeInSection>
-        </div>
+        <FadeInSection>
+          <Categories />
+        </FadeInSection>
+        <Hero slides={heroSlides} />
       </div>
       <FadeInSection>
         <PopularToys />
@@ -43,7 +39,7 @@ export default async function Home() {
         <Promotions />
       </FadeInSection>
       <FadeInSection>
-        <section className="px-4 py-2 md:px-8 md:py-8">
+        <section className="px-4 py-2 md:px-8 md:py-4">
           <div className="mx-auto max-w-7xl">
             <SectionHeader
               title="Special Offers"

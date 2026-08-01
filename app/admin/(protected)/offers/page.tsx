@@ -1,7 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
-import ImageUploadField from '@/components/admin/ImageUploadField'
+import MediaUploadField from '@/components/admin/MediaUploadField'
 import { updateOfferBanner } from './actions'
 
 export default async function OffersAdminPage() {
@@ -15,14 +15,15 @@ export default async function OffersAdminPage() {
       <ActionForm action={updateOfferBanner} successMessage="Offer banner saved successfully" className="max-w-2xl">
         <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
           <h2 className="font-bold text-gray-900">Hero Banner</h2>
-          <p className="text-sm text-gray-500">Image shown at the top of the Offers page.</p>
+          <p className="text-sm text-gray-500">Media shown at the top of the Offers page.</p>
 
-          <ImageUploadField
+          <MediaUploadField
             bucket="banners"
             name="image"
-            label="Banner image"
+            label="Banner media (image or video)"
             defaultUrl={banner?.image ?? null}
             aspectRatio={3}
+            hint="1280 × 427px (3:1) — image or MP4 video"
           />
 
           <label className="flex items-center gap-2 text-sm text-gray-700">

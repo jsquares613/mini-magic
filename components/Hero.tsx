@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import SafeImage from '@/components/SafeImage'
+import { isVideo } from '@/lib/media'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
@@ -143,19 +144,28 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
               >
                 {/* Artwork — full-bleed background behind the text, on both mobile and desktop. */}
                 <div className="absolute inset-0">
-                  <SafeImage
-                    src={slide.image}
-                    alt={slide.imageAlt}
-                    priority={index === 0}
-                    eager={index > 0 && index < 3}
-                    blurDataURL={slide.blurDataURL}
-                    sizes="(max-width: 768px) 100vw, 1280px"
-                    className="object-cover object-center"
-                  />
+                  {isVideo(slide.image) ? (
+                    <video
+                      src={slide.image}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="h-full w-full object-cover object-center"
+                    />
+                  ) : (
+                    <SafeImage
+                      src={slide.image}
+                      alt={slide.imageAlt}
+                      priority={index === 0}
+                      eager={index > 0 && index < 3}
+                      blurDataURL={slide.blurDataURL}
+                      sizes="(max-width: 768px) 100vw, 1280px"
+                      className="object-cover object-center"
+                    />
+                  )}
                 </div>
 
-                {/* Readability scrim, where text sits on top of the cropped image. */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/75 via-primary/10" />
 
                 {/* Text column */}
                 <div className="relative z-10 flex w-[30%] flex-col justify-center md:w-1/2">

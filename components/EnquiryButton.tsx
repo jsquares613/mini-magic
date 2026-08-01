@@ -120,7 +120,7 @@ export default function EnquiryButton({
                 <div className="mb-3 text-5xl">✅</div>
                 <h3 className="mb-2 text-lg font-bold text-gray-900">Enquiry sent!</h3>
                 <p className="mb-6 text-sm text-gray-600">
-                  Thank you — our team will get back to you shortly.
+                  Thank you! Our team will get back to you shortly.
                 </p>
                 <button
                   onClick={close}

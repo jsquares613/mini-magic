@@ -5,7 +5,7 @@ import Footer from '@/components/Footer'
 import Hero from '@/components/Hero'
 import StatCounter from '@/components/StatCounter'
 import SafeImage from '@/components/SafeImage'
-import StarBorder from '@/components/StarBorder'
+import { isVideo } from '@/lib/media'
 import { getAboutContent, getAboutGallery, getAboutHero, getAboutSeo, getAboutStatistics, getTeamMembers } from '@/lib/about'
 
 const FALLBACK_TITLE = 'About Us - Minimagic | Our Story, Mission & Team'
@@ -110,22 +110,29 @@ export default async function AboutPage() {
         </section>
 
         {/* 3. Mission & Vision & Values */}
-        <section className="bg-white px-4 py-16 md:px-8">
+        <section className="bg-blue-950 px-4 py-20 md:px-8">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-12 text-center">
-              <h2 className="text-4xl font-bold text-gray-900">What Drives Us</h2>
-              <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+            <div className="mb-16 text-center">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-yellow-400">Our Foundation</p>
+              <h2 className="text-4xl font-bold text-white md:text-5xl">What Drives Us</h2>
+              <p className="mx-auto mt-4 max-w-2xl text-blue-300/60">
                 The principles that guide every decision we make, from the products we stock to the way we serve you.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              {values.map((v) => (
+              {[
+                { title: 'Our Mission', desc: content.mission, accent: 'from-yellow-400 to-orange-400', dot: 'bg-yellow-400' },
+                { title: 'Our Vision', desc: content.vision, accent: 'from-blue-400 to-cyan-400', dot: 'bg-blue-400' },
+                { title: 'Our Values', desc: content.valuesText, accent: 'from-pink-400 to-rose-400', dot: 'bg-pink-400' },
+              ].map((v) => (
                 <div
                   key={v.title}
-                  className={`${v.bg} rounded-2xl border-2 border-gray-200 p-8 text-center transition hover:-translate-y-1 hover:shadow-lg`}
+                  className="group relative overflow-hidden rounded-3xl bg-white/5 p-8 ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:ring-white/20 hover:shadow-2xl hover:shadow-blue-900"
                 >
-                  <h3 className="mb-3 text-2xl font-bold text-gray-900">{v.title}</h3>
-                  <p className="leading-relaxed text-gray-600">{v.desc}</p>
+                  <div className={`absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r ${v.accent}`} />
+                  <div className={`mb-6 h-2 w-2 rounded-full ${v.dot}`} />
+                  <h3 className="mb-4 text-2xl font-bold text-white">{v.title}</h3>
+                  <p className="leading-relaxed text-blue-300/70">{v.desc}</p>
                 </div>
               ))}
             </div>
@@ -133,22 +140,28 @@ export default async function AboutPage() {
         </section>
 
         {/* 4. Why Choose Us */}
-        <section id="why-choose-us" className="scroll-mt-24 px-4 py-16 md:px-8">
+        <section id="why-choose-us" className="scroll-mt-24 px-4 py-20 md:px-8">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-12 text-center">
-              <h2 className="text-4xl font-bold text-gray-900">Why Choose Minimagic?</h2>
-              <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+            <div className="mb-16 text-center">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-blue-600">Our Difference</p>
+              <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">Why Choose Minimagic?</h2>
+              <p className="mx-auto mt-4 max-w-2xl text-gray-500">
                 Six reasons families keep coming back to us, year after year.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {WHY_CHOOSE.map((item) => (
-                <StarBorder key={item.title} color="#FFB800" speed="5s">
-                  <div className={`${item.bg} h-full p-6 transition hover:-translate-y-1 hover:shadow-lg`}>
-                    <h3 className="mb-1 text-lg font-bold text-gray-900">{item.title}</h3>
-                    <p className="text-sm leading-relaxed text-gray-600">{item.desc}</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {WHY_CHOOSE.map((item, i) => (
+                <div
+                  key={item.title}
+                  className="group relative overflow-hidden rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-blue-100"
+                >
+                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-900">
+                    <span className="text-sm font-black text-yellow-400">{String(i + 1).padStart(2, '0')}</span>
                   </div>
-                </StarBorder>
+                  <h3 className="mb-2 text-lg font-bold text-gray-900">{item.title}</h3>
+                  <p className="text-sm leading-relaxed text-gray-500">{item.desc}</p>
+                  <div className="absolute bottom-0 right-0 h-24 w-24 translate-x-8 translate-y-8 rounded-full bg-yellow-400/10 transition-transform duration-500 group-hover:scale-150 group-hover:bg-yellow-400/20" />
+                </div>
               ))}
             </div>
           </div>
@@ -241,12 +254,23 @@ export default async function AboutPage() {
                     key={`${item.image}-${index}`}
                     className="group relative aspect-square overflow-hidden rounded-2xl transition hover:shadow-lg"
                   >
-                    <SafeImage
-                      src={item.image}
-                      alt={item.label}
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
+                    {isVideo(item.image) ? (
+                      <video
+                        src={item.image}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    ) : (
+                      <SafeImage
+                        src={item.image}
+                        alt={item.label}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    )}
                     {item.label && (
                       <span className="absolute bottom-3 left-3 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-gray-700">
                         {item.label}
@@ -265,7 +289,7 @@ export default async function AboutPage() {
             <div className="rounded-3xl bg-gradient-to-r from-yellow-300 to-yellow-200 px-6 py-14 text-center md:px-12">
               <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl">Come Find Your Joy</h2>
               <p className="mx-auto mb-8 max-w-2xl text-gray-700">
-                Explore our collection, visit the play area, or say hello — there is a little magic here for everyone.
+                Explore our collection, visit the play area, or say hello. There is a little magic here for everyone.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link

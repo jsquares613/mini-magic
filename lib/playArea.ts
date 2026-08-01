@@ -33,7 +33,7 @@ export async function getPlayZones(): Promise<PlayZone[]> {
     id: row.id,
     name: row.alt_text ?? 'Play Zone',
     description: '', // not stored — see content-fidelity note above
-    image: row.image_url,
+    image: row.image_url ?? null,
   }))
 }
 

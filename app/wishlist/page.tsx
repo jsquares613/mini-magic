@@ -31,7 +31,7 @@ export default async function WishlistPage() {
 
           <ProductGrid
             products={products}
-            emptyMessage="Your wishlist is empty — tap the heart on any product to save it here."
+            emptyMessage="Your wishlist is empty. Tap the heart on any product to save it here."
           />
         </div>
       </main>

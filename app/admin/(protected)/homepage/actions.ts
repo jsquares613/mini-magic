@@ -15,7 +15,7 @@ function revalidateHome() {
 /* ------------------------------ Hero slides ----------------------------- */
 function parseHero(fd: FormData) {
   return {
-    title: str(fd, 'title') ?? 'Untitled',
+    title: str(fd, 'title') ?? '',
     subtitle: str(fd, 'subtitle'),
     description: str(fd, 'description'),
     image: str(fd, 'image'),

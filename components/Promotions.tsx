@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import SafeImage from '@/components/SafeImage'
+import { isVideo } from '@/lib/media'
 import { repositories } from '@/lib/supabase'
 import { getLqip } from '@/lib/lqip'
 
@@ -33,7 +34,7 @@ export default async function Promotions() {
   )
 
   return (
-    <section className="px-4 py-2 md:px-8 md:py-8">
+    <section className="px-4 py-2 md:px-8 md:py-4">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6">
           {promos.map((banner, i) => {
@@ -47,18 +48,25 @@ export default async function Promotions() {
                 }`}
               >
                 {banner.image && (
-                  // Wrap SafeImage in a div that carries the hover-zoom transform.
-                  // SafeImage renders fill-mode next/image (span + img, both absolute).
-                  // The transform lives on the wrapping div so it is not clipped by
-                  // next/image's internal overflow:hidden span wrapper.
                   <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
-                    <SafeImage
-                      src={banner.image}
-                      alt=""
-                      blurDataURL={blurDataURLs[i]}
-                      sizes="(max-width: 768px) 50vw, 640px"
-                      className="object-cover"
-                    />
+                    {isVideo(banner.image) ? (
+                      <video
+                        src={banner.image}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <SafeImage
+                        src={banner.image}
+                        alt=""
+                        blurDataURL={blurDataURLs[i]}
+                        sizes="(max-width: 768px) 50vw, 640px"
+                        className="object-cover"
+                      />
+                    )}
                   </div>
                 )}
                 <div className="relative">

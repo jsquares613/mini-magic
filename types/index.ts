@@ -96,7 +96,7 @@ export interface PlayZone {
   id: string
   name: string
   description: string
-  image: string
+  image: string | null
 }
 
 export interface PlayInfoBlock {
