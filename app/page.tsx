@@ -39,7 +39,7 @@ export default async function Home() {
         <Promotions />
       </FadeInSection>
       <FadeInSection>
-        <section className="px-4 py-2 md:px-8 md:py-4">
+        <section className="px-2 py-2 min-[390px]:px-4 md:px-8 md:py-4">
           <div className="mx-auto max-w-7xl">
             <SectionHeader
               title="Special Offers"

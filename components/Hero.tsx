@@ -108,7 +108,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
   if (count === 0) return null
 
   return (
-    <section className={`py-4 px-4 md:py-8 md:px-6 ${className}`}>
+    <section className={`py-2 px-2 min-[390px]:py-4 min-[390px]:px-4 md:py-8 md:px-6 ${className}`}>
       <div className="max-w-7xl mx-auto">
         {/*
           The slides are stacked in a single CSS grid cell (every slide uses
@@ -138,7 +138,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                 aria-roledescription="slide"
                 aria-label={`${index + 1} of ${count}`}
                 aria-hidden={!active}
-                className={`col-start-1 row-start-1 relative flex min-h-[190px] flex-col justify-center p-4 md:min-h-[440px] md:p-10 transition-opacity duration-700 ease-in-out ${
+                className={`col-start-1 row-start-1 relative flex min-h-[150px] min-[390px]:min-h-[190px] flex-col justify-center p-2.5 min-[390px]:p-4 md:min-h-[440px] md:p-10 transition-opacity duration-700 ease-in-out ${
                   active ? 'opacity-100' : 'pointer-events-none opacity-0'
                 }`}
               >
@@ -168,33 +168,35 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
 
 
                 {/* Text column */}
-                <div className="relative z-10 flex w-[30%] flex-col justify-center md:w-1/2">
+                <div className="relative z-10 flex w-[34%] min-[390px]:w-[30%] self-stretch flex-col justify-between py-2 min-[390px]:py-3 md:w-[38%] md:justify-center md:self-auto md:py-0">
+                  <div>
                   {slide.badge && (
-                    <p className="mb-1 text-[7px] font-bold uppercase tracking-wide text-blue-900/80 md:mb-6 md:text-sm">
+                    <p className="mb-0.5 min-[390px]:mb-1 text-[6px] min-[390px]:text-[7px] font-bold uppercase tracking-wide text-blue-900/80 md:mb-6 md:text-sm">
                       {slide.badge}
                     </p>
                   )}
 
-                  <h1 className="mb-1 text-xs font-extrabold leading-tight md:mb-4 md:text-5xl">
+                  <h1 className="mb-1 text-[10px] min-[390px]:text-xs font-extrabold leading-tight md:mb-4 md:text-5xl">
                     <RichText segments={slide.title} />
                   </h1>
 
-                  <p className="mb-2 max-w-md text-[8px] text-gray-700 md:mb-6 md:text-base">
+                  <p className="line-clamp-4 text-[7px] min-[390px]:text-[8px] text-gray-700 md:mb-6 md:line-clamp-none md:text-base">
                     <RichText segments={slide.description} />
                   </p>
+                  </div>
 
-                  <div className="flex flex-wrap items-start gap-1 md:gap-6">
+                  <div className="mt-2 min-[390px]:mt-3 flex flex-wrap items-start gap-1 md:mt-0 md:gap-6">
                     {slide.ctaLabel &&
                       (slide.ctaHref ? (
                         <Link
                           href={slide.ctaHref}
-                          className="inline-flex transform items-center gap-1 rounded-full bg-blue-900 px-2 py-1 text-[8px] font-bold text-white transition hover:scale-105 hover:bg-blue-800 md:px-6 md:py-3 md:text-base"
+                          className="inline-flex transform items-center gap-0.5 min-[390px]:gap-1 rounded-full bg-blue-900 px-1.5 py-0.5 min-[390px]:px-2 min-[390px]:py-1 text-[7px] min-[390px]:text-[8px] font-bold text-white transition hover:scale-105 hover:bg-blue-800 md:px-6 md:py-3 md:text-base"
                         >
                           {slide.ctaLabel}
                           <span aria-hidden="true">→</span>
                         </Link>
                       ) : (
-                        <button className="inline-flex transform items-center gap-1 rounded-full bg-blue-900 px-2 py-1 text-[8px] font-bold text-white transition hover:scale-105 hover:bg-blue-800 md:px-6 md:py-3 md:text-base">
+                        <button className="inline-flex transform items-center gap-0.5 min-[390px]:gap-1 rounded-full bg-blue-900 px-1.5 py-0.5 min-[390px]:px-2 min-[390px]:py-1 text-[7px] min-[390px]:text-[8px] font-bold text-white transition hover:scale-105 hover:bg-blue-800 md:px-6 md:py-3 md:text-base">
                           {slide.ctaLabel}
                           <span aria-hidden="true">→</span>
                         </button>
@@ -204,8 +206,8 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                       <div className="flex flex-col gap-1 md:gap-3">
                         {highlights.map((h, i) => (
                           <div key={i} className="flex items-center gap-1 md:gap-2">
-                            <span className="text-xs md:text-2xl">{h.icon}</span>
-                            <span className="text-[8px] font-medium text-gray-700 md:text-sm">{h.label}</span>
+                            <span className="text-[10px] min-[390px]:text-xs md:text-2xl">{h.icon}</span>
+                            <span className="hidden min-[390px]:inline text-[8px] font-medium text-gray-700 md:text-sm">{h.label}</span>
                           </div>
                         ))}
                       </div>

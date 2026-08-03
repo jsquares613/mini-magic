@@ -10,7 +10,7 @@ export default async function PopularToys({ limit = 3 }: { limit?: number }) {
   const products = await getPopularProducts(limit)
 
   return (
-    <section className="px-4 py-2 md:px-8 md:py-4">
+    <section className="px-2 py-2 min-[390px]:px-4 md:px-8 md:py-4">
       <div className="mx-auto max-w-7xl">
         <SectionHeader
           title="Most Popular"
@@ -19,7 +19,7 @@ export default async function PopularToys({ limit = 3 }: { limit?: number }) {
         />
 
         {/* Mobile: 3 products in a single row */}
-        <div className="grid grid-cols-3 gap-2 md:hidden">
+        <div className="grid grid-cols-3 gap-1 min-[390px]:gap-2 md:hidden">
           {products.slice(0, 3).map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

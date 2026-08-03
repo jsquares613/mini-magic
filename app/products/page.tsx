@@ -21,7 +21,7 @@ export default async function ProductsPage() {
     <>
       <Header />
       <main className="min-h-screen bg-[#FFFFEC]">
-        <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
+        <div className="mx-auto max-w-7xl px-2 py-4 min-[390px]:px-4 min-[390px]:py-8 md:py-12">
           <nav className="mb-2 text-sm text-gray-500">
             <Link href="/" className="hover:text-blue-900">Home</Link>{' '}
             <span className="mx-2">›</span> <span className="font-semibold">All Products</span>

@@ -48,7 +48,7 @@ export default async function OffersPage() {
       <Header />
 
       <main className="min-h-screen bg-[#FFFFEC]">
-        <div className="mx-auto max-w-7xl px-4 py-4 md:py-8">
+        <div className="mx-auto max-w-7xl px-2 py-3 min-[390px]:px-4 min-[390px]:py-4 md:py-8">
           <nav className="mb-3 text-sm text-gray-500">
             <Link href="/" className="hover:text-blue-900">Home</Link>{' '}
             <span className="mx-2">›</span> <span className="font-semibold">Offers</span>
