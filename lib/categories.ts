@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { repositories } from '@/lib/supabase'
-import type { Category } from '@/types'
-import type { CategoryRow } from '@/lib/supabase/repositories/categories'
+import type { Category, Subcategory } from '@/types'
+import type { CategoryRow, SubcategoryRow } from '@/lib/supabase/repositories/categories'
 
 /**
  * Category data-access layer — now backed by Supabase (Phase 3 integration).
@@ -66,4 +66,26 @@ export async function getCategoryName(slug: string): Promise<string> {
 export async function getAllCategorySlugs(): Promise<string[]> {
   const all = await getCachedCategories()
   return all.map((c) => c.slug)
+}
+
+/** subcategory_id (uuid) → slug, used by toProduct() to resolve Product.subcategory. */
+export const getSubcategoryIdToSlugMap = cache(async (): Promise<Map<string, string>> => {
+  const rows = await repositories.categories.getAllSubcategories()
+  return new Map(rows.map((r) => [r.id, r.slug]))
+})
+
+function toSubcategory(row: SubcategoryRow): Subcategory {
+  return {
+    id: row.id,
+    categoryId: row.category_id,
+    name: row.name,
+    slug: row.slug,
+    emoji: row.emoji ?? '🏷️',
+    displayOrder: row.display_order,
+  }
+}
+
+export async function getSubcategoriesByCategoryId(categoryId: string): Promise<Subcategory[]> {
+  const rows = await repositories.categories.getSubcategoriesByCategoryId(categoryId)
+  return rows.map(toSubcategory)
 }

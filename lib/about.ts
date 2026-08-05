@@ -32,16 +32,16 @@ export async function getAboutContent() {
  */
 export async function getAboutHero(): Promise<HeroSlide[]> {
   const page = await getCachedAboutPage()
-  if (!page?.hero_title) return aboutHeroSlides
+  if (!page?.hero_image && !page?.hero_title) return aboutHeroSlides
   return [
     {
       id: 'about-hero',
       image: page.hero_image ?? aboutHeroSlides[0].image,
-      imageAlt: page.hero_title,
-      title: [{ text: page.hero_title }],
+      imageAlt: page.hero_title ?? 'About Us',
+      title: page.hero_title ? [{ text: page.hero_title }] : [],
       description: page.hero_description ? [{ text: page.hero_description }] : [],
-      ctaLabel: 'Discover Our Story',
-      ctaHref: '#our-story',
+      ctaLabel: page.hero_title ? 'Discover Our Story' : undefined,
+      ctaHref: page.hero_title ? '#our-story' : undefined,
     },
   ]
 }

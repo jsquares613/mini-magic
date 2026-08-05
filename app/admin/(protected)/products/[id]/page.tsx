@@ -14,10 +14,11 @@ export default async function EditProductPage({ params }: { params: { id: string
   const { data: product } = await supabase.from('products').select('*').eq('id', params.id).maybeSingle()
   if (!product) notFound()
 
-  const [{ data: categories }, { data: ageGroups }, { data: pivots }, { data: images }, { data: relatedPivots }, { data: otherProducts }] =
+  const [{ data: categories }, { data: ageGroups }, { data: subcategories }, { data: pivots }, { data: images }, { data: relatedPivots }, { data: otherProducts }] =
     await Promise.all([
       supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
       supabase.from('age_groups').select('id, label').order('sort_order', { ascending: true }),
+      supabase.from('subcategories').select('id, name, emoji, category_id').order('display_order', { ascending: true }),
       supabase.from('product_age_groups').select('age_group_id').eq('product_id', product.id),
       supabase.from('product_images').select('*').eq('product_id', product.id).order('sort_order', { ascending: true }),
       // No embed: product_related has two FKs to products (product_id AND
@@ -72,6 +73,7 @@ export default async function EditProductPage({ params }: { params: { id: string
         product={product}
         categories={categories ?? []}
         ageGroups={ageGroups ?? []}
+        subcategories={subcategories ?? []}
         selectedAgeIds={selectedAgeIds}
       />
 

@@ -36,6 +36,7 @@ function parseProduct(fd: FormData): TablesInsert<'products'> {
     short_description: str(fd, 'short_description'),
     description: str(fd, 'description'),
     category_id: str(fd, 'category_id') ?? '',
+    subcategory_id: str(fd, 'subcategory_id'),
     price: num(fd, 'price'),
     sale_price: num(fd, 'sale_price'),
     price_display: (str(fd, 'price_display') as 'show' | 'hide' | 'enquire') ?? 'show',

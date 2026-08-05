@@ -89,9 +89,9 @@ export default async function PlayAreaPage() {
         </section>
 
         {/* Play Zones */}
-        <section id="play-zones" className="scroll-mt-24 bg-gray-50 px-4 py-20 md:px-8">
+        <section id="play-zones" className="scroll-mt-24 bg-gray-50 px-4 py-10 md:px-8 md:py-20">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-16 text-center">
+            <div className="mb-8 text-center md:mb-16">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Explore</p>
               <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">Our Play Zones</h2>
               <p className="mx-auto mt-4 max-w-2xl text-gray-500">
@@ -141,9 +141,9 @@ export default async function PlayAreaPage() {
         </section>
 
         {/* Why Parents Trust Us */}
-        <section className="bg-white px-4 py-20 md:px-8">
+        <section className="bg-white px-4 py-10 md:px-8 md:py-20">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-14 text-center">
+            <div className="mb-8 text-center md:mb-14">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Safety First</p>
               <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">Why Parents Trust Us</h2>
               <p className="mx-auto mt-4 max-w-xl text-gray-500">
@@ -169,9 +169,9 @@ export default async function PlayAreaPage() {
 
         {/* House Rules */}
         {playRules.length > 0 && (
-          <section id="rules" className="scroll-mt-24 bg-gray-50 px-4 py-20 md:px-8">
+          <section id="rules" className="scroll-mt-24 bg-gray-50 px-4 py-10 md:px-8 md:py-20">
             <div className="mx-auto max-w-7xl">
-              <div className="mb-12 text-center">
+              <div className="mb-6 text-center md:mb-12">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Guidelines</p>
                 <h2 className="text-4xl font-bold text-gray-900 md:text-5xl">House Rules</h2>
                 <p className="mx-auto mt-4 max-w-xl text-gray-500">

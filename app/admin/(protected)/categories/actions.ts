@@ -112,3 +112,43 @@ export async function togglePromotion(id: string, categoryId: string, active: bo
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
+
+/* --------------------------- Subcategories ----------------------------- */
+export async function createSubcategory(categoryId: string, formData: FormData) {
+  await requireStaff('editor')
+  const supabase = createServerSupabase()
+  const name = str(formData, 'name') ?? 'Subcategory'
+  const { error } = await supabase.from('subcategories').insert({
+    category_id: categoryId,
+    name,
+    slug: slugify(name),
+    emoji: str(formData, 'emoji'),
+    display_order: int(formData, 'display_order'),
+  })
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/categories/${categoryId}`)
+  revalidateStorefront()
+}
+
+export async function updateSubcategory(id: string, categoryId: string, formData: FormData) {
+  await requireStaff('editor')
+  const supabase = createServerSupabase()
+  const name = str(formData, 'name') ?? 'Subcategory'
+  const { error } = await supabase.from('subcategories').update({
+    name,
+    slug: slugify(name),
+    emoji: str(formData, 'emoji'),
+    display_order: int(formData, 'display_order'),
+  }).eq('id', id)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/categories/${categoryId}`)
+  revalidateStorefront()
+}
+
+export async function deleteSubcategory(id: string, categoryId: string) {
+  await requireStaff('editor')
+  const supabase = createServerSupabase()
+  await supabase.from('subcategories').delete().eq('id', id)
+  revalidatePath(`/admin/categories/${categoryId}`)
+  revalidateStorefront()
+}

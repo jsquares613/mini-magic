@@ -6,21 +6,21 @@ import CategoryImageField from '@/components/admin/CategoryImageField'
 import DeleteCategoryButton from '@/components/admin/DeleteCategoryButton'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
-import { updateCategory, createPromotion, deletePromotion, togglePromotion } from '../actions'
+import { updateCategory, createPromotion, deletePromotion, togglePromotion, createSubcategory, updateSubcategory, deleteSubcategory } from '../actions'
 
 export default async function EditCategoryPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase()
   const { data: category } = await supabase.from('categories').select('*').eq('id', params.id).maybeSingle()
   if (!category) notFound()
 
-  const { data: promotions } = await supabase
-    .from('category_promotions')
-    .select('*')
-    .eq('category_id', category.id)
-    .order('display_order', { ascending: true })
+  const [{ data: promotions }, { data: subcategories }] = await Promise.all([
+    supabase.from('category_promotions').select('*').eq('category_id', category.id).order('display_order', { ascending: true }),
+    supabase.from('subcategories').select('*').eq('category_id', category.id).order('display_order', { ascending: true }),
+  ])
 
   const update = updateCategory.bind(null, category.id)
   const addPromo = createPromotion.bind(null, category.id)
+  const addSub = createSubcategory.bind(null, category.id)
   const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
 
   return (
@@ -61,6 +61,70 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
       </section>
 
       <CategoryForm action={update} category={category} />
+
+      {/* Subcategories */}
+      <section className="mt-8 max-w-2xl rounded-2xl border border-gray-200 bg-white p-6">
+        <h2 className="mb-4 font-bold text-gray-900">Subcategories</h2>
+
+        <div className="mb-6 space-y-2">
+          {(subcategories ?? []).map((sub) => (
+            <div key={sub.id} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2">
+              <ActionForm
+                action={updateSubcategory.bind(null, sub.id, category.id)}
+                successMessage="Subcategory updated"
+                className="flex flex-1 items-center gap-2"
+              >
+                <input
+                  name="emoji"
+                  defaultValue={sub.emoji ?? ''}
+                  placeholder="🏷️"
+                  className="w-12 rounded border border-gray-200 px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <input
+                  name="name"
+                  required
+                  defaultValue={sub.name}
+                  className={`flex-1 ${input}`}
+                />
+                <input type="hidden" name="display_order" value={sub.display_order} />
+                <SubmitButton pendingText="Saving…" variant="link" className="text-xs text-blue-600">
+                  Save
+                </SubmitButton>
+              </ActionForm>
+              <ActionForm
+                action={deleteSubcategory.bind(null, sub.id, category.id)}
+                successMessage="Subcategory deleted"
+                confirmMessage="Delete this subcategory?"
+              >
+                <SubmitButton pendingText="…" variant="link" className="text-xs text-red-600">
+                  Delete
+                </SubmitButton>
+              </ActionForm>
+            </div>
+          ))}
+          {(!subcategories || subcategories.length === 0) && (
+            <p className="text-sm text-gray-400">No subcategories yet.</p>
+          )}
+        </div>
+
+        <ActionForm action={addSub} successMessage="Subcategory added" className="space-y-3 border-t border-gray-100 pt-4">
+          <p className="text-sm font-medium text-gray-700">Add subcategory</p>
+          <div className="flex gap-2">
+            <input
+              name="emoji"
+              placeholder="🏷️"
+              className="w-14 rounded-lg border border-gray-300 px-3 py-2 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <input
+              name="name"
+              required
+              placeholder="Subcategory name"
+              className={`flex-1 ${input}`}
+            />
+          </div>
+          <SubmitButton pendingText="Adding…">Add subcategory</SubmitButton>
+        </ActionForm>
+      </section>
 
       {/* Promotions */}
       <section className="mt-8 max-w-2xl rounded-2xl border border-gray-200 bg-white p-6">

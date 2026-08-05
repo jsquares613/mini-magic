@@ -18,6 +18,28 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      subcategories: {
+        Row: {
+          id: string
+          category_id: string
+          name: string
+          slug: string
+          emoji: string | null
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          category_id: string
+          name: string
+          slug: string
+          emoji?: string | null
+          display_order?: number
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['subcategories']['Insert']>
+        Relationships: []
+      }
       categories: {
         Row: {
           id: string
@@ -83,6 +105,7 @@ export interface Database {
           short_description: string | null
           description: string | null
           category_id: string
+          subcategory_id: string | null
           price: number | null
           price_display: Database['public']['Enums']['price_display']
           sale_price: number | null
@@ -107,6 +130,7 @@ export interface Database {
           short_description?: string | null
           description?: string | null
           category_id: string
+          subcategory_id?: string | null
           price?: number | null
           price_display?: Database['public']['Enums']['price_display']
           sale_price?: number | null

@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import ProductGrid from '@/components/ProductGrid'
-import { getCategoryBySlug } from '@/lib/categories'
+import SubcategoryFilter from '@/components/SubcategoryFilter'
+import { getCategoryBySlug, getSubcategoriesByCategoryId } from '@/lib/categories'
 import { getProductsByCategory } from '@/lib/products'
 import { repositories } from '@/lib/supabase'
 
@@ -36,9 +36,10 @@ export default async function CategoryPage({ params }: PageProps) {
   const category = await getCategoryBySlug(params.slug)
   if (!category) notFound()
 
-  const [products, promotions] = await Promise.all([
+  const [products, promotions, subcategories] = await Promise.all([
     getProductsByCategory(category.slug),
     repositories.categories.getCategoryPromotions(category.id),
+    getSubcategoriesByCategoryId(category.id),
   ])
   const promo = promotions[0]
 
@@ -67,19 +68,14 @@ export default async function CategoryPage({ params }: PageProps) {
             )}
           </div>
 
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">
-              {products.length} {products.length === 1 ? 'Product' : 'Products'}
-            </h2>
-            <Link href="/categories" className="font-semibold text-blue-600 hover:text-blue-900">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">{category.name}</h2>
+            <Link href="/categories" className="text-sm font-semibold text-blue-600 hover:text-blue-900">
               ← All Categories
             </Link>
           </div>
 
-          <ProductGrid
-            products={products}
-            emptyMessage="No products in this category yet. Check back soon!"
-          />
+          <SubcategoryFilter subcategories={subcategories} products={products} />
         </div>
       </main>
 

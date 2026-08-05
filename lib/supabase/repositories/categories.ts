@@ -6,6 +6,7 @@ import { ok, isLive } from './_util'
 
 export type CategoryRow = Tables<'categories'>
 export type CategoryPromotion = Tables<'category_promotions'>
+export type SubcategoryRow = Tables<'subcategories'>
 
 export async function getAllCategories(): Promise<CategoryRow[]> {
   const sb = getSupabaseClient()
@@ -28,6 +29,16 @@ export async function getAllCategorySlugs(): Promise<string[]> {
   const sb = getSupabaseClient()
   const rows = ok(await sb.from('categories').select('slug'))
   return rows.map((r) => r.slug)
+}
+
+export async function getAllSubcategories(): Promise<SubcategoryRow[]> {
+  const sb = getSupabaseClient()
+  return ok(await sb.from('subcategories').select('*').order('display_order', { ascending: true }))
+}
+
+export async function getSubcategoriesByCategoryId(categoryId: string): Promise<SubcategoryRow[]> {
+  const sb = getSupabaseClient()
+  return ok(await sb.from('subcategories').select('*').eq('category_id', categoryId).order('display_order', { ascending: true }))
 }
 
 /** Active, in-schedule promotions (banners) for a category — or all categories. */

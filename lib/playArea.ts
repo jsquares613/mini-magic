@@ -13,16 +13,16 @@ import type { HeroSlide } from '@/components/Hero'
 
 export async function getPlayAreaHero(): Promise<HeroSlide[]> {
   const playArea = await repositories.playArea.getPlayArea()
-  if (!playArea?.hero_title) return []
+  if (!playArea?.hero_image && !playArea?.hero_title) return []
   return [
     {
       id: 'play-area-hero',
       image: playArea.hero_image ?? '/images/play area/play-area-1.png',
-      imageAlt: playArea.hero_title,
-      title: [{ text: playArea.hero_title }],
+      imageAlt: playArea.hero_title ?? 'Play Area',
+      title: playArea.hero_title ? [{ text: playArea.hero_title }] : [],
       description: playArea.hero_description ? [{ text: playArea.hero_description }] : [],
-      ctaLabel: 'Explore Play Zones',
-      ctaHref: '#play-zones',
+      ctaLabel: playArea.hero_title ? 'Explore Play Zones' : undefined,
+      ctaHref: playArea.hero_title ? '#play-zones' : undefined,
     },
   ]
 }

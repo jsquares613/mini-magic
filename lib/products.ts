@@ -1,5 +1,5 @@
 import { repositories } from '@/lib/supabase'
-import { getCategoryIdToSlugMap } from '@/lib/categories'
+import { getCategoryIdToSlugMap, getSubcategoryIdToSlugMap } from '@/lib/categories'
 import type { Product, ProductWithPricing } from '@/types'
 import type { ProductRow } from '@/lib/supabase/repositories/products'
 
@@ -17,7 +17,7 @@ import type { ProductRow } from '@/lib/supabase/repositories/products'
  * products costs one categories round trip, not fifty.
  */
 
-function toProduct(row: ProductRow, categorySlug: string, images: string[] = []): Product {
+function toProduct(row: ProductRow, categorySlug: string, images: string[] = [], subcategorySlug?: string): Product {
   return {
     id: row.id,
     slug: row.slug,
@@ -27,6 +27,7 @@ function toProduct(row: ProductRow, categorySlug: string, images: string[] = [])
     price: row.price ?? 0,
     salePrice: row.sale_price,
     category: categorySlug,
+    subcategory: subcategorySlug,
     images,
     ageGroup: '',
     material: row.material ?? '',
@@ -44,8 +45,9 @@ function toProduct(row: ProductRow, categorySlug: string, images: string[] = [])
 }
 
 async function toProducts(rows: ProductRow[]): Promise<Product[]> {
-  const [idToSlug, imagesByProduct] = await Promise.all([
+  const [idToSlug, subIdToSlug, imagesByProduct] = await Promise.all([
     getCategoryIdToSlugMap(),
+    getSubcategoryIdToSlugMap(),
     repositories.products.getImagesByProductIds(rows.map((r) => r.id)),
   ])
   return rows.map((row) =>
@@ -53,6 +55,7 @@ async function toProducts(rows: ProductRow[]): Promise<Product[]> {
       row,
       idToSlug.get(row.category_id) ?? row.category_id,
       (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url),
+      row.subcategory_id ? subIdToSlug.get(row.subcategory_id) : undefined,
     ),
   )
 }
@@ -86,8 +89,18 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
 
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const rows = await repositories.products.getProductsByCategory(categorySlug)
-  const imagesByProduct = await repositories.products.getImagesByProductIds(rows.map((r) => r.id))
-  return rows.map((row) => toProduct(row, categorySlug, (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url)))
+  const [subIdToSlug, imagesByProduct] = await Promise.all([
+    getSubcategoryIdToSlugMap(),
+    repositories.products.getImagesByProductIds(rows.map((r) => r.id)),
+  ])
+  return rows.map((row) =>
+    toProduct(
+      row,
+      categorySlug,
+      (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url),
+      row.subcategory_id ? subIdToSlug.get(row.subcategory_id) : undefined,
+    ),
+  )
 }
 
 export async function getFeaturedProducts(limit?: number): Promise<Product[]> {

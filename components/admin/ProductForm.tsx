@@ -13,6 +13,7 @@ import ImageCropModal from './ImageCropModal'
 type Product = Tables<'products'>
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>
 type AgeGroup = Pick<Tables<'age_groups'>, 'id' | 'label'>
+type Subcategory = Pick<Tables<'subcategories'>, 'id' | 'name' | 'emoji' | 'category_id'>
 
 const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
 const label = 'mb-1 block text-sm font-medium text-gray-700'
@@ -29,15 +30,18 @@ export default function ProductForm({
   product,
   categories,
   ageGroups,
+  subcategories = [],
   selectedAgeIds = [],
 }: {
   action: (formData: FormData) => unknown | Promise<unknown>
   product?: Product
   categories: Category[]
   ageGroups: AgeGroup[]
+  subcategories?: Subcategory[]
   selectedAgeIds?: string[]
 }) {
   const router = useRouter()
+  const [selectedCategoryId, setSelectedCategoryId] = useState(product?.category_id ?? '')
   const [stagedImages, setStagedImages] = useState<{ blob: Blob; name: string; preview: string }[]>([])
   const [cropQueue, setCropQueue] = useState<{ file: File; preview: string }[]>([])
 
@@ -271,17 +275,40 @@ export default function ProductForm({
             <div className="space-y-4">
               <div>
                 <label className={label}>Category *</label>
-                <select name="category_id" required defaultValue={product?.category_id ?? ''} className={input}>
-                  <option value="" disabled>
-                    Select…
-                  </option>
+                <select
+                  name="category_id"
+                  required
+                  defaultValue={product?.category_id ?? ''}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  className={input}
+                >
+                  <option value="" disabled>Select…</option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
+                    <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>
+              {(() => {
+                const filtered = subcategories.filter((s) => s.category_id === selectedCategoryId)
+                if (!filtered.length) return null
+                return (
+                  <div>
+                    <label className={label}>Subcategory</label>
+                    <select
+                      name="subcategory_id"
+                      defaultValue={product?.subcategory_id ?? ''}
+                      className={input}
+                    >
+                      <option value="">None</option>
+                      {filtered.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.emoji ? `${s.emoji} ` : ''}{s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )
+              })()}
               <div>
                 <label className={label}>Display order</label>
                 <input name="display_order" type="number" defaultValue={product?.display_order ?? 0} className={input} />

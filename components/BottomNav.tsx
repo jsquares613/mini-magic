@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { siteConfig } from '@/config/site'
 
@@ -33,15 +34,25 @@ export default function BottomNav() {
               active ? 'bg-blue-50 text-blue-900' : 'text-gray-500'
             }`}
           >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={active ? 2 : 1.75}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d={ICONS[link.href]} />
-            </svg>
+            {link.href === '/about' ? (
+              <Image
+                src="/images/MiniMagic Logo BLACK Icon-01 1.png"
+                alt="About Us"
+                width={20}
+                height={20}
+                className={`h-5 w-5 object-contain transition-opacity ${active ? 'opacity-100' : 'opacity-40'}`}
+              />
+            ) : (
+              <svg
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={active ? 2 : 1.75}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d={ICONS[link.href]} />
+              </svg>
+            )}
             {link.label}
           </Link>
         )

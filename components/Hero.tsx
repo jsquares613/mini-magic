@@ -138,7 +138,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                 aria-roledescription="slide"
                 aria-label={`${index + 1} of ${count}`}
                 aria-hidden={!active}
-                className={`col-start-1 row-start-1 relative flex min-h-[150px] min-[390px]:min-h-[190px] flex-col justify-center p-2.5 min-[390px]:p-4 md:min-h-[440px] md:p-10 transition-opacity duration-700 ease-in-out ${
+                className={`col-start-1 row-start-1 relative flex min-h-[110px] aspect-[1280/440] flex-col justify-center p-2.5 min-[390px]:p-4 md:aspect-auto md:min-h-[440px] md:p-10 transition-opacity duration-700 ease-in-out ${
                   active ? 'opacity-100' : 'pointer-events-none opacity-0'
                 }`}
               >
