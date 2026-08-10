@@ -79,6 +79,7 @@ create table products (
   popular           boolean not null default false,
   new_arrival       boolean not null default false,
   display_order     int not null default 0,
+  promo_tag         text,
   seo_title         text,
   seo_description   text,
   created_at        timestamptz not null default now(),

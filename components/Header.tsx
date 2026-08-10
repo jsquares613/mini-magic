@@ -2,31 +2,39 @@ import Link from 'next/link'
 import { siteConfig } from '@/config/site'
 import SearchBar from '@/components/SearchBar'
 import WishlistHeaderIcon from '@/components/WishlistHeaderIcon'
-import { getAnnouncements, getHeaderNav } from '@/lib/settings'
+import { getAnnouncements, getHeaderNav, getMarqueeEnabled } from '@/lib/settings'
 
-/**
- * Header — an `async` Server Component. Nav links and the announcement
- * marquee are admin-editable data (Phase 3); logo/site name stay brand-level
- * static config. On mobile, navigation lives in the fixed `BottomNav` tab bar
- * instead of a hamburger menu, matching the reference design.
- */
 export default async function Header() {
-  const [navLinks, announcements] = await Promise.all([getHeaderNav(), getAnnouncements()])
+  const [navLinks, announcements, marqueeEnabled] = await Promise.all([
+    getHeaderNav(),
+    getAnnouncements(),
+    getMarqueeEnabled(),
+  ])
   const marqueeMessages = announcements.length ? announcements : siteConfig.announcements
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Top Banner — desktop only; the mobile reference design has no marquee */}
-      <div className="hidden overflow-hidden bg-primary px-4 py-2 text-sm md:block">
-        <div className="marquee">
-          <div className="marquee-content">
-            {Array(8).fill(null).flatMap(() => marqueeMessages).map((msg, i) => (
+      {/* Announcement bar — always visible; scrolling can be toggled by admin */}
+      <div className="overflow-hidden bg-primary px-4 py-1.5 text-sm">
+        {marqueeEnabled ? (
+          <div className="marquee">
+            <div className="marquee-content">
+              {Array(8).fill(null).flatMap(() => marqueeMessages).map((msg, i) => (
+                <span key={i} className="px-4 font-semibold">
+                  {msg}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center gap-8">
+            {marqueeMessages.map((msg, i) => (
               <span key={i} className="px-4 font-semibold">
                 {msg}
               </span>
             ))}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Mobile banner: logo + tagline, wishlist icon, no cart */}

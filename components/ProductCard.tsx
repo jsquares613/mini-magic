@@ -28,6 +28,21 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Visual: real image when available, else emoji placeholder — always square, matching the recommended 1000x1000 upload */}
         <div className={`relative flex aspect-square items-center justify-center overflow-hidden ${product.bg ?? 'bg-lightYellow'}`}>
+          {/* Promo tag — top-left corner ribbon */}
+          {product.promoTag && (
+            <div
+              className="absolute left-0 top-0 z-10 overflow-hidden rounded-br-xl shadow-[3px_3px_16px_rgba(0,0,0,0.55)]"
+              style={{ background: 'linear-gradient(155deg, #1e3fad 0%, #080f2e 100%)' }}
+            >
+              <div className="px-1.5 py-1 md:px-4 md:py-2.5">
+                {product.promoTag.split('\n').map((line, i) => (
+                  <p key={i} className={`text-center text-[8px] font-black uppercase leading-none tracking-widest drop-shadow md:text-[17px] ${i === 0 ? 'text-white' : 'text-yellow-400'}`}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
           {hasImage ? (
             <SafeImage
               src={product.images[0]}
@@ -47,7 +62,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <h3 className="line-clamp-1 text-[11px] font-semibold text-gray-900 md:mb-1 md:text-base">{product.name}</h3>
           <div className="flex items-center justify-between gap-1 md:gap-2">
             <div className="flex min-w-0 items-baseline gap-1 md:gap-2">
-              <span className={`text-xs font-bold md:text-base ${isOnSale ? 'text-green-600' : 'text-blue-900'}`}>
+              <span className={`text-xs font-bold md:text-base ${isOnSale ? 'text-blue-600' : 'text-blue-900'}`}>
                 {formatPrice(effectivePrice)}
               </span>
               {isOnSale && (

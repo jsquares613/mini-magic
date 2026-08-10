@@ -325,6 +325,39 @@ export default function ProductForm({
             </div>
           </section>
 
+          <section className="rounded-2xl border border-gray-200 bg-white p-6">
+            <h2 className="mb-1 font-bold text-gray-900">Promo Tag</h2>
+            <p className="mb-4 text-xs text-gray-500">
+              Badge shown on the product card and detail page. Use line breaks to control how text stacks (e.g. &ldquo;BUY 1 / GET 1 / FREE&rdquo;). Leave blank for no badge.
+            </p>
+            <div className="space-y-3">
+              <textarea
+                name="promo_tag"
+                rows={3}
+                placeholder={'BUY 1\nGET 1\nFREE'}
+                defaultValue={product?.promo_tag ?? ''}
+                className={input}
+              />
+              {product?.promo_tag && (
+                <div className="flex items-start gap-3">
+                  <span className="text-xs text-gray-400">Preview:</span>
+                  <div
+                    className="inline-block overflow-hidden rounded-br-xl shadow-[3px_3px_16px_rgba(0,0,0,0.5)]"
+                    style={{ background: 'linear-gradient(155deg, #1e3fad 0%, #080f2e 100%)' }}
+                  >
+                    <div className="px-4 py-2.5">
+                      {product.promo_tag.split('\n').map((line, i) => (
+                        <p key={i} className={`text-center text-[16px] font-black uppercase leading-none tracking-widest drop-shadow ${i === 0 ? 'text-white' : 'text-yellow-400'}`}>
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
           <SubmitButton pendingText={product ? 'Saving…' : 'Creating…'} className="w-full py-3">
             {product ? 'Save changes' : 'Create product'}
           </SubmitButton>

@@ -93,6 +93,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Product Image */}
             <div className="relative">
               <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl ${product.bg ?? 'bg-yellow-50'}`}>
+                {/* Promo tag — top-left corner ribbon */}
+                {product.promoTag && (
+                  <div
+                    className="absolute left-0 top-0 z-10 overflow-hidden rounded-br-2xl shadow-[4px_4px_24px_rgba(0,0,0,0.6)]"
+                    style={{ background: 'linear-gradient(155deg, #1e3fad 0%, #080f2e 100%)' }}
+                  >
+                    <div className="px-7 py-4">
+                      {product.promoTag.split('\n').map((line, i) => (
+                        <p key={i} className={`text-center text-3xl font-black uppercase leading-none tracking-widest drop-shadow-md ${i === 0 ? 'text-white' : 'text-yellow-400'}`}>
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {hasImage ? (
                   <SafeImage
                     src={product.images[0]}
@@ -114,6 +129,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {/* Product Information */}
             <div>
+              {product.promoTag && (
+                <div className="mb-3 inline-flex items-center gap-1 rounded-lg bg-[#1B2957] px-3 py-1.5">
+                  {product.promoTag.split('\n').map((line, i, arr) => (
+                    <span key={i} className="text-sm font-extrabold uppercase tracking-wide text-white">
+                      {line}{i < arr.length - 1 && <span className="mx-1 font-normal opacity-40">·</span>}
+                    </span>
+                  ))}
+                </div>
+              )}
               <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-700">
                 {categoryName}
               </p>
@@ -123,7 +147,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
               {/* Price */}
               <div className="mb-4 flex items-center gap-3">
-                <span className={`text-3xl font-bold ${isOnSale ? 'text-green-600' : 'text-blue-900'}`}>
+                <span className={`text-3xl font-bold ${isOnSale ? 'text-blue-600' : 'text-blue-900'}`}>
                   {formatPrice(effectivePrice)}
                 </span>
                 {isOnSale && (

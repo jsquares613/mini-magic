@@ -51,6 +51,8 @@ export interface Product {
   isFeatured: boolean
   isPopular: boolean
   isNew: boolean
+  /** Promotional badge text shown on the product card (e.g. "BUY 1\nGET 1\nFREE"). Null when no promo applies. */
+  promoTag: string | null
   tags: string[]
   /** "Why kids love it" bullet list. */
   features: string[]

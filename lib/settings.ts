@@ -22,6 +22,11 @@ export const getAnnouncements = cache(async (): Promise<string[]> => {
   return value ?? []
 })
 
+export const getMarqueeEnabled = cache(async (): Promise<boolean> => {
+  const value = await repositories.settings.getSetting<boolean>('marquee_enabled')
+  return value ?? true
+})
+
 export const getFooterText = cache(async (): Promise<string | null> => {
   const value = await repositories.settings.getSetting<string>('footer_text')
   return value ?? null

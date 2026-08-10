@@ -47,6 +47,7 @@ function parseProduct(fd: FormData): TablesInsert<'products'> {
     features: lineList(fd, 'features'),
     popular: bool(fd, 'popular'),
     new_arrival: bool(fd, 'new_arrival'),
+    promo_tag: str(fd, 'promo_tag'),
     display_order: num(fd, 'display_order') ?? 0,
     seo_title: str(fd, 'seo_title'),
     seo_description: str(fd, 'seo_description'),

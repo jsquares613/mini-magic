@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
-import { str } from '@/lib/admin/form'
+import { str, bool, lineList } from '@/lib/admin/form'
 
 function revalidateSettings() {
   revalidatePath('/admin/settings')
-  revalidatePath('/')
+  revalidatePath('/', 'layout')
 }
 
 export async function updateContactInfo(formData: FormData) {
@@ -22,6 +22,20 @@ export async function updateContactInfo(formData: FormData) {
     map_url:   str(formData, 'map_url'),
   })
   if (error) throw new Error(error.message)
+  revalidateSettings()
+}
+
+export async function updateBannerSettings(formData: FormData) {
+  await requireStaff('editor')
+  const supabase = createServerSupabase()
+  const messages = lineList(formData, 'messages')
+  const scrolling = bool(formData, 'marquee_enabled')
+  const [r1, r2] = await Promise.all([
+    supabase.from('site_settings').upsert({ key: 'announcements', value: messages }, { onConflict: 'key' }),
+    supabase.from('site_settings').upsert({ key: 'marquee_enabled', value: scrolling }, { onConflict: 'key' }),
+  ])
+  if (r1.error) throw new Error(r1.error.message)
+  if (r2.error) throw new Error(r2.error.message)
   revalidateSettings()
 }
 

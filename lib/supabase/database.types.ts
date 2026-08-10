@@ -116,6 +116,7 @@ export interface Database {
           features: string[]
           popular: boolean
           new_arrival: boolean
+          promo_tag: string | null
           display_order: number
           seo_title: string | null
           seo_description: string | null
@@ -141,6 +142,7 @@ export interface Database {
           features?: string[]
           popular?: boolean
           new_arrival?: boolean
+          promo_tag?: string | null
           display_order?: number
           seo_title?: string | null
           seo_description?: string | null

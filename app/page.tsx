@@ -24,7 +24,7 @@ export default async function Home() {
   const heroSlides = await getHomeHeroSlides()
 
   return (
-    <main className="min-h-screen bg-surface">
+    <main className="min-h-screen bg-[#FFFFEC]">
       <Header />
       <div className="flex flex-col">
         <FadeInSection>
