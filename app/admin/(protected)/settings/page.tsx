@@ -17,7 +17,7 @@ export default async function SettingsPage() {
   ])
   const footerText = (footerSetting?.value as string) ?? ''
   const marqueeEnabled = marqueeSetting ? (marqueeSetting.value as boolean) : true
-  const announcements: string[] = (announcementsSetting?.value as string[]) ?? siteConfig.announcements
+  const announcements: string[] = (announcementsSetting?.value as string[]) ?? [...siteConfig.announcements]
 
   return (
     <div className="space-y-8 p-4 md:p-8">

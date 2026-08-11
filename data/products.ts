@@ -43,6 +43,7 @@ export const products: Product[] = [
       'Perfect cuddle size for little arms',
     ],
     relatedProducts: ['blue-teddy-bear', 'stegosaurus-plush-toy', 'rainbow-unicorn-plush'],
+    promoTag: null,
     displayOrder: 1,
     seo: {
       metaTitle: 'Classic Teddy Bear - Minimagic',
@@ -79,6 +80,7 @@ export const products: Product[] = [
       'Easy to clean',
     ],
     relatedProducts: ['classic-teddy-bear', 'rainbow-unicorn-plush', 'stegosaurus-plush-toy'],
+    promoTag: null,
     displayOrder: 2,
   },
   {
@@ -110,6 +112,7 @@ export const products: Product[] = [
       'Encourages active, imaginative play',
     ],
     relatedProducts: ['classic-robot-toy', 'stegosaurus-plush-toy', 'classic-teddy-bear'],
+    promoTag: null,
     displayOrder: 3,
   },
   {
@@ -141,6 +144,7 @@ export const products: Product[] = [
       'Just the right size to carry everywhere',
     ],
     relatedProducts: ['classic-teddy-bear', 'rainbow-unicorn-plush', 'monster-racing-truck'],
+    promoTag: null,
     displayOrder: 4,
   },
   {
@@ -172,6 +176,7 @@ export const products: Product[] = [
       'Encourages creative role-play',
     ],
     relatedProducts: ['rainbow-unicorn-plush', 'classic-teddy-bear', 'classic-robot-toy'],
+    promoTag: null,
     displayOrder: 5,
   },
   {
@@ -203,6 +208,7 @@ export const products: Product[] = [
       'A magical bedtime companion',
     ],
     relatedProducts: ['classic-teddy-bear', 'princess-fashion-doll', 'stegosaurus-plush-toy'],
+    promoTag: null,
     displayOrder: 6,
   },
   {
@@ -234,6 +240,7 @@ export const products: Product[] = [
       'Sparks STEM curiosity',
     ],
     relatedProducts: ['monster-racing-truck', 'princess-fashion-doll', 'stegosaurus-plush-toy'],
+    promoTag: null,
     displayOrder: 7,
   },
   {
@@ -264,6 +271,7 @@ export const products: Product[] = [
       'Secure zip closure',
     ],
     relatedProducts: ['silk-scarf', 'travel-umbrella'],
+    promoTag: null,
     displayOrder: 8,
   },
   {
@@ -294,6 +302,7 @@ export const products: Product[] = [
       'Easy one-hand open',
     ],
     relatedProducts: ['leather-tote-bag', 'silk-scarf'],
+    promoTag: null,
     displayOrder: 9,
   },
   {
@@ -324,6 +333,7 @@ export const products: Product[] = [
       'Lies flat for easy writing',
     ],
     relatedProducts: ['stationery-pack', 'leather-tote-bag'],
+    promoTag: null,
     displayOrder: 10,
   },
   {
@@ -354,6 +364,7 @@ export const products: Product[] = [
       'Neatly organised set',
     ],
     relatedProducts: ['deluxe-notebook', 'kids-lunchbox'],
+    promoTag: null,
     displayOrder: 11,
   },
   {
@@ -384,6 +395,7 @@ export const products: Product[] = [
       'Rust-resistant stainless steel',
     ],
     relatedProducts: ['kids-lunchbox', 'ceramic-vase'],
+    promoTag: null,
     displayOrder: 12,
   },
   {
@@ -414,6 +426,7 @@ export const products: Product[] = [
       'Lightweight all-season wear',
     ],
     relatedProducts: ['leather-tote-bag', 'travel-umbrella'],
+    promoTag: null,
     displayOrder: 13,
   },
   {
@@ -444,6 +457,7 @@ export const products: Product[] = [
       'Statement décor piece',
     ],
     relatedProducts: ['kitchen-knife-set', 'silk-scarf'],
+    promoTag: null,
     displayOrder: 14,
   },
   {
@@ -474,6 +488,7 @@ export const products: Product[] = [
       'Dishwasher friendly',
     ],
     relatedProducts: ['stationery-pack', 'kitchen-knife-set'],
+    promoTag: null,
     displayOrder: 15,
   },
   {
@@ -504,6 +519,7 @@ export const products: Product[] = [
       'Fresh family-friendly scent',
     ],
     relatedProducts: ['party-tableware-set', 'kids-lunchbox'],
+    promoTag: null,
     displayOrder: 16,
   },
   {
@@ -534,6 +550,7 @@ export const products: Product[] = [
       'Zero-hassle cleanup',
     ],
     relatedProducts: ['gentle-hand-wash', 'kids-lunchbox'],
+    promoTag: null,
     displayOrder: 17,
   },
 ]
