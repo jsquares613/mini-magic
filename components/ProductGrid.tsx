@@ -22,8 +22,8 @@ export default function ProductGrid({
 
   return (
     <div className="grid grid-cols-3 gap-1 min-[390px]:gap-2 md:gap-6 lg:grid-cols-4">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+      {products.map((product, i) => (
+        <ProductCard key={product.id} product={product} index={i} />
       ))}
     </div>
   )

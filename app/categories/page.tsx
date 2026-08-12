@@ -42,6 +42,7 @@ export default async function CategoriesPage() {
                       src={category.image}
                       alt={category.name}
                       sizes="(max-width: 768px) 18vw, 10vw"
+                      eager
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (

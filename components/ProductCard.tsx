@@ -13,7 +13,7 @@ import { formatPrice } from '@/lib/format'
  * No `'use client'` — it is a presentational Server Component (just a Link),
  * so it renders inside both server and client trees with zero JS cost.
  */
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product, index = 99 }: { product: Product; index?: number }) {
   const { effectivePrice, isOnSale, discountPercent } = withPricing(product)
   const hasImage = product.images.length > 0
 
@@ -48,6 +48,8 @@ export default function ProductCard({ product }: { product: Product }) {
               src={product.images[0]}
               alt={product.name}
               sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 25vw"
+              priority={index === 0}
+              eager={index < 9}
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (

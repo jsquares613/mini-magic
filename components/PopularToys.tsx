@@ -20,15 +20,15 @@ export default async function PopularToys({ limit = 3 }: { limit?: number }) {
 
         {/* Mobile: 3 products in a single row */}
         <div className="grid grid-cols-3 gap-1 min-[390px]:gap-2 md:hidden">
-          {products.slice(0, 3).map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {products.slice(0, 3).map((product, i) => (
+            <ProductCard key={product.id} product={product} index={i} />
           ))}
         </div>
 
         {/* Desktop */}
         <div className="hidden md:grid md:grid-cols-4 md:gap-8">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {products.map((product, i) => (
+            <ProductCard key={product.id} product={product} index={i} />
           ))}
         </div>
       </div>
