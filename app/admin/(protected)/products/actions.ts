@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
@@ -55,7 +55,7 @@ function parseProduct(fd: FormData): TablesInsert<'products'> {
 }
 
 async function syncAgeGroups(productId: string, ageGroupIds: string[]) {
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   await supabase.from('product_age_groups').delete().eq('product_id', productId)
   if (ageGroupIds.length) {
     await supabase
@@ -78,7 +78,7 @@ function revalidateStorefront(slug?: string) {
  *  upload any images staged on the create form before navigating away. */
 export async function createProduct(formData: FormData): Promise<string> {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const payload = parseProduct(formData)
 
   const { data, error } = await supabase.from('products').insert(payload).select('id').single()
@@ -91,7 +91,7 @@ export async function createProduct(formData: FormData): Promise<string> {
 
 export async function updateProduct(id: string, formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const payload = parseProduct(formData)
 
   const { error } = await supabase.from('products').update(payload).eq('id', id)
@@ -104,7 +104,7 @@ export async function updateProduct(id: string, formData: FormData) {
 
 export async function deleteProduct(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: images } = await supabase.from('product_images').select('image_url').eq('product_id', id)
 
   const { error } = await supabase.from('products').delete().eq('id', id)
@@ -118,7 +118,7 @@ export async function deleteProduct(id: string) {
 /* ------------------------------- Images --------------------------------- */
 export async function addProductImage(productId: string, imageUrl: string, altText: string | null) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
 
   // First image becomes primary automatically.
   const { count } = await supabase
@@ -140,7 +140,7 @@ export async function addProductImage(productId: string, imageUrl: string, altTe
 
 export async function deleteProductImage(imageId: string, productId: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: image } = await supabase.from('product_images').select('image_url').eq('id', imageId).maybeSingle()
 
   const { error } = await supabase.from('product_images').delete().eq('id', imageId)
@@ -153,7 +153,7 @@ export async function deleteProductImage(imageId: string, productId: string) {
 
 export async function setPrimaryImage(imageId: string, productId: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   // Unset all, then set the chosen one (partial unique index allows one primary).
   await supabase.from('product_images').update({ is_primary: false }).eq('product_id', productId)
   const { error } = await supabase.from('product_images').update({ is_primary: true }).eq('id', imageId)
@@ -168,7 +168,7 @@ export async function addRelatedProduct(productId: string, formData: FormData) {
   const relatedProductId = str(formData, 'related_product_id')
   if (!relatedProductId) return
 
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { count } = await supabase
     .from('product_related')
     .select('*', { count: 'exact', head: true })
@@ -186,7 +186,7 @@ export async function addRelatedProduct(productId: string, formData: FormData) {
 
 export async function removeRelatedProduct(relationId: string, productId: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('product_related').delete().eq('id', relationId)
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/products/${productId}`)

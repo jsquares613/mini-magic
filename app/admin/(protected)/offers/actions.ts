@@ -1,14 +1,14 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged } from '@/lib/supabase/storage'
 import { str, bool } from '@/lib/admin/form'
 
 export async function updateOfferBanner(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: current } = await supabase.from('offer_banner').select('image').eq('id', 1).maybeSingle()
 
   const image = str(formData, 'image')

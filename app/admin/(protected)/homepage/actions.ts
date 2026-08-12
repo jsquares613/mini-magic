@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, bool, dateTime } from '@/lib/admin/form'
@@ -28,7 +28,7 @@ function parseHero(fd: FormData) {
 
 export async function createHeroSlide(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('homepage_hero_slides').insert(parseHero(formData))
   if (error) throw new Error(error.message)
   revalidateHome()
@@ -37,7 +37,7 @@ export async function createHeroSlide(formData: FormData) {
 
 export async function updateHeroSlide(id: string, formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: current } = await supabase.from('homepage_hero_slides').select('image').eq('id', id).maybeSingle()
 
   const payload = parseHero(formData)
@@ -51,7 +51,7 @@ export async function updateHeroSlide(id: string, formData: FormData) {
 
 export async function deleteHeroSlide(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: slide } = await supabase.from('homepage_hero_slides').select('image').eq('id', id).maybeSingle()
 
   await supabase.from('homepage_hero_slides').delete().eq('id', id)
@@ -63,7 +63,7 @@ export async function deleteHeroSlide(id: string) {
 /* --------------------------- Featured products -------------------------- */
 export async function addFeaturedProduct(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const productId = str(formData, 'product_id')
   if (!productId) return
   const { count } = await supabase.from('homepage_featured_products').select('*', { count: 'exact', head: true })
@@ -75,7 +75,7 @@ export async function addFeaturedProduct(formData: FormData) {
 
 export async function removeFeaturedProduct(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   await supabase.from('homepage_featured_products').delete().eq('id', id)
   revalidateHome()
 }
@@ -97,7 +97,7 @@ function parseBanner(fd: FormData) {
 
 export async function createBanner(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('promotional_banners').insert(parseBanner(formData))
   if (error) throw new Error(error.message)
   revalidateHome()
@@ -106,7 +106,7 @@ export async function createBanner(formData: FormData) {
 
 export async function updateBanner(id: string, formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: current } = await supabase.from('promotional_banners').select('image').eq('id', id).maybeSingle()
 
   const payload = parseBanner(formData)
@@ -120,7 +120,7 @@ export async function updateBanner(id: string, formData: FormData) {
 
 export async function deleteBanner(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: banner } = await supabase.from('promotional_banners').select('image').eq('id', id).maybeSingle()
 
   await supabase.from('promotional_banners').delete().eq('id', id)
@@ -131,7 +131,7 @@ export async function deleteBanner(id: string) {
 
 export async function toggleBanner(id: string, active: boolean) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   await supabase.from('promotional_banners').update({ active }).eq('id', id)
   revalidateHome()
 }

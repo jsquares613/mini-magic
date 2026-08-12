@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { str, bool, lineList } from '@/lib/admin/form'
 
@@ -12,7 +12,7 @@ function revalidateSettings() {
 
 export async function updateContactInfo(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('contact_information').upsert({
     id: 1,
     phone:     str(formData, 'phone'),
@@ -27,7 +27,7 @@ export async function updateContactInfo(formData: FormData) {
 
 export async function updateBannerSettings(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const messages = lineList(formData, 'messages')
   const scrolling = bool(formData, 'marquee_enabled')
   const [r1, r2] = await Promise.all([
@@ -41,7 +41,7 @@ export async function updateBannerSettings(formData: FormData) {
 
 export async function updateFooterText(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const value = str(formData, 'footer_text')
   const { error } = await supabase
     .from('site_settings')

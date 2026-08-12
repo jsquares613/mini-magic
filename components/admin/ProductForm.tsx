@@ -84,6 +84,7 @@ export default function ProductForm({
 
   async function createWithImages(formData: FormData) {
     const id = (await action(formData)) as string
+    if (!id) throw new Error('Product creation returned no ID — please try again.')
 
     if (stagedImages.length > 0) {
       const supabase = createBrowserSupabase()

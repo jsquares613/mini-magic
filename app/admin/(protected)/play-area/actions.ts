@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, lineList } from '@/lib/admin/form'
@@ -15,7 +15,7 @@ function revalidatePlayArea() {
 /* ------------------------------- Settings -------------------------------- */
 export async function updatePlayAreaSettings(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: current } = await supabase.from('play_area').select('hero_image').eq('id', 1).maybeSingle()
 
   const heroImage = str(formData, 'hero_image')
@@ -41,7 +41,7 @@ export async function addGalleryImage(formData: FormData) {
   await requireStaff('editor')
   const imageUrl = str(formData, 'image_url')
   if (!imageUrl) return
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { count } = await supabase.from('play_area_gallery').select('*', { count: 'exact', head: true })
   const { error } = await supabase
     .from('play_area_gallery')
@@ -52,7 +52,7 @@ export async function addGalleryImage(formData: FormData) {
 
 export async function deleteGalleryImage(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: image } = await supabase.from('play_area_gallery').select('image_url').eq('id', id).maybeSingle()
 
   const { error } = await supabase.from('play_area_gallery').delete().eq('id', id)
@@ -74,7 +74,7 @@ function parseFeature(fd: FormData) {
 
 export async function createFeature(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('play_area_features').insert(parseFeature(formData))
   if (error) throw new Error(error.message)
   revalidatePlayArea()
@@ -83,7 +83,7 @@ export async function createFeature(formData: FormData) {
 
 export async function updateFeature(id: string, formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('play_area_features').update(parseFeature(formData)).eq('id', id)
   if (error) throw new Error(error.message)
   revalidatePlayArea()
@@ -92,7 +92,7 @@ export async function updateFeature(id: string, formData: FormData) {
 
 export async function deleteFeature(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('play_area_features').delete().eq('id', id)
   if (error) throw new Error(error.message)
   revalidatePlayArea()

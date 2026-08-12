@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, bool } from '@/lib/admin/form'
@@ -17,7 +17,7 @@ function revalidateAbout() {
 /* ------------------------------- Settings -------------------------------- */
 export async function updateAboutContent(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: current } = await supabase
     .from('about_page')
     .select('story_image, hero_image')
@@ -52,7 +52,7 @@ export async function updateAboutContent(formData: FormData) {
 // per-item id) — add/remove read-modify-write the whole array. Index-based
 // removal is fine for a single-admin-at-a-time tool; every other delete in
 // this codebase is by UUID, this is the one deliberate exception.
-async function readGallery(supabase: ReturnType<typeof createServerSupabase>): Promise<AboutGalleryItem[]> {
+async function readGallery(supabase: ReturnType<typeof createAdminSupabase>): Promise<AboutGalleryItem[]> {
   const { data } = await supabase.from('about_page').select('gallery').eq('id', 1).maybeSingle()
   return Array.isArray(data?.gallery) ? (data.gallery as unknown as AboutGalleryItem[]) : []
 }
@@ -61,7 +61,7 @@ export async function addGalleryItem(formData: FormData) {
   await requireStaff('editor')
   const image = str(formData, 'image')
   if (!image) return
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const gallery = await readGallery(supabase)
   gallery.push({ image, label: str(formData, 'label') ?? '' })
   const { error } = await supabase.from('about_page').update({ gallery: gallery as unknown as Json }).eq('id', 1)
@@ -71,7 +71,7 @@ export async function addGalleryItem(formData: FormData) {
 
 export async function removeGalleryItem(index: number) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const gallery = await readGallery(supabase)
   const [removed] = gallery.splice(index, 1)
   const { error } = await supabase.from('about_page').update({ gallery: gallery as unknown as Json }).eq('id', 1)
@@ -86,7 +86,7 @@ export async function addStatistic(formData: FormData) {
   await requireStaff('editor')
   const label = str(formData, 'label')
   if (!label) return
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('about_statistics').insert({
     label,
     value: Number(str(formData, 'value') ?? '0'),
@@ -99,7 +99,7 @@ export async function addStatistic(formData: FormData) {
 
 export async function deleteStatistic(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('about_statistics').delete().eq('id', id)
   if (error) throw new Error(error.message)
   revalidateAbout()
@@ -119,7 +119,7 @@ function parseTeamMember(fd: FormData) {
 
 export async function createTeamMember(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('team_members').insert(parseTeamMember(formData))
   if (error) throw new Error(error.message)
   revalidateAbout()
@@ -128,7 +128,7 @@ export async function createTeamMember(formData: FormData) {
 
 export async function updateTeamMember(id: string, formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: current } = await supabase.from('team_members').select('image').eq('id', id).maybeSingle()
 
   const payload = parseTeamMember(formData)
@@ -142,7 +142,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
 
 export async function deleteTeamMember(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: member } = await supabase.from('team_members').select('image').eq('id', id).maybeSingle()
 
   const { error } = await supabase.from('team_members').delete().eq('id', id)
@@ -154,7 +154,7 @@ export async function deleteTeamMember(id: string) {
 
 export async function toggleTeamMemberActive(id: string, active: boolean) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   await supabase.from('team_members').update({ active }).eq('id', id)
   revalidateAbout()
 }
@@ -174,7 +174,7 @@ function parseTestimonial(fd: FormData) {
 
 export async function createTestimonial(formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { error } = await supabase.from('testimonials').insert(parseTestimonial(formData))
   if (error) throw new Error(error.message)
   revalidateAbout()
@@ -183,7 +183,7 @@ export async function createTestimonial(formData: FormData) {
 
 export async function updateTestimonial(id: string, formData: FormData) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: current } = await supabase.from('testimonials').select('image').eq('id', id).maybeSingle()
 
   const payload = parseTestimonial(formData)
@@ -197,7 +197,7 @@ export async function updateTestimonial(id: string, formData: FormData) {
 
 export async function deleteTestimonial(id: string) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   const { data: testimonial } = await supabase.from('testimonials').select('image').eq('id', id).maybeSingle()
 
   const { error } = await supabase.from('testimonials').delete().eq('id', id)
@@ -209,7 +209,7 @@ export async function deleteTestimonial(id: string) {
 
 export async function toggleTestimonialActive(id: string, active: boolean) {
   await requireStaff('editor')
-  const supabase = createServerSupabase()
+  const supabase = createAdminSupabase()
   await supabase.from('testimonials').update({ active }).eq('id', id)
   revalidateAbout()
 }
