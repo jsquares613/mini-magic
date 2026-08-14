@@ -11,7 +11,7 @@ export default function FeatureForm({
   action,
   feature,
 }: {
-  action: (formData: FormData) => void | Promise<void>
+  action: (formData: FormData) => unknown | Promise<unknown>
   feature?: PlayAreaFeature
 }) {
   return (

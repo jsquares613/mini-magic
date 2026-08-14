@@ -12,7 +12,7 @@ export default function TestimonialForm({
   action,
   testimonial,
 }: {
-  action: (formData: FormData) => void | Promise<void>
+  action: (formData: FormData) => unknown | Promise<unknown>
   testimonial?: Testimonial
 }) {
   return (

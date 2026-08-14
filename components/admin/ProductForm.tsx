@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import type { Tables } from '@/lib/supabase/database.types'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
 import { addProductImage } from '@/app/admin/(protected)/products/actions'
+import { unwrapAction, type ActionResult } from '@/lib/admin/actionResult'
 import ActionForm from './ActionForm'
 import SubmitButton from './SubmitButton'
 import ImageCropModal from './ImageCropModal'
@@ -83,7 +84,7 @@ export default function ProductForm({
   }
 
   async function createWithImages(formData: FormData) {
-    const id = (await action(formData)) as string
+    const id = unwrapAction(await action(formData) as ActionResult<string>)
     if (!id) throw new Error('Product creation returned no ID — please try again.')
 
     if (stagedImages.length > 0) {
@@ -97,7 +98,7 @@ export default function ProductForm({
           const {
             data: { publicUrl },
           } = supabase.storage.from('product-images').getPublicUrl(path)
-          await addProductImage(id, publicUrl, name)
+          unwrapAction(await addProductImage(id, publicUrl, name))
         } catch {
           failures++
         }

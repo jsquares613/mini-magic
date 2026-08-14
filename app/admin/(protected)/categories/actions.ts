@@ -31,32 +31,39 @@ function revalidateStorefront(slug?: string) {
   if (slug) revalidatePath(`/categories/${slug}`)
 }
 
-export async function createCategory(formData: FormData) {
+export async function createCategory(formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { data, error } = await supabase.from('categories').insert(parseCategory(formData)).select('id').single()
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidateStorefront()
   redirect(`/admin/categories/${data.id}`)
 }
 
-export async function updateCategory(id: string, formData: FormData) {
+export async function updateCategory(id: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const payload = parseCategory(formData)
   const { error } = await supabase.from('categories').update(payload).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidateStorefront(payload.slug)
   redirect(`/admin/categories/${id}`)
 }
 
-export async function deleteCategory(id: string) {
+export async function deleteCategory(id: string): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { data: category } = await supabase.from('categories').select('image, banner_image').eq('id', id).maybeSingle()
 
   const { error } = await supabase.from('categories').delete().eq('id', id)
-  if (error) throw new Error('Cannot delete: this category still has products. Reassign them first.')
+  if (error) {
+    // 23503 = Postgres foreign_key_violation — products still reference
+    // this category (on delete restrict). Any other error is unexpected.
+    if (error.code === '23503') {
+      return { error: 'Cannot delete: this category still has products. Reassign them first.' }
+    }
+    return { error: error.message }
+  }
 
   await deleteStorageObjects([category?.image, category?.banner_image])
   revalidateStorefront()
@@ -64,14 +71,14 @@ export async function deleteCategory(id: string) {
 }
 
 /** Set the category image or banner URL (called after a Storage upload). */
-export async function updateCategoryImage(id: string, field: 'image' | 'banner_image', url: string | null) {
+export async function updateCategoryImage(id: string, field: 'image' | 'banner_image', url: string | null): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { data: current } = await supabase.from('categories').select(field).eq('id', id).maybeSingle()
 
   const patch = field === 'image' ? { image: url } : { banner_image: url }
   const { error } = await supabase.from('categories').update(patch).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   await deleteStorageObjectIfChanged(current?.[field], url)
   revalidatePath(`/admin/categories/${id}`)
@@ -79,7 +86,7 @@ export async function updateCategoryImage(id: string, field: 'image' | 'banner_i
 }
 
 /* ----------------------------- Promotions ------------------------------ */
-export async function createPromotion(categoryId: string, formData: FormData) {
+export async function createPromotion(categoryId: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('category_promotions').insert({
@@ -91,29 +98,31 @@ export async function createPromotion(categoryId: string, formData: FormData) {
     active: true,
     display_order: int(formData, 'display_order'),
   })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
 
-export async function deletePromotion(id: string, categoryId: string) {
+export async function deletePromotion(id: string, categoryId: string): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
-  await supabase.from('category_promotions').delete().eq('id', id)
+  const { error } = await supabase.from('category_promotions').delete().eq('id', id)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
 
-export async function togglePromotion(id: string, categoryId: string, active: boolean) {
+export async function togglePromotion(id: string, categoryId: string, active: boolean): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
-  await supabase.from('category_promotions').update({ active }).eq('id', id)
+  const { error } = await supabase.from('category_promotions').update({ active }).eq('id', id)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
 
 /* --------------------------- Subcategories ----------------------------- */
-export async function createSubcategory(categoryId: string, formData: FormData) {
+export async function createSubcategory(categoryId: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const name = str(formData, 'name') ?? 'Subcategory'
@@ -124,12 +133,12 @@ export async function createSubcategory(categoryId: string, formData: FormData) 
     emoji: str(formData, 'emoji'),
     display_order: int(formData, 'display_order'),
   })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
 
-export async function updateSubcategory(id: string, categoryId: string, formData: FormData) {
+export async function updateSubcategory(id: string, categoryId: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const name = str(formData, 'name') ?? 'Subcategory'
@@ -139,15 +148,16 @@ export async function updateSubcategory(id: string, categoryId: string, formData
     emoji: str(formData, 'emoji'),
     display_order: int(formData, 'display_order'),
   }).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
 
-export async function deleteSubcategory(id: string, categoryId: string) {
+export async function deleteSubcategory(id: string, categoryId: string): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
-  await supabase.from('subcategories').delete().eq('id', id)
+  const { error } = await supabase.from('subcategories').delete().eq('id', id)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }

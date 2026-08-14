@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
 import { addProductImage, deleteProductImage, setPrimaryImage } from '@/app/admin/(protected)/products/actions'
+import { unwrapAction } from '@/lib/admin/actionResult'
 import type { Tables } from '@/lib/supabase/database.types'
 import Spinner from './Spinner'
 import ImageCropModal from './ImageCropModal'
@@ -58,7 +59,7 @@ export default function ImageManager({
       const {
         data: { publicUrl },
       } = supabase.storage.from('product-images').getPublicUrl(path)
-      await addProductImage(productId, publicUrl, name)
+      unwrapAction(await addProductImage(productId, publicUrl, name))
       toast.success('Image uploaded successfully')
       router.refresh()
     } catch (err) {
@@ -72,7 +73,7 @@ export default function ImageManager({
   async function handleSetPrimary(imageId: string) {
     setBusyImageId(imageId)
     try {
-      await setPrimaryImage(imageId, productId)
+      unwrapAction(await setPrimaryImage(imageId, productId))
       toast.success('Primary image updated')
       router.refresh()
     } catch (err) {
@@ -85,7 +86,7 @@ export default function ImageManager({
   async function handleDelete(imageId: string) {
     setBusyImageId(imageId)
     try {
-      await deleteProductImage(imageId, productId)
+      unwrapAction(await deleteProductImage(imageId, productId))
       toast.success('Image deleted successfully')
       router.refresh()
     } catch (err) {

@@ -30,7 +30,7 @@ export async function updatePlayAreaSettings(formData: FormData) {
       seo_title: str(formData, 'seo_title'),
       seo_description: str(formData, 'seo_description'),
     })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   await deleteStorageObjectIfChanged(current?.hero_image, heroImage)
   revalidatePlayArea()
@@ -46,7 +46,7 @@ export async function addGalleryImage(formData: FormData) {
   const { error } = await supabase
     .from('play_area_gallery')
     .insert({ image_url: imageUrl, alt_text: str(formData, 'alt_text'), sort_order: count ?? 0 })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePlayArea()
 }
 
@@ -56,7 +56,7 @@ export async function deleteGalleryImage(id: string) {
   const { data: image } = await supabase.from('play_area_gallery').select('image_url').eq('id', id).maybeSingle()
 
   const { error } = await supabase.from('play_area_gallery').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   await deleteStorageObjects([image?.image_url])
   revalidatePlayArea()
@@ -76,7 +76,7 @@ export async function createFeature(formData: FormData) {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('play_area_features').insert(parseFeature(formData))
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePlayArea()
   redirect('/admin/play-area')
 }
@@ -85,7 +85,7 @@ export async function updateFeature(id: string, formData: FormData) {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('play_area_features').update(parseFeature(formData)).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePlayArea()
   redirect('/admin/play-area')
 }
@@ -94,6 +94,6 @@ export async function deleteFeature(id: string) {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('play_area_features').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePlayArea()
 }

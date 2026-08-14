@@ -6,6 +6,7 @@ import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
+import { isActionError, type ActionResult } from '@/lib/admin/actionResult'
 import type { TablesInsert } from '@/lib/supabase/database.types'
 
 /* --------------------------- FormData helpers --------------------------- */
@@ -54,13 +55,15 @@ function parseProduct(fd: FormData): TablesInsert<'products'> {
   }
 }
 
-async function syncAgeGroups(productId: string, ageGroupIds: string[]) {
+async function syncAgeGroups(productId: string, ageGroupIds: string[]): Promise<{ error: string } | void> {
   const supabase = createAdminSupabase()
-  await supabase.from('product_age_groups').delete().eq('product_id', productId)
+  const del = await supabase.from('product_age_groups').delete().eq('product_id', productId)
+  if (del.error) return { error: del.error.message }
   if (ageGroupIds.length) {
-    await supabase
+    const ins = await supabase
       .from('product_age_groups')
       .insert(ageGroupIds.map((age_group_id) => ({ product_id: productId, age_group_id })))
+    if (ins.error) return { error: ins.error.message }
   }
 }
 
@@ -76,39 +79,43 @@ function revalidateStorefront(slug?: string) {
 /* ------------------------------- Actions -------------------------------- */
 /** Returns the new product's id (rather than redirecting) so the caller can
  *  upload any images staged on the create form before navigating away. */
-export async function createProduct(formData: FormData): Promise<string> {
+export async function createProduct(formData: FormData): Promise<ActionResult<string>> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const payload = parseProduct(formData)
 
   const { data, error } = await supabase.from('products').insert(payload).select('id').single()
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
-  await syncAgeGroups(data.id, formData.getAll('age_group_ids').map(String))
+  const syncResult = await syncAgeGroups(data.id, formData.getAll('age_group_ids').map(String))
+  if (isActionError(syncResult)) return syncResult
+
   revalidateStorefront(payload.slug)
   return data.id
 }
 
-export async function updateProduct(id: string, formData: FormData) {
+export async function updateProduct(id: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const payload = parseProduct(formData)
 
   const { error } = await supabase.from('products').update(payload).eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
-  await syncAgeGroups(id, formData.getAll('age_group_ids').map(String))
+  const syncResult = await syncAgeGroups(id, formData.getAll('age_group_ids').map(String))
+  if (isActionError(syncResult)) return syncResult
+
   revalidateStorefront(payload.slug)
   redirect(`/admin/products/${id}`)
 }
 
-export async function deleteProduct(id: string) {
+export async function deleteProduct(id: string): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { data: images } = await supabase.from('product_images').select('image_url').eq('product_id', id)
 
   const { error } = await supabase.from('products').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   await deleteStorageObjects((images ?? []).map((i) => i.image_url))
   revalidateStorefront()
@@ -116,7 +123,7 @@ export async function deleteProduct(id: string) {
 }
 
 /* ------------------------------- Images --------------------------------- */
-export async function addProductImage(productId: string, imageUrl: string, altText: string | null) {
+export async function addProductImage(productId: string, imageUrl: string, altText: string | null): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
 
@@ -133,37 +140,38 @@ export async function addProductImage(productId: string, imageUrl: string, altTe
     is_primary: (count ?? 0) === 0,
     sort_order: count ?? 0,
   })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }
 
-export async function deleteProductImage(imageId: string, productId: string) {
+export async function deleteProductImage(imageId: string, productId: string): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { data: image } = await supabase.from('product_images').select('image_url').eq('id', imageId).maybeSingle()
 
   const { error } = await supabase.from('product_images').delete().eq('id', imageId)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   await deleteStorageObjects([image?.image_url])
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }
 
-export async function setPrimaryImage(imageId: string, productId: string) {
+export async function setPrimaryImage(imageId: string, productId: string): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   // Unset all, then set the chosen one (partial unique index allows one primary).
-  await supabase.from('product_images').update({ is_primary: false }).eq('product_id', productId)
+  const unset = await supabase.from('product_images').update({ is_primary: false }).eq('product_id', productId)
+  if (unset.error) return { error: unset.error.message }
   const { error } = await supabase.from('product_images').update({ is_primary: true }).eq('id', imageId)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }
 
 /* --------------------------- Related products ---------------------------- */
-export async function addRelatedProduct(productId: string, formData: FormData) {
+export async function addRelatedProduct(productId: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const relatedProductId = str(formData, 'related_product_id')
   if (!relatedProductId) return
@@ -178,17 +186,17 @@ export async function addRelatedProduct(productId: string, formData: FormData) {
     .from('product_related')
     .insert({ product_id: productId, related_product_id: relatedProductId, sort_order: count ?? 0 })
   // unique(product_id, related_product_id) — adding the same product twice is a no-op, not an error.
-  if (error && error.code !== '23505') throw new Error(error.message)
+  if (error && error.code !== '23505') return { error: error.message }
 
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }
 
-export async function removeRelatedProduct(relationId: string, productId: string) {
+export async function removeRelatedProduct(relationId: string, productId: string): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('product_related').delete().eq('id', relationId)
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }

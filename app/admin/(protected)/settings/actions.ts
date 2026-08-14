@@ -21,7 +21,7 @@ export async function updateContactInfo(formData: FormData) {
     address:   str(formData, 'address'),
     map_url:   str(formData, 'map_url'),
   })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidateSettings()
 }
 
@@ -34,8 +34,8 @@ export async function updateBannerSettings(formData: FormData) {
     supabase.from('site_settings').upsert({ key: 'announcements', value: messages }, { onConflict: 'key' }),
     supabase.from('site_settings').upsert({ key: 'marquee_enabled', value: scrolling }, { onConflict: 'key' }),
   ])
-  if (r1.error) throw new Error(r1.error.message)
-  if (r2.error) throw new Error(r2.error.message)
+  if (r1.error) return { error: r1.error.message }
+  if (r2.error) return { error: r2.error.message }
   revalidateSettings()
 }
 
@@ -46,6 +46,6 @@ export async function updateFooterText(formData: FormData) {
   const { error } = await supabase
     .from('site_settings')
     .upsert({ key: 'footer_text', value }, { onConflict: 'key' })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
   revalidateSettings()
 }

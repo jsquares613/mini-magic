@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from 'react'
 import { toast } from 'sonner'
+import { isActionError } from '@/lib/admin/actionResult'
 
 type ActionFn = (formData: FormData) => unknown | Promise<unknown>
 
@@ -52,7 +53,11 @@ export default function ActionForm({
     const formData = new FormData(e.currentTarget)
     setPending(true)
     try {
-      await action(formData)
+      const result = await action(formData)
+      if (isActionError(result)) {
+        toast.error(result.error)
+        return
+      }
       toast.success(successMessage)
       onSuccess?.()
     } catch (err) {

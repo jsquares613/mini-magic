@@ -12,7 +12,7 @@ export default function TeamMemberForm({
   action,
   member,
 }: {
-  action: (formData: FormData) => void | Promise<void>
+  action: (formData: FormData) => unknown | Promise<unknown>
   member?: TeamMember
 }) {
   return (

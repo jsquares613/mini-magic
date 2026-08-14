@@ -13,7 +13,7 @@ export default function BannerForm({
   action,
   banner,
 }: {
-  action: (formData: FormData) => void | Promise<void>
+  action: (formData: FormData) => unknown | Promise<unknown>
   banner?: Banner
 }) {
   return (

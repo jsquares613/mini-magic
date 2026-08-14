@@ -11,7 +11,7 @@ export default function CategoryForm({
   action,
   category,
 }: {
-  action: (formData: FormData) => void | Promise<void>
+  action: (formData: FormData) => unknown | Promise<unknown>
   category?: Category
 }) {
   return (

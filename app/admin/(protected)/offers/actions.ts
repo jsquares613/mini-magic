@@ -19,7 +19,7 @@ export async function updateOfferBanner(formData: FormData) {
       image,
       active: bool(formData, 'active'),
     })
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   await deleteStorageObjectIfChanged(current?.image, image)
   revalidatePath('/admin/offers')

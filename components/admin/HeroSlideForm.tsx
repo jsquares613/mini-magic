@@ -15,7 +15,7 @@ export default function HeroSlideForm({
   action,
   slide,
 }: {
-  action: (formData: FormData) => void | Promise<void>
+  action: (formData: FormData) => unknown | Promise<unknown>
   slide?: HeroSlide
 }) {
   return (

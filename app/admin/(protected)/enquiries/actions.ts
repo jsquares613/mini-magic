@@ -13,48 +13,53 @@ function refresh(id: string) {
   revalidatePath(`/admin/enquiries/${id}`)
 }
 
-export async function setStatus(id: string, formData: FormData) {
+export async function setStatus(id: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff()
   const supabase = createAdminSupabase()
   const status = (str(formData, 'status') ?? 'new') as Status
   const patch: TablesUpdate<'enquiries'> = { status }
   if (status === 'contacted') patch.contacted_at = new Date().toISOString()
   if (status === 'converted') patch.converted_at = new Date().toISOString()
-  await supabase.from('enquiries').update(patch).eq('id', id)
+  const { error } = await supabase.from('enquiries').update(patch).eq('id', id)
+  if (error) return { error: error.message }
   refresh(id)
 }
 
-export async function assignEnquiry(id: string, formData: FormData) {
+export async function assignEnquiry(id: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff()
   const supabase = createAdminSupabase()
   const assignedTo = str(formData, 'assigned_to') // '' → unassign
-  await supabase.from('enquiries').update({ assigned_to: assignedTo }).eq('id', id)
+  const { error } = await supabase.from('enquiries').update({ assigned_to: assignedTo }).eq('id', id)
+  if (error) return { error: error.message }
   refresh(id)
 }
 
-export async function addNote(enquiryId: string, formData: FormData) {
+export async function addNote(enquiryId: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff()
   const note = str(formData, 'note')
   if (!note) return
   const supabase = createAdminSupabase()
   const user = await getSessionUser()
-  await supabase.from('enquiry_notes').insert({ enquiry_id: enquiryId, note, created_by: user?.id ?? null })
+  const { error } = await supabase.from('enquiry_notes').insert({ enquiry_id: enquiryId, note, created_by: user?.id ?? null })
+  if (error) return { error: error.message }
   refresh(enquiryId)
 }
 
-export async function markConverted(id: string, formData: FormData) {
+export async function markConverted(id: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff()
   const supabase = createAdminSupabase()
-  await supabase
+  const { error } = await supabase
     .from('enquiries')
     .update({ status: 'converted', converted_at: new Date().toISOString(), estimated_value: num(formData, 'estimated_value') })
     .eq('id', id)
+  if (error) return { error: error.message }
   refresh(id)
 }
 
-export async function markLost(id: string, formData: FormData) {
+export async function markLost(id: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff()
   const supabase = createAdminSupabase()
-  await supabase.from('enquiries').update({ status: 'lost', outcome_reason: str(formData, 'outcome_reason') }).eq('id', id)
+  const { error } = await supabase.from('enquiries').update({ status: 'lost', outcome_reason: str(formData, 'outcome_reason') }).eq('id', id)
+  if (error) return { error: error.message }
   refresh(id)
 }

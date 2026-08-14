@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
 import { updateCategoryImage } from '@/app/admin/(protected)/categories/actions'
+import { unwrapAction } from '@/lib/admin/actionResult'
 import Spinner from './Spinner'
 import ImageCropModal from './ImageCropModal'
 
@@ -39,7 +40,7 @@ export default function CategoryImageField({
       const {
         data: { publicUrl },
       } = supabase.storage.from('category-images').getPublicUrl(path)
-      await updateCategoryImage(categoryId, field, publicUrl)
+      unwrapAction(await updateCategoryImage(categoryId, field, publicUrl))
       toast.success('Image uploaded successfully')
       router.refresh()
     } catch (err) {
@@ -64,7 +65,7 @@ export default function CategoryImageField({
   async function remove() {
     setBusy(true)
     try {
-      await updateCategoryImage(categoryId, field, null)
+      unwrapAction(await updateCategoryImage(categoryId, field, null))
       toast.success('Image removed successfully')
       router.refresh()
     } catch (err) {
