@@ -4,7 +4,8 @@ import { timeAgo } from '@/lib/format'
 import { CONTACT_PREFERENCE, ENQUIRY_CHANNEL, ENQUIRY_STATUS, ENQUIRY_STATUS_ORDER, ENQUIRY_TYPE } from '@/lib/admin/enquiryLabels'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
-import { Avatar, Badge, Card, Page, PageHeader, buttonClass, ui } from '@/components/admin/ui'
+import Select from '@/components/admin/Select'
+import { Avatar, Badge, Card, Dot, Page, PageHeader, buttonClass, ui } from '@/components/admin/ui'
 import {
   CheckCircleIcon,
   FileTextIcon,
@@ -155,13 +156,16 @@ export default async function EnquiryDetailPage({ params }: { params: { id: stri
         <div className="space-y-6">
           <Card title="Status" icon={TrendingUpIcon} tone="violet">
             <ActionForm action={setStatus.bind(null, enquiry.id)} successMessage="Status updated successfully" className="space-y-3">
-              <select name="status" defaultValue={enquiry.status} aria-label="Status" className={ui.input}>
-                {ENQUIRY_STATUS_ORDER.map((s) => (
-                  <option key={s} value={s}>
-                    {ENQUIRY_STATUS[s].label}
-                  </option>
-                ))}
-              </select>
+              <Select
+                name="status"
+                aria-label="Status"
+                defaultValue={enquiry.status}
+                options={ENQUIRY_STATUS_ORDER.map((s) => ({
+                  value: s,
+                  label: ENQUIRY_STATUS[s].label,
+                  icon: <Dot tone={ENQUIRY_STATUS[s].tone} />,
+                }))}
+              />
               <SubmitButton pendingText="Updating…" className="w-full">
                 Update status
               </SubmitButton>
@@ -170,14 +174,20 @@ export default async function EnquiryDetailPage({ params }: { params: { id: stri
 
           <Card title="Assigned to" icon={UsersIcon} tone="teal">
             <ActionForm action={assignEnquiry.bind(null, enquiry.id)} successMessage="Enquiry assigned successfully" className="space-y-3">
-              <select name="assigned_to" defaultValue={enquiry.assigned_to ?? ''} aria-label="Assigned to" className={ui.input}>
-                <option value="">Unassigned</option>
-                {(staff ?? []).map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.email} ({s.role})
-                  </option>
-                ))}
-              </select>
+              <Select
+                name="assigned_to"
+                aria-label="Assigned to"
+                defaultValue={enquiry.assigned_to ?? ''}
+                options={[
+                  { value: '', label: 'Unassigned', icon: <UserIcon className="h-4 w-4 text-slate-400" /> },
+                  ...(staff ?? []).map((s) => ({
+                    value: s.id,
+                    label: s.email ?? 'Unknown user',
+                    description: s.role.charAt(0).toUpperCase() + s.role.slice(1),
+                    icon: <Avatar name={s.email ?? '?'} size="xs" />,
+                  })),
+                ]}
+              />
               <SubmitButton pendingText="Assigning…" variant="secondary" className="w-full">
                 Assign
               </SubmitButton>

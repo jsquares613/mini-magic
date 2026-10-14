@@ -11,7 +11,8 @@ import { isActionError, unwrapAction, type ActionResult } from '@/lib/admin/acti
 import ActionForm, { usePending } from './ActionForm'
 import SubmitButton from './SubmitButton'
 import ImageCropModal from './ImageCropModal'
-import { Card, Field, FormActions, Switch, buttonClass, ui } from './ui'
+import Select from './Select'
+import { Card, Dot, Field, FormActions, Switch, buttonClass, ui } from './ui'
 import {
   BadgePercentIcon,
   EyeIcon,
@@ -298,11 +299,16 @@ export default function ProductForm({
                 <input name="sale_price" type="number" step="0.01" defaultValue={product?.sale_price ?? ''} className={ui.input} />
               </Field>
               <Field label="Price display">
-                <select name="price_display" defaultValue={product?.price_display ?? 'show'} className={ui.input}>
-                  <option value="show">Show price</option>
-                  <option value="hide">Hide price</option>
-                  <option value="enquire">Enquire for price</option>
-                </select>
+                <Select
+                  name="price_display"
+                  aria-label="Price display"
+                  defaultValue={product?.price_display ?? 'show'}
+                  options={[
+                    { value: 'show', label: 'Show price', description: 'Customers see the price' },
+                    { value: 'hide', label: 'Hide price', description: 'No price on the website' },
+                    { value: 'enquire', label: 'Enquire for price', description: 'Shows “Enquire for price”' },
+                  ]}
+                />
               </Field>
             </div>
           </Card>
@@ -375,31 +381,28 @@ export default function ProductForm({
           <Card title="Organisation" icon={ShapesIcon} tone="teal">
             <div className="space-y-5">
               <Field label="Category" hint="Required to publish.">
-                <select
+                <Select
                   name="category_id"
+                  aria-label="Category"
                   defaultValue={product?.category_id ?? ''}
-                  onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  className={ui.input}
-                >
-                  <option value="">Select a category…</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedCategoryId}
+                  options={[
+                    { value: '', label: 'No category' },
+                    ...categories.map((c) => ({ value: c.id, label: c.name })),
+                  ]}
+                />
               </Field>
               {subsForCategory.length > 0 && (
                 <Field label="Subcategory">
-                  <select name="subcategory_id" defaultValue={product?.subcategory_id ?? ''} className={ui.input}>
-                    <option value="">None</option>
-                    {subsForCategory.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.emoji ? `${s.emoji} ` : ''}
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    name="subcategory_id"
+                    aria-label="Subcategory"
+                    defaultValue={product?.subcategory_id ?? ''}
+                    options={[
+                      { value: '', label: 'None' },
+                      ...subsForCategory.map((s) => ({ value: s.id, label: `${s.emoji ? `${s.emoji} ` : ''}${s.name}` })),
+                    ]}
+                  />
                 </Field>
               )}
               <Field label="Display order" hint="Lower numbers show first.">
@@ -418,13 +421,18 @@ export default function ProductForm({
                   </span>
                 </div>
                 <Field label="Shown to customers">
-                  <select name="stock_status_override" defaultValue={product.stock_status_override ?? ''} className={ui.input}>
-                    <option value="">Automatic from Marg stock</option>
-                    <option value="in-stock">Always in stock</option>
-                    <option value="low-stock">Low stock</option>
-                    <option value="out-of-stock">Out of stock</option>
-                    <option value="pre-order">Pre-order</option>
-                  </select>
+                  <Select
+                    name="stock_status_override"
+                    aria-label="Stock shown to customers"
+                    defaultValue={product.stock_status_override ?? ''}
+                    options={[
+                      { value: '', label: 'Automatic', description: 'Follows the Marg quantity', icon: <Dot tone="gray" /> },
+                      { value: 'in-stock', label: 'Always in stock', description: 'Even when Marg says 0', icon: <Dot tone="green" /> },
+                      { value: 'low-stock', label: 'Low stock', description: 'Shows “Low stock”', icon: <Dot tone="amber" /> },
+                      { value: 'out-of-stock', label: 'Out of stock', description: 'Shows “Out of stock”', icon: <Dot tone="red" /> },
+                      { value: 'pre-order', label: 'Pre-order', description: 'Shows “Available to pre-order”', icon: <Dot tone="blue" /> },
+                    ]}
+                  />
                 </Field>
               </div>
             ) : (

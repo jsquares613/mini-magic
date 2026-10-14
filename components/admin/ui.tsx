@@ -281,6 +281,21 @@ export function ProgressBar({ value, max, tone = 'blue' }: { value: number; max:
   )
 }
 
+const DOT_TONES: Record<Tone, string> = {
+  blue: 'bg-blue-500',
+  green: 'bg-emerald-500',
+  amber: 'bg-amber-400',
+  red: 'bg-rose-500',
+  teal: 'bg-teal-500',
+  violet: 'bg-violet-500',
+  gray: 'bg-slate-300',
+}
+
+/** Small status dot, e.g. as a dropdown option icon. */
+export function Dot({ tone }: { tone: Tone }) {
+  return <span className={`h-2 w-2 rounded-full ${DOT_TONES[tone]}`} aria-hidden="true" />
+}
+
 const AVATAR_TONES = [
   'bg-blue-100 text-blue-800',
   'bg-emerald-100 text-emerald-800',
@@ -291,7 +306,7 @@ const AVATAR_TONES = [
 ]
 
 /** Initials in a colour picked from the name, so each person keeps theirs. */
-export function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg' }) {
+export function Avatar({ name, size = 'md' }: { name: string; size?: 'xs' | 'sm' | 'md' | 'lg' }) {
   const initials =
     name
       .split(/\s+/)
@@ -301,7 +316,8 @@ export function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md'
       .join('')
       .toUpperCase() || '?'
   const tone = AVATAR_TONES[Array.from(name).reduce((sum, c) => sum + c.charCodeAt(0), 0) % AVATAR_TONES.length]
-  const dims = size === 'sm' ? 'h-8 w-8 text-xs' : size === 'lg' ? 'h-14 w-14 text-lg' : 'h-10 w-10 text-sm'
+  const dims =
+    size === 'xs' ? 'h-5 w-5 text-[10px]' : size === 'sm' ? 'h-8 w-8 text-xs' : size === 'lg' ? 'h-14 w-14 text-lg' : 'h-10 w-10 text-sm'
   return (
     <span className={`flex shrink-0 items-center justify-center rounded-full font-semibold ${dims} ${tone}`} aria-hidden="true">
       {initials}

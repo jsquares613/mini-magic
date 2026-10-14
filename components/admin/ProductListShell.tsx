@@ -4,9 +4,16 @@ import { Fragment, useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { PRODUCT_SOURCES, PRODUCT_TABS, type ProductListFilters, type ProductTab } from '@/lib/admin/productFilters'
-import { ChevronLeftIcon, ChevronRightIcon, SearchIcon, XIcon } from './icons'
+import { ChevronLeftIcon, ChevronRightIcon, LayersIcon, PencilIcon, RefreshIcon, SearchIcon, TruckIcon, XIcon } from './icons'
+import Select from './Select'
 import Spinner from './Spinner'
 import { buttonClass, ui } from './ui'
+
+const SOURCE_ICON: Record<ProductListFilters['source'], React.ReactNode> = {
+  '': <LayersIcon className="h-4 w-4 text-slate-400" />,
+  marg: <RefreshIcon className="h-4 w-4 text-blue-600" />,
+  manual: <PencilIcon className="h-4 w-4 text-amber-600" />,
+}
 
 type ListParams = Partial<Record<keyof ProductListFilters | 'page', string | number>>
 
@@ -158,31 +165,24 @@ export default function ProductListShell({
             )
           )}
         </div>
-        <select
-          value={filters.supplier}
-          onChange={(e) => navigate({ supplier: e.target.value, page: 1 })}
+        <Select
           aria-label="Supplier"
-          className={`${control} max-w-full sm:max-w-[15rem]`}
-        >
-          <option value="">All suppliers</option>
-          {suppliers.map((s) => (
-            <option key={s.supplier} value={s.supplier}>
-              {s.supplier} ({s.product_count.toLocaleString('en-IN')})
-            </option>
-          ))}
-        </select>
-        <select
-          value={filters.source}
-          onChange={(e) => navigate({ source: e.target.value, page: 1 })}
+          className="w-full sm:w-64"
+          value={filters.supplier}
+          onChange={(v) => navigate({ supplier: v, page: 1 })}
+          searchable
+          options={[
+            { value: '', label: 'All suppliers', icon: <TruckIcon className="h-4 w-4 text-slate-400" /> },
+            ...suppliers.map((s) => ({ value: s.supplier, label: s.supplier, meta: s.product_count.toLocaleString('en-IN') })),
+          ]}
+        />
+        <Select
           aria-label="Source"
-          className={control}
-        >
-          {PRODUCT_SOURCES.map((s) => (
-            <option key={s.key} value={s.key}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+          className="w-full sm:w-48"
+          value={filters.source}
+          onChange={(v) => navigate({ source: v, page: 1 })}
+          options={PRODUCT_SOURCES.map((s) => ({ value: s.key, label: s.label, icon: SOURCE_ICON[s.key] }))}
+        />
         {hasFilters && (
           <button
             type="button"

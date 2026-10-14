@@ -3,6 +3,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { isVideo } from '@/lib/media'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
+import Select from '@/components/admin/Select'
 import { Badge, Card, EmptyState, Page, PageHeader, buttonClass, iconButtonClass, ui } from '@/components/admin/ui'
 import {
   CalendarIcon,
@@ -113,16 +114,15 @@ export default async function HomepageAdminPage() {
           bodyClassName="p-0"
           footer={
             <ActionForm action={addFeaturedProduct} successMessage="Featured product added" className="flex gap-2 py-1">
-              <select name="product_id" required defaultValue="" aria-label="Product" className={`${ui.control} min-w-0 flex-1`}>
-                <option value="" disabled>
-                  Choose a published product…
-                </option>
-                {availableToFeature.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                name="product_id"
+                required
+                aria-label="Product to feature"
+                placeholder="Choose a published product…"
+                className="min-w-0 flex-1"
+                searchable
+                options={availableToFeature.map((p) => ({ value: p.id, label: p.name }))}
+              />
               <SubmitButton pendingText="Adding…">
                 <PlusIcon className="h-4 w-4" />
                 Add

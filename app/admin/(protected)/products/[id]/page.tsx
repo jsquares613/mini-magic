@@ -6,6 +6,7 @@ import ImageManager from '@/components/admin/ImageManager'
 import DeleteProductButton from '@/components/admin/DeleteProductButton'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
+import Select from '@/components/admin/Select'
 import { Badge, Card, Page, PageHeader, buttonClass, ui } from '@/components/admin/ui'
 import { AlertTriangleIcon, ExternalLinkIcon, PackageIcon, PlusIcon, RefreshIcon, TrashIcon } from '@/components/admin/icons'
 import { addRelatedProduct, removeRelatedProduct, updateProduct } from '../actions'
@@ -168,16 +169,15 @@ export default async function EditProductPage({ params }: { params: { id: string
             successMessage="Related product added"
             className="flex flex-wrap gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-4"
           >
-            <select name="related_product_id" required defaultValue="" className={`${ui.control} min-w-0 flex-1`}>
-              <option value="" disabled>
-                Choose a product to relate…
-              </option>
-              {addableProducts.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              name="related_product_id"
+              required
+              aria-label="Product to relate"
+              placeholder="Choose a product to relate…"
+              className="min-w-0 flex-1"
+              searchable
+              options={addableProducts.map((p) => ({ value: p.id, label: p.name }))}
+            />
             <SubmitButton pendingText="Adding…">
               <PlusIcon className="h-4 w-4" />
               Add

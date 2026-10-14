@@ -170,6 +170,12 @@ export const ChevronLeftIcon: Icon = (p) => (
   </Svg>
 )
 
+export const ChevronDownIcon: Icon = (p) => (
+  <Svg {...p}>
+    <path d="m6 9 6 6 6-6" />
+  </Svg>
+)
+
 export const ChevronRightIcon: Icon = (p) => (
   <Svg {...p}>
     <path d="m9 18 6-6-6-6" />
@@ -417,6 +423,23 @@ export const LockIcon: Icon = (p) => (
   <Svg {...p}>
     <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </Svg>
+)
+
+export const TruckIcon: Icon = (p) => (
+  <Svg {...p}>
+    <rect x="1" y="3" width="15" height="13" rx="1" />
+    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+    <circle cx="5.5" cy="18.5" r="2.5" />
+    <circle cx="18.5" cy="18.5" r="2.5" />
+  </Svg>
+)
+
+export const LayersIcon: Icon = (p) => (
+  <Svg {...p}>
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
   </Svg>
 )
 

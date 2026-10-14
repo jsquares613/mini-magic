@@ -8,7 +8,19 @@ import { bulkUpdateProducts, type BulkOperation } from '@/app/admin/(protected)/
 import { isActionError } from '@/lib/admin/actionResult'
 import type { ProductListFilters } from '@/lib/admin/productFilters'
 import type { Tables } from '@/lib/supabase/database.types'
-import { AlertTriangleIcon, ExternalLinkIcon, ImageIcon, PencilIcon, SearchIcon, SparklesIcon, StarIcon } from './icons'
+import {
+  AlertTriangleIcon,
+  ExternalLinkIcon,
+  EyeIcon,
+  EyeOffIcon,
+  ImageIcon,
+  PencilIcon,
+  SearchIcon,
+  ShapesIcon,
+  SparklesIcon,
+  StarIcon,
+} from './icons'
+import Select from './Select'
 import Spinner from './Spinner'
 import { Badge, EmptyState, buttonClass, iconButtonClass, ui, type Tone } from './ui'
 
@@ -42,7 +54,6 @@ export interface ProductTableRow {
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>
 type Subcategory = Pick<Tables<'subcategories'>, 'id' | 'name' | 'emoji' | 'category_id'>
 
-const control = ui.control
 const checkbox = ui.checkbox
 
 /**
@@ -324,41 +335,58 @@ export default function ProductTable({
 
             <span className="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
 
-            <select value={op} onChange={(e) => setOp(e.target.value as BulkOperation | '')} className={control} aria-label="Bulk action">
-              <option value="">Choose action…</option>
-              <option value="set-category">Set category</option>
-              <option value="publish">Publish</option>
-              <option value="unpublish">Unpublish</option>
-            </select>
+            <Select
+              aria-label="Bulk action"
+              className="w-full sm:w-52"
+              placeholder="Choose action…"
+              value={op}
+              onChange={(v) => setOp(v as BulkOperation | '')}
+              options={[
+                {
+                  value: 'set-category',
+                  label: 'Set category',
+                  description: 'Move them into a category',
+                  icon: <ShapesIcon className="h-4 w-4 text-teal-600" />,
+                },
+                {
+                  value: 'publish',
+                  label: 'Publish',
+                  description: 'Show them on the website',
+                  icon: <EyeIcon className="h-4 w-4 text-emerald-600" />,
+                },
+                {
+                  value: 'unpublish',
+                  label: 'Unpublish',
+                  description: 'Hide them from the website',
+                  icon: <EyeOffIcon className="h-4 w-4 text-slate-500" />,
+                },
+              ]}
+            />
 
             {op === 'set-category' && (
               <>
-                <select
+                <Select
+                  aria-label="Category"
+                  className="w-full sm:w-56"
+                  placeholder="Choose category…"
                   value={categoryId}
-                  onChange={(e) => {
-                    setCategoryId(e.target.value)
+                  onChange={(v) => {
+                    setCategoryId(v)
                     setSubcategoryId('')
                   }}
-                  className={control}
-                  aria-label="Category"
-                >
-                  <option value="">Category…</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                />
                 {subsForCategory.length > 0 && (
-                  <select value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)} className={control} aria-label="Subcategory">
-                    <option value="">No subcategory</option>
-                    {subsForCategory.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.emoji ? `${s.emoji} ` : ''}
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    aria-label="Subcategory"
+                    className="w-full sm:w-52"
+                    value={subcategoryId}
+                    onChange={setSubcategoryId}
+                    options={[
+                      { value: '', label: 'No subcategory' },
+                      ...subsForCategory.map((s) => ({ value: s.id, label: `${s.emoji ? `${s.emoji} ` : ''}${s.name}` })),
+                    ]}
+                  />
                 )}
               </>
             )}

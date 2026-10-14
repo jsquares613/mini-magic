@@ -84,6 +84,22 @@ html {
   background: transparent;
 }
 
+/* Admin: popover entrance (custom dropdown menus) */
+@keyframes admin-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.admin-pop {
+  animation: admin-pop 120ms ease-out;
+}
+
 /* StarBorder animated edge effect */
 .star-border-container {
   display: block;
