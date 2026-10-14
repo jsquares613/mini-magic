@@ -29,7 +29,7 @@ export default async function EditProductPage({ params }: { params: { id: string
         .select('id, related_product_id')
         .eq('product_id', product.id)
         .order('sort_order', { ascending: true }),
-      supabase.from('products').select('id, name').neq('id', product.id).order('name', { ascending: true }),
+      supabase.from('products').select('id, name').eq('is_published', true).neq('id', product.id).order('name', { ascending: true }),
     ])
 
   const relatedIds = (relatedPivots ?? []).map((r) => r.related_product_id)
@@ -57,12 +57,44 @@ export default async function EditProductPage({ params }: { params: { id: string
             ← Products
           </Link>
           <h1 className="mt-2 text-2xl font-bold text-gray-900">{product.name}</h1>
-          <Link href={`/products/${product.slug}`} target="_blank" className="text-xs text-blue-600 hover:underline">
-            View on storefront ↗
-          </Link>
+          {product.is_published ? (
+            <Link href={`/products/${product.slug}`} target="_blank" className="text-xs text-blue-600 hover:underline">
+              View on storefront ↗
+            </Link>
+          ) : (
+            <span className="text-xs text-gray-400">Draft — not visible on the website</span>
+          )}
         </div>
         <DeleteProductButton id={product.id} />
       </div>
+
+      {product.marg_code && (
+        <section className="mb-6 max-w-2xl rounded-2xl border border-blue-100 bg-blue-50/50 p-5 text-sm">
+          <h2 className="mb-3 font-bold text-gray-900">From Marg ERP</h2>
+          {(product.marg_deleted_at || product.marg_missing_since) && (
+            <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-red-700">
+              {product.marg_deleted_at
+                ? 'This item was deleted in Marg and has been unpublished.'
+                : 'Marg no longer lists this item. Check it in Marg, then unpublish or delete it here.'}
+            </p>
+          )}
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3">
+            {[
+              ['Item code', product.marg_code],
+              ['Billing name', product.marg_name ?? '—'],
+              ['Supplier', product.marg_company ?? '—'],
+              ['MRP', product.marg_mrp != null ? `₹${product.marg_mrp}` : '—'],
+              ['Stock', String(Number(product.marg_stock ?? 0))],
+              ['Last synced', product.marg_synced_at ? new Date(product.marg_synced_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-xs text-gray-400">{k}</dt>
+                <dd className="font-medium text-gray-800">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
 
       <div className="mb-6 max-w-md">
         <ImageManager productId={product.id} images={images ?? []} />
@@ -75,6 +107,7 @@ export default async function EditProductPage({ params }: { params: { id: string
         ageGroups={ageGroups ?? []}
         subcategories={subcategories ?? []}
         selectedAgeIds={selectedAgeIds}
+        imageCount={images?.length ?? 0}
       />
 
       {/* Related products — curated "You may also like" picks. Optional: the

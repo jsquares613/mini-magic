@@ -19,7 +19,7 @@ export default async function HomepageAdminPage() {
       supabase.from('homepage_hero_slides').select('*').order('display_order', { ascending: true }),
       supabase.from('promotional_banners').select('*').order('display_order', { ascending: true }),
       supabase.from('homepage_featured_products').select('id, product_id, sort_order').order('sort_order', { ascending: true }),
-      supabase.from('products').select('id, name').order('name', { ascending: true }),
+      supabase.from('products').select('id, name').eq('is_published', true).order('name', { ascending: true }),
     ])
 
   const productName = new Map((products ?? []).map((p) => [p.id, p.name]))

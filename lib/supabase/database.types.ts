@@ -104,7 +104,7 @@ export interface Database {
           sku: string | null
           short_description: string | null
           description: string | null
-          category_id: string
+          category_id: string | null
           subcategory_id: string | null
           price: number | null
           price_display: Database['public']['Enums']['price_display']
@@ -120,6 +120,19 @@ export interface Database {
           display_order: number
           seo_title: string | null
           seo_description: string | null
+          marg_code: string | null
+          marg_name: string | null
+          marg_mrp: number | null
+          marg_company: string | null
+          marg_stock: number | null
+          marg_synced_at: string | null
+          marg_deleted_at: string | null
+          marg_missing_since: string | null
+          brand: string | null
+          overridden_fields: string[]
+          stock_status_override: 'in-stock' | 'low-stock' | 'out-of-stock' | 'pre-order' | null
+          is_published: boolean
+          image_count: number
           created_at: string
           updated_at: string
         }
@@ -130,7 +143,7 @@ export interface Database {
           sku?: string | null
           short_description?: string | null
           description?: string | null
-          category_id: string
+          category_id?: string | null
           subcategory_id?: string | null
           price?: number | null
           price_display?: Database['public']['Enums']['price_display']
@@ -146,10 +159,61 @@ export interface Database {
           display_order?: number
           seo_title?: string | null
           seo_description?: string | null
+          marg_code?: string | null
+          marg_name?: string | null
+          marg_mrp?: number | null
+          marg_company?: string | null
+          marg_stock?: number | null
+          marg_synced_at?: string | null
+          marg_deleted_at?: string | null
+          marg_missing_since?: string | null
+          brand?: string | null
+          overridden_fields?: string[]
+          stock_status_override?: 'in-stock' | 'low-stock' | 'out-of-stock' | 'pre-order' | null
+          is_published?: boolean
+          image_count?: number
           created_at?: string
           updated_at?: string
         }
         Update: Partial<Database['public']['Tables']['products']['Insert']>
+        Relationships: []
+      }
+      marg_sync_runs: {
+        Row: {
+          id: string
+          kind: 'full' | 'changes'
+          source: 'manual' | 'cron'
+          status: 'running' | 'success' | 'failed'
+          since: string | null
+          marg_datetime: string | null
+          received: number
+          inserted: number
+          updated: number
+          deleted: number
+          missing: number
+          error: string | null
+          started_by: string | null
+          started_at: string
+          finished_at: string | null
+        }
+        Insert: {
+          id?: string
+          kind: 'full' | 'changes'
+          source?: 'manual' | 'cron'
+          status?: 'running' | 'success' | 'failed'
+          since?: string | null
+          marg_datetime?: string | null
+          received?: number
+          inserted?: number
+          updated?: number
+          deleted?: number
+          missing?: number
+          error?: string | null
+          started_by?: string | null
+          started_at?: string
+          finished_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['marg_sync_runs']['Insert']>
         Relationships: []
       }
       product_age_groups: {
@@ -697,6 +761,8 @@ export interface Database {
     Functions: {
       is_staff: { Args: Record<string, never>; Returns: boolean }
       is_admin: { Args: Record<string, never>; Returns: boolean }
+      marg_apply_items: { Args: { items: Json }; Returns: Json }
+      marg_supplier_counts: { Args: Record<string, never>; Returns: { supplier: string; product_count: number }[] }
     }
     Enums: {
       price_display: 'show' | 'hide' | 'enquire'

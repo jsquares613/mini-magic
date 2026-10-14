@@ -1,5 +1,6 @@
 import { repositories } from '@/lib/supabase'
 import { getCategoryIdToSlugMap, getSubcategoryIdToSlugMap } from '@/lib/categories'
+import { stockStatusOf } from '@/lib/stock'
 import type { Product, ProductWithPricing } from '@/types'
 import type { ProductRow } from '@/lib/supabase/repositories/products'
 
@@ -32,7 +33,7 @@ function toProduct(row: ProductRow, categorySlug: string, images: string[] = [],
     ageGroup: '',
     material: row.material ?? '',
     color: row.color ?? '',
-    stockStatus: row.available ? 'in-stock' : 'out-of-stock',
+    stockStatus: stockStatusOf(row),
     isFeatured: false,
     isPopular: row.popular,
     isNew: row.new_arrival,
@@ -54,7 +55,8 @@ async function toProducts(rows: ProductRow[]): Promise<Product[]> {
   return rows.map((row) =>
     toProduct(
       row,
-      idToSlug.get(row.category_id) ?? row.category_id,
+      // Storefront reads only see published rows, which always have a category.
+      row.category_id ? idToSlug.get(row.category_id) ?? row.category_id : '',
       (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url),
       row.subcategory_id ? subIdToSlug.get(row.subcategory_id) : undefined,
     ),
@@ -81,7 +83,7 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
   return {
     ...toProduct(
       detail,
-      detail.category?.slug ?? detail.category_id,
+      detail.category?.slug ?? detail.category_id ?? '',
       detail.images.map((i) => i.image_url),
     ),
     ageGroup: detail.ageGroups.map((a) => a.label).join(', '),

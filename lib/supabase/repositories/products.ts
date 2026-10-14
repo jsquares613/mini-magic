@@ -69,7 +69,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
     await sb.from('product_images').select('*').eq('product_id', product.id).order('sort_order', { ascending: true }),
   )
   const pivots = ok(await sb.from('product_age_groups').select('age_group_id').eq('product_id', product.id))
-  const category = ok(await sb.from('categories').select('*').eq('id', product.category_id).maybeSingle())
+  const category = product.category_id
+    ? ok(await sb.from('categories').select('*').eq('id', product.category_id).maybeSingle())
+    : null
 
   const ageGroupIds = pivots.map((p) => p.age_group_id)
   const ageGroups = ageGroupIds.length
@@ -145,7 +147,7 @@ export async function getRelatedProducts(slug: string, limit = 4): Promise<Produ
       .filter((p): p is ProductRow => Boolean(p))
   }
 
-  if (related.length < limit) {
+  if (related.length < limit && product.category_id) {
     const excludeIds = [product.id, ...related.map((p) => p.id)]
     const fillers = ok(
       await sb

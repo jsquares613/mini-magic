@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import type { Tables } from '@/lib/supabase/database.types'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
-import { addProductImage } from '@/app/admin/(protected)/products/actions'
-import { unwrapAction, type ActionResult } from '@/lib/admin/actionResult'
-import ActionForm from './ActionForm'
+import { addProductImage, bulkUpdateProducts } from '@/app/admin/(protected)/products/actions'
+import { isActionError, unwrapAction, type ActionResult } from '@/lib/admin/actionResult'
+import ActionForm, { usePending } from './ActionForm'
 import SubmitButton from './SubmitButton'
 import ImageCropModal from './ImageCropModal'
 
@@ -18,6 +18,60 @@ type Subcategory = Pick<Tables<'subcategories'>, 'id' | 'name' | 'emoji' | 'cate
 
 const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
 const label = 'mb-1 block text-sm font-medium text-gray-700'
+
+/**
+ * "Marg: …" note under a Marg-owned field. When the admin's value overrides
+ * Marg's, offers a one-click reset: it puts Marg's value back in the input and
+ * saves the form — a value equal to Marg's is what hands the field back to the
+ * sync (see margOverrides() in the product actions).
+ */
+function MargHint({
+  product,
+  field,
+  margValue,
+  display,
+}: {
+  product?: Product
+  field: 'name' | 'price'
+  /** Raw value to put back in the input. */
+  margValue: string | null
+  /** How the Marg value is shown in the note. */
+  display: string
+}) {
+  const pending = usePending()
+  if (!product?.marg_code || margValue == null) return null
+  const value = margValue
+  const overridden = product.overridden_fields.includes(field)
+
+  function resetToMarg(e: React.MouseEvent<HTMLButtonElement>) {
+    const form = e.currentTarget.form
+    const el = form?.elements.namedItem(field)
+    if (!form || !(el instanceof HTMLInputElement)) return
+    el.value = value
+    form.requestSubmit()
+  }
+
+  return (
+    <p className="mt-1 text-xs text-gray-400">
+      Marg: {display}
+      {overridden ? (
+        <>
+          {' — your edit is kept. '}
+          <button
+            type="button"
+            onClick={resetToMarg}
+            disabled={pending}
+            className="font-medium text-blue-600 hover:underline disabled:opacity-60"
+          >
+            Reset to Marg
+          </button>
+        </>
+      ) : (
+        ' — follows Marg until you change it.'
+      )}
+    </p>
+  )
+}
 
 /**
  * Shared create/edit product form. `action` is a bound Server Action
@@ -33,6 +87,7 @@ export default function ProductForm({
   ageGroups,
   subcategories = [],
   selectedAgeIds = [],
+  imageCount = 0,
 }: {
   action: (formData: FormData) => unknown | Promise<unknown>
   product?: Product
@@ -40,6 +95,8 @@ export default function ProductForm({
   ageGroups: AgeGroup[]
   subcategories?: Subcategory[]
   selectedAgeIds?: string[]
+  /** Photos the product already has (edit page). */
+  imageCount?: number
 }) {
   const router = useRouter()
   const [selectedCategoryId, setSelectedCategoryId] = useState(product?.category_id ?? '')
@@ -84,6 +141,9 @@ export default function ProductForm({
   }
 
   async function createWithImages(formData: FormData) {
+    // createProduct always saves a draft (publishing needs a photo, and photos
+    // attach to an existing product) — publish once the uploads are in.
+    const wantsPublish = formData.get('is_published') === 'on'
     const id = unwrapAction(await action(formData) as ActionResult<string>)
     if (!id) throw new Error('Product creation returned no ID — please try again.')
 
@@ -106,6 +166,12 @@ export default function ProductForm({
       if (failures > 0) {
         toast.error(`${failures} image(s) failed to upload — add them from the product's edit page`)
       }
+    }
+
+    if (wantsPublish) {
+      const published = await bulkUpdateProducts({ op: 'publish', ids: [id] })
+      if (isActionError(published)) toast.error(published.error)
+      else if (published.skipped > 0) toast.warning('Saved as a draft — publishing needs a category and at least one photo.')
     }
 
     router.push(`/admin/products/${id}`)
@@ -168,6 +234,7 @@ export default function ProductForm({
               <div>
                 <label className={label}>Name *</label>
                 <input name="name" required defaultValue={product?.name} className={input} />
+                <MargHint product={product} field="name" margValue={product?.marg_name ?? null} display={product?.marg_name ?? ''} />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -205,6 +272,12 @@ export default function ProductForm({
               <div>
                 <label className={label}>Price (₹)</label>
                 <input name="price" type="number" step="0.01" defaultValue={product?.price ?? ''} className={input} />
+                <MargHint
+                  product={product}
+                  field="price"
+                  margValue={product?.marg_mrp != null ? String(Number(product.marg_mrp)) : null}
+                  display={`₹${product?.marg_mrp} (MRP)`}
+                />
               </div>
               <div>
                 <label className={label}>Sale price (₹)</label>
@@ -276,15 +349,14 @@ export default function ProductForm({
             <h2 className="mb-4 font-bold text-gray-900">Organisation</h2>
             <div className="space-y-4">
               <div>
-                <label className={label}>Category *</label>
+                <label className={label}>Category <span className="text-gray-400">(required to publish)</span></label>
                 <select
                   name="category_id"
-                  required
                   defaultValue={product?.category_id ?? ''}
                   onChange={(e) => setSelectedCategoryId(e.target.value)}
                   className={input}
                 >
-                  <option value="" disabled>Select…</option>
+                  <option value="">Select…</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -315,9 +387,33 @@ export default function ProductForm({
                 <label className={label}>Display order</label>
                 <input name="display_order" type="number" defaultValue={product?.display_order ?? 0} className={input} />
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" name="available" defaultChecked={product?.available ?? true} /> Available
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                <input type="checkbox" name="is_published" defaultChecked={product?.is_published ?? true} /> Published on website
               </label>
+              <p className={`-mt-2 text-xs ${product && !product.is_published && imageCount === 0 ? 'text-orange-600' : 'text-gray-400'}`}>
+                {product && !product.is_published && imageCount === 0
+                  ? 'Add a photo above before publishing.'
+                  : 'Publishing needs a category and at least one photo.'}
+              </p>
+              {product?.marg_code ? (
+                <div>
+                  <label className={label}>
+                    Stock shown to customers{' '}
+                    <span className="text-gray-400">(Marg stock: {Number(product.marg_stock ?? 0)})</span>
+                  </label>
+                  <select name="stock_status_override" defaultValue={product.stock_status_override ?? ''} className={input}>
+                    <option value="">Automatic from Marg stock</option>
+                    <option value="in-stock">Always in stock</option>
+                    <option value="low-stock">Low stock</option>
+                    <option value="out-of-stock">Out of stock</option>
+                    <option value="pre-order">Pre-order</option>
+                  </select>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" name="available" defaultChecked={product?.available ?? true} /> Available
+                </label>
+              )}
               <label className="flex items-center gap-2 text-sm text-gray-700">
                 <input type="checkbox" name="popular" defaultChecked={product?.popular ?? false} /> Popular
               </label>

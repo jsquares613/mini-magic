@@ -11,6 +11,7 @@ import type { Role } from '@/lib/supabase/auth'
 const NAV = [
   { label: 'Dashboard', href: '/admin', icon: '📊', exact: true },
   { label: 'Products', href: '/admin/products', icon: '🧸' },
+  { label: 'Marg Sync', href: '/admin/marg', icon: '🔄' },
   { label: 'Categories', href: '/admin/categories', icon: '🗂️' },
   { label: 'Homepage', href: '/admin/homepage', icon: '🏠' },
   { label: 'Offers', href: '/admin/offers', icon: '🏷️' },

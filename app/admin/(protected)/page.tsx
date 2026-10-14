@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const supabase = createServerSupabase()
 
   const [products, categories, enquiriesTotal, enquiriesNew] = await Promise.all([
-    count('products'),
+    count('products', (q) => q.eq('is_published', true)),
     count('categories'),
     count('enquiries'),
     count('enquiries', (q) => q.eq('status', 'new')),
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
     .limit(6)
 
   const stats = [
-    { label: 'Products', value: products, href: '/admin/products', accent: 'text-blue-900' },
+    { label: 'Live Products', value: products, href: '/admin/products?status=published', accent: 'text-blue-900' },
     { label: 'Categories', value: categories, href: '/admin/categories', accent: 'text-orange-500' },
     { label: 'Total Enquiries', value: enquiriesTotal, href: '/admin/enquiries', accent: 'text-green-600' },
     { label: 'New Leads', value: enquiriesNew, href: '/admin/enquiries?status=new', accent: 'text-red-500' },

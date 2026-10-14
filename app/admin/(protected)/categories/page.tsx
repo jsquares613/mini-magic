@@ -9,9 +9,9 @@ export default async function AdminCategoriesPage() {
     .order('display_order', { ascending: true })
 
   // product counts per category
-  const { data: products } = await supabase.from('products').select('category_id')
+  const { data: products } = await supabase.from('products').select('category_id').not('category_id', 'is', null)
   const counts = new Map<string, number>()
-  for (const p of products ?? []) counts.set(p.category_id, (counts.get(p.category_id) ?? 0) + 1)
+  for (const p of products ?? []) if (p.category_id) counts.set(p.category_id, (counts.get(p.category_id) ?? 0) + 1)
 
   return (
     <div className="p-4 md:p-8">
