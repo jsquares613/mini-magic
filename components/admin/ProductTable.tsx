@@ -8,27 +8,34 @@ import { bulkUpdateProducts, type BulkOperation } from '@/app/admin/(protected)/
 import { isActionError } from '@/lib/admin/actionResult'
 import type { ProductListFilters } from '@/lib/admin/productFilters'
 import type { Tables } from '@/lib/supabase/database.types'
+import { AlertTriangleIcon, ExternalLinkIcon, ImageIcon, PencilIcon, SearchIcon, SparklesIcon, StarIcon } from './icons'
 import Spinner from './Spinner'
+
+export type Tone = 'green' | 'amber' | 'red' | 'blue' | 'teal' | 'gray'
 
 /** Display-ready product row, computed by the (server) products page. */
 export interface ProductTableRow {
   id: string
+  slug: string
   name: string
   margCode: string | null
   /** Marg's billing name, only when it differs from the website name. */
   margName: string | null
+  supplier: string | null
   thumb: string | null
   category: string | null
   priceText: string
-  onSale: boolean
+  /** Regular price, shown struck through when a sale price applies. */
+  originalPriceText: string | null
   priceMuted: boolean
-  /** Marg stock quantity; null for hand-made products. */
-  stockQty: number | null
-  stockLabel: string
-  stockClass: string
+  stock: { label: string; tone: Tone; title?: string }
   popular: boolean
   newArrival: boolean
   published: boolean
+  /** Draft that meets every publishing requirement. */
+  ready: boolean
+  /** What's missing, e.g. ['photo', 'category']. */
+  needs: string[]
   /** "Deleted in Marg" / "Missing in Marg", when applicable. */
   removed: string | null
 }
@@ -36,7 +43,30 @@ export interface ProductTableRow {
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>
 type Subcategory = Pick<Tables<'subcategories'>, 'id' | 'name' | 'emoji' | 'category_id'>
 
-const control = 'rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
+const TONE: Record<Tone, string> = {
+  green: 'bg-green-50 text-green-700 ring-green-600/20',
+  amber: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+  red: 'bg-red-50 text-red-700 ring-red-600/20',
+  blue: 'bg-blue-50 text-blue-700 ring-blue-600/20',
+  teal: 'bg-teal-50 text-teal-700 ring-teal-600/20',
+  gray: 'bg-gray-50 text-gray-600 ring-gray-500/20',
+}
+
+function Pill({ tone, title, children }: { tone: Tone; title?: string; children: React.ReactNode }) {
+  return (
+    <span
+      title={title}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TONE[tone]}`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+      {children}
+    </span>
+  )
+}
+
+const control =
+  'h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100'
+const checkbox = 'h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-900'
 
 /**
  * Products table with row selection and bulk actions (set category, publish,
@@ -51,7 +81,7 @@ export default function ProductTable({
   categories,
   subcategories,
   canWrite,
-  emptyMessage,
+  empty,
 }: {
   rows: ProductTableRow[]
   total: number
@@ -59,7 +89,7 @@ export default function ProductTable({
   categories: Category[]
   subcategories: Subcategory[]
   canWrite: boolean
-  emptyMessage: React.ReactNode
+  empty: { title: string; message: React.ReactNode }
 }) {
   const router = useRouter()
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -79,6 +109,7 @@ export default function ProductTable({
   const someOnPage = rows.some((r) => selected.has(r.id))
   const selectionCount = allMatching ? total : selected.size
   const subsForCategory = subcategories.filter((s) => s.category_id === categoryId)
+  const columns = canWrite ? 7 : 6
 
   function toggle(id: string) {
     setAllMatching(false)
@@ -126,16 +157,17 @@ export default function ProductTable({
 
   return (
     <>
-      <div className={`overflow-hidden rounded-2xl border border-gray-200 bg-white ${selectionCount > 0 ? 'mb-28' : ''}`}>
+      <div className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ${selectionCount > 0 ? 'mb-28' : ''}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-400">
+            <thead className="border-b border-gray-200 bg-gray-50/80 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
               <tr>
                 {canWrite && (
-                  <th className="w-10 py-3 pl-6">
+                  <th className="w-12 py-3 pl-5 pr-2">
                     <input
                       type="checkbox"
                       aria-label="Select all on this page"
+                      className={checkbox}
                       checked={allOnPage}
                       ref={(el) => {
                         if (el) el.indeterminate = someOnPage && !allOnPage
@@ -144,87 +176,160 @@ export default function ProductTable({
                     />
                   </th>
                 )}
-                <th className="w-14 px-3 py-3 font-medium">Photo</th>
-                <th className="px-3 py-3 font-medium">Name</th>
-                <th className="px-6 py-3 font-medium">Category</th>
-                <th className="px-6 py-3 font-medium">Price</th>
-                <th className="px-6 py-3 font-medium">Stock</th>
-                <th className="px-6 py-3 font-medium">Flags</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3"></th>
+                <th className={`py-3 pr-4 font-medium ${canWrite ? 'pl-2' : 'pl-5'}`}>Product</th>
+                <th className="px-4 py-3 font-medium">Category</th>
+                <th className="px-4 py-3 font-medium">Price</th>
+                <th className="px-4 py-3 font-medium">Stock</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
-            <tbody>
-              {rows.map((p) => (
-                <tr key={p.id} className={`border-t border-gray-50 ${selected.has(p.id) || allMatching ? 'bg-blue-50/60' : 'hover:bg-gray-50'}`}>
-                  {canWrite && (
-                    <td className="py-3 pl-6">
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${p.name}`}
-                        checked={allMatching || selected.has(p.id)}
-                        onChange={() => toggle(p.id)}
-                      />
+            <tbody className="divide-y divide-gray-100">
+              {rows.map((p) => {
+                const isSelected = allMatching || selected.has(p.id)
+                return (
+                  <tr key={p.id} className={`group transition-colors ${isSelected ? 'bg-blue-50/60' : 'hover:bg-gray-50/80'}`}>
+                    {canWrite && (
+                      <td className="py-3 pl-5 pr-2">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${p.name}`}
+                          className={checkbox}
+                          checked={isSelected}
+                          onChange={() => toggle(p.id)}
+                        />
+                      </td>
+                    )}
+
+                    {/* Product: photo, name, flags, Marg details */}
+                    <td className={`py-3 pr-4 ${canWrite ? 'pl-2' : 'pl-5'}`}>
+                      <div className="flex items-center gap-3">
+                        {p.thumb ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={p.thumb}
+                            alt=""
+                            loading="lazy"
+                            className="h-11 w-11 shrink-0 rounded-lg border border-gray-100 bg-gray-50 object-cover"
+                          />
+                        ) : (
+                          <span
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-gray-300"
+                            title="No photo"
+                          >
+                            <ImageIcon className="h-5 w-5" />
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <Link href={`/admin/products/${p.id}`} className="font-medium text-gray-900 hover:text-blue-700 hover:underline">
+                              {p.name}
+                            </Link>
+                            {p.popular && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
+                                <StarIcon className="h-3 w-3" />
+                                Popular
+                              </span>
+                            )}
+                            {p.newArrival && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
+                                <SparklesIcon className="h-3 w-3" />
+                                New
+                              </span>
+                            )}
+                          </div>
+                          {(p.margCode || p.supplier) && (
+                            <p className="mt-0.5 truncate text-xs text-gray-400">
+                              {p.margCode && <span className="font-mono">#{p.margCode}</span>}
+                              {p.margCode && p.supplier && ' · '}
+                              {p.supplier}
+                            </p>
+                          )}
+                          {p.margName && <p className="truncate text-xs text-gray-400">Marg name: {p.margName}</p>}
+                        </div>
+                      </div>
                     </td>
-                  )}
-                  <td className="px-3 py-2">
-                    {p.thumb ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.thumb} alt="" loading="lazy" className="h-10 w-10 rounded-md border border-gray-100 object-cover" />
-                    ) : (
-                      <span className="flex h-10 w-10 items-center justify-center rounded-md border border-dashed border-gray-300 text-[10px] text-gray-400">
-                        No photo
+
+                    <td className="px-4 py-3 text-gray-600">{p.category ?? <span className="text-gray-300">—</span>}</td>
+
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <span
+                        className={
+                          p.priceMuted ? 'text-gray-400' : p.originalPriceText ? 'font-semibold text-green-700' : 'font-medium text-gray-800'
+                        }
+                      >
+                        {p.priceText}
                       </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className="font-medium text-gray-900">{p.name}</span>
-                    {p.margCode && (
-                      <span className="block text-xs text-gray-400">
-                        Marg {p.margCode}
-                        {p.margName ? ` · ${p.margName}` : ''}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-gray-500">{p.category ?? '—'}</td>
-                  <td className="px-6 py-3">
-                    <span className={p.priceMuted ? 'text-gray-400' : p.onSale ? 'font-semibold text-green-600' : 'text-gray-700'}>
-                      {p.priceText}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    {p.stockQty != null && <span className="mr-1 text-gray-700">{p.stockQty}</span>}
-                    <span className={`text-xs font-medium ${p.stockClass}`}>{p.stockLabel}</span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <div className="flex gap-1">
-                      {p.popular && <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-xs text-yellow-700">Popular</span>}
-                      {p.newArrival && <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">New</span>}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        p.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                      }`}
-                    >
-                      {p.published ? 'Published' : 'Draft'}
-                    </span>
-                    {p.removed && (
-                      <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">{p.removed}</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    <Link href={`/admin/products/${p.id}`} className="font-medium text-blue-600 hover:underline">
-                      Edit
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+                      {p.originalPriceText && <span className="ml-1.5 text-xs text-gray-400 line-through">{p.originalPriceText}</span>}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <Pill tone={p.stock.tone} title={p.stock.title}>
+                        {p.stock.label}
+                      </Pill>
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {p.published ? (
+                        <Pill tone="green">Published</Pill>
+                      ) : p.ready ? (
+                        <Pill tone="teal">Ready to publish</Pill>
+                      ) : (
+                        <Pill tone="gray">Draft</Pill>
+                      )}
+                      {p.needs.length > 0 && (
+                        <p className="mt-1 whitespace-nowrap text-xs text-amber-600">
+                          {p.published ? 'No ' : 'Needs '}
+                          {p.needs.join(' · ')}
+                        </p>
+                      )}
+                      {p.removed && (
+                        <p className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-red-600">
+                          <AlertTriangleIcon className="h-3.5 w-3.5" />
+                          {p.removed}
+                        </p>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        {p.published && (
+                          <a
+                            href={`/products/${p.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="View on website"
+                            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                          >
+                            <ExternalLinkIcon className="h-4 w-4" />
+                            <span className="sr-only">View {p.name} on the website</span>
+                          </a>
+                        )}
+                        <Link
+                          href={`/admin/products/${p.id}`}
+                          title="Edit"
+                          className="rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                          <span className="sr-only">Edit {p.name}</span>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={canWrite ? 9 : 8} className="px-6 py-12 text-center text-gray-400">
-                    {emptyMessage}
+                  <td colSpan={columns} className="px-6 py-16">
+                    <div className="mx-auto flex max-w-sm flex-col items-center text-center">
+                      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                        <SearchIcon className="h-6 w-6" />
+                      </span>
+                      <p className="font-medium text-gray-800">{empty.title}</p>
+                      <div className="mt-1 text-sm text-gray-500">{empty.message}</div>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -234,23 +339,23 @@ export default function ProductTable({
       </div>
 
       {canWrite && selectionCount > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-blue-200 bg-white/95 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur md:left-60">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:left-60 md:px-8">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-semibold text-blue-900">
-              {allMatching ? `All ${total.toLocaleString('en-IN')} in this view` : `${selectionCount} selected`}
+            <span className="inline-flex items-center gap-2 font-semibold text-gray-900">
+              <span className="rounded-md bg-blue-900 px-2 py-0.5 text-xs font-bold tabular-nums text-white">
+                {selectionCount.toLocaleString('en-IN')}
+              </span>
+              {allMatching ? 'products in this view' : 'selected'}
             </span>
             {allOnPage && !allMatching && total > rows.length && (
-              <button type="button" onClick={() => setAllMatching(true)} className="font-medium text-blue-600 hover:underline">
+              <button type="button" onClick={() => setAllMatching(true)} className="font-medium text-blue-700 hover:underline">
                 Select all {total.toLocaleString('en-IN')} matching
               </button>
             )}
 
-            <select
-              value={op}
-              onChange={(e) => setOp(e.target.value as BulkOperation | '')}
-              className={control}
-              aria-label="Bulk action"
-            >
+            <span className="hidden h-6 w-px bg-gray-200 sm:block" aria-hidden="true" />
+
+            <select value={op} onChange={(e) => setOp(e.target.value as BulkOperation | '')} className={control} aria-label="Bulk action">
               <option value="">Choose action…</option>
               <option value="set-category">Set category</option>
               <option value="publish">Publish</option>
@@ -297,15 +402,15 @@ export default function ProductTable({
                 type="button"
                 onClick={clearSelection}
                 disabled={pending}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+                className="h-9 rounded-lg border border-gray-300 px-3 font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
               >
-                Clear
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={apply}
                 disabled={pending || !op}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-1.5 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-900 px-4 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {pending && <Spinner />}
                 {pending ? 'Applying…' : 'Apply'}

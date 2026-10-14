@@ -2,28 +2,39 @@ import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { canWrite, getCurrentProfile } from '@/lib/supabase/auth'
 import { toSupabaseTransformUrl } from '@/lib/supabase/imageTransform'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, timeAgo } from '@/lib/format'
 import { stockStatusOf } from '@/lib/stock'
 import {
-  PRODUCT_SOURCES,
   PRODUCT_TABS,
   parseProductListFilters,
   productFilterConditions,
   toLogicTree,
+  type ProductTab,
 } from '@/lib/admin/productFilters'
-import ProductTable, { type ProductTableRow } from '@/components/admin/ProductTable'
+import ProductListShell from '@/components/admin/ProductListShell'
+import ProductTable, { type ProductTableRow, type Tone } from '@/components/admin/ProductTable'
+import { PlusIcon, RefreshIcon } from '@/components/admin/icons'
 import type { StockStatus } from '@/types'
 
 const PAGE_SIZE = 50
 
-const STOCK_BADGE: Record<StockStatus, { label: string; className: string }> = {
-  'in-stock': { label: 'In stock', className: 'text-green-600' },
-  'low-stock': { label: 'Low', className: 'text-orange-500' },
-  'out-of-stock': { label: 'Out', className: 'text-red-500' },
-  'pre-order': { label: 'Pre-order', className: 'text-blue-600' },
-}
+const PRICE_HIDDEN_LABEL = { hide: 'Price hidden', enquire: 'On enquiry' } as const
 
-const control = 'rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
+/** Stock pill: Marg products show the synced quantity; a staff override says so. */
+function stockBadge(status: StockStatus, qty: number | null, overridden: boolean): ProductTableRow['stock'] {
+  const pieces = qty?.toLocaleString('en-IN')
+  const fromMarg = qty != null && !overridden
+  const badge: Record<StockStatus, { label: string; tone: Tone }> = {
+    'in-stock': { label: fromMarg ? `${pieces} in stock` : 'In stock', tone: 'green' },
+    'low-stock': { label: fromMarg ? `Only ${pieces} left` : 'Low stock', tone: 'amber' },
+    'out-of-stock': { label: 'Out of stock', tone: 'red' },
+    'pre-order': { label: 'Pre-order', tone: 'blue' },
+  }
+  const { label, tone } = badge[status]
+  return overridden
+    ? { label: `${label} · manual`, tone, title: `Set manually${qty != null ? ` — Marg stock: ${pieces}` : ''}` }
+    : { label, tone }
+}
 
 type SearchParams = { [key: string]: string | string[] | undefined }
 
@@ -37,18 +48,36 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const tree = toLogicTree(productFilterConditions(filters))
   if (tree) query = query.or(tree)
 
-  const [{ data: products, count }, { data: categories }, { data: subcategories }, { data: suppliers }, profile] =
+  /** Per-tab counts, with the search/supplier/source filters applied. */
+  const countTab = async (status: ProductTab) => {
+    let q = supabase.from('products').select('id', { count: 'exact', head: true })
+    const t = toLogicTree(productFilterConditions({ ...filters, status }))
+    if (t) q = q.or(t)
+    const { count } = await q
+    return [status, count ?? 0] as const
+  }
+
+  const [{ data: products, count }, counts, { data: categories }, { data: subcategories }, { data: suppliers }, { data: lastSync }, profile] =
     await Promise.all([
       query
         .order('is_published', { ascending: false })
         .order('display_order', { ascending: true })
         .order('name', { ascending: true })
         .range(from, from + PAGE_SIZE - 1),
+      Promise.all(PRODUCT_TABS.map((t) => countTab(t.key))),
       supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
       supabase.from('subcategories').select('id, name, emoji, category_id').order('display_order', { ascending: true }),
       supabase.rpc('marg_supplier_counts'),
+      supabase
+        .from('marg_sync_runs')
+        .select('started_at, finished_at')
+        .eq('status', 'success')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
       getCurrentProfile(),
     ])
+  const tabCounts = Object.fromEntries(counts) as Record<ProductTab, number>
 
   // Primary image (else first) per product on this page — one query.
   const ids = (products ?? []).map((p) => p.id)
@@ -65,144 +94,102 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
 
   const catName = new Map((categories ?? []).map((c) => [c.id, c.name]))
   const rows: ProductTableRow[] = (products ?? []).map((p) => {
-    const stock = STOCK_BADGE[stockStatusOf(p)]
-    const showPrice = p.price_display === 'show' && p.price != null
     const thumb = thumbs.get(p.id)
+    const showPrice = p.price_display === 'show' && p.price != null
+    const onSale = showPrice && p.sale_price != null && p.sale_price < (p.price as number)
+    const needs = [!thumb && 'photo', !p.category_id && 'category'].filter((n): n is string => Boolean(n))
     return {
       id: p.id,
+      slug: p.slug,
       name: p.name,
       margCode: p.marg_code,
       margName: p.marg_name && p.marg_name !== p.name ? p.marg_name : null,
+      supplier: p.marg_company,
       thumb: thumb ? toSupabaseTransformUrl(thumb, { width: 96 }) : null,
       category: p.category_id ? catName.get(p.category_id) ?? null : null,
-      priceText: showPrice ? formatPrice(p.sale_price ?? (p.price as number)) : p.price_display,
-      onSale: showPrice && p.sale_price != null,
+      priceText: showPrice
+        ? formatPrice(onSale ? (p.sale_price as number) : (p.price as number))
+        : p.price_display === 'show'
+          ? '—'
+          : PRICE_HIDDEN_LABEL[p.price_display],
+      originalPriceText: onSale ? formatPrice(p.price as number) : null,
       priceMuted: !showPrice,
-      stockQty: p.marg_code ? Number(p.marg_stock ?? 0) : null,
-      stockLabel: stock.label,
-      stockClass: stock.className,
+      stock: stockBadge(stockStatusOf(p), p.marg_code ? Number(p.marg_stock ?? 0) : null, p.stock_status_override != null),
       popular: p.popular,
       newArrival: p.new_arrival,
       published: p.is_published,
+      ready: !p.is_published && needs.length === 0 && !p.marg_deleted_at,
+      needs,
       removed: p.marg_deleted_at ? 'Deleted in Marg' : p.marg_missing_since ? 'Missing in Marg' : null,
     }
   })
 
   const total = count ?? 0
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const href = (overrides: Record<string, string | number>) => {
-    const params = new URLSearchParams()
-    const merged = { ...filters, page, ...overrides }
-    for (const [k, v] of Object.entries(merged)) {
-      if (v === '' || (k === 'status' && v === 'all') || (k === 'page' && v === 1)) continue
-      params.set(k, String(v))
-    }
-    const qs = params.toString()
-    return qs ? `/admin/products?${qs}` : '/admin/products'
-  }
   const filtered = Boolean(filters.status !== 'all' || filters.q || filters.supplier || filters.source)
+  const lastSyncAt = lastSync ? lastSync.finished_at ?? lastSync.started_at : null
+  const firstPage = new URLSearchParams(
+    Object.entries({ ...filters, status: filters.status === 'all' ? '' : filters.status }).filter(([, v]) => v),
+  ).toString()
 
   return (
     <div className="p-4 md:p-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-sm text-gray-500">
-            {`${total.toLocaleString('en-IN')} ${filtered ? 'matching ' : ''}products`}
+          <p className="mt-1 text-sm text-gray-500">
+            Stock and prices come from Marg. Names, photos and categories are managed here.
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
-        >
-          + New Product
-        </Link>
-      </div>
-
-      <div className="mb-3 flex flex-wrap gap-1">
-        {PRODUCT_TABS.map((t) => (
+        <div className="flex flex-wrap items-center gap-2">
           <Link
-            key={t.key}
-            href={href({ status: t.key, page: 1 })}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              filters.status === t.key ? 'bg-blue-900 text-white' : 'text-gray-600 hover:bg-gray-100'
-            }`}
+            href="/admin/marg"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-600 shadow-sm transition hover:bg-gray-50"
+            title="Marg sync"
           >
-            {t.label}
+            <RefreshIcon className="h-4 w-4 text-gray-400" />
+            {lastSyncAt ? `Synced ${timeAgo(lastSyncAt)}` : 'Not synced yet'}
           </Link>
-        ))}
+          <Link
+            href="/admin/products/new"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+          >
+            <PlusIcon className="h-4 w-4" />
+            New product
+          </Link>
+        </div>
       </div>
 
-      <form action="/admin/products" className="mb-4 flex flex-wrap items-center gap-2">
-        {filters.status !== 'all' && <input type="hidden" name="status" value={filters.status} />}
-        <input name="q" defaultValue={filters.q} placeholder="Search name or Marg code…" className={`w-56 ${control}`} />
-        <select name="supplier" defaultValue={filters.supplier} className={`max-w-[16rem] ${control}`} aria-label="Supplier">
-          <option value="">All suppliers</option>
-          {(suppliers ?? []).map((s) => (
-            <option key={s.supplier} value={s.supplier}>
-              {s.supplier} ({s.product_count})
-            </option>
-          ))}
-        </select>
-        <select name="source" defaultValue={filters.source} className={control} aria-label="Source">
-          {PRODUCT_SOURCES.map((s) => (
-            <option key={s.key} value={s.key}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <button type="submit" className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-200">
-          Filter
-        </button>
-        {filtered && (
-          <Link href="/admin/products" className="text-sm text-blue-600 hover:underline">
-            Clear filters
-          </Link>
-        )}
-      </form>
-
-      <ProductTable
-        rows={rows}
-        total={total}
+      <ProductListShell
         filters={filters}
-        categories={categories ?? []}
-        subcategories={subcategories ?? []}
-        canWrite={!!profile && canWrite(profile.role)}
-        emptyMessage={
-          page > 1 ? (
-            <Link href={href({ page: 1 })} className="text-blue-600 hover:underline">
-              No products on this page — back to page 1
-            </Link>
-          ) : filtered ? (
-            'No products match these filters.'
-          ) : (
-            'No products yet. Run a Marg sync or create one.'
-          )
-        }
-      />
-
-      {pageCount > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <span>
-            {Math.min(from + 1, total)}–{Math.min(from + PAGE_SIZE, total)} of {total.toLocaleString('en-IN')}
-          </span>
-          <div className="flex gap-2">
-            {page > 1 && (
-              <Link href={href({ page: page - 1 })} className="rounded-lg border border-gray-300 px-3 py-1.5 hover:bg-gray-50">
-                ← Prev
-              </Link>
-            )}
-            <span className="px-2 py-1.5">
-              Page {page} of {pageCount}
-            </span>
-            {page < pageCount && (
-              <Link href={href({ page: page + 1 })} className="rounded-lg border border-gray-300 px-3 py-1.5 hover:bg-gray-50">
-                Next →
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+        tabCounts={tabCounts}
+        suppliers={suppliers ?? []}
+        page={page}
+        pageSize={PAGE_SIZE}
+        total={total}
+      >
+        <ProductTable
+          rows={rows}
+          total={total}
+          filters={filters}
+          categories={categories ?? []}
+          subcategories={subcategories ?? []}
+          canWrite={!!profile && canWrite(profile.role)}
+          empty={
+            page > 1 && total > 0
+              ? {
+                  title: 'Nothing on this page',
+                  message: (
+                    <Link href={firstPage ? `/admin/products?${firstPage}` : '/admin/products'} className="text-blue-700 hover:underline">
+                      Back to the first page
+                    </Link>
+                  ),
+                }
+              : filtered
+                ? { title: 'No products match', message: 'Try another tab, or clear the search and filters.' }
+                : { title: 'No products yet', message: 'Run a Marg sync, or add a product by hand.' }
+          }
+        />
+      </ProductListShell>
     </div>
   )
 }
