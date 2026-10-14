@@ -2,21 +2,28 @@
  * Admin product-list filters, shared by the list page (which rows to show) and
  * the bulk actions ("apply to all N products matching this view").
  *
- * Every filter is a PostgREST condition string, combined into one logic tree
- * that applies identically to a select or an update via `.or(tree)`.
+ * Two independent axes that combine: the *view* (all / published / drafts)
+ * and an optional *issue* ("needs attention": missing photo, out of stock…),
+ * plus source, supplier and search. Every filter is a PostgREST condition
+ * string, combined into one logic tree that applies identically to a select or
+ * an update via `.or(tree)`.
  */
 
-export const PRODUCT_TABS = [
+export const PRODUCT_VIEWS = [
   { key: 'all', label: 'All' },
   { key: 'published', label: 'Published' },
   { key: 'draft', label: 'Drafts' },
+] as const
+export type ProductView = (typeof PRODUCT_VIEWS)[number]['key']
+
+export const PRODUCT_ISSUES = [
   { key: 'ready', label: 'Ready to publish' },
   { key: 'missing-photo', label: 'Missing photo' },
   { key: 'no-category', label: 'No category' },
   { key: 'out-of-stock', label: 'Out of stock' },
   { key: 'removed', label: 'Removed in Marg' },
 ] as const
-export type ProductTab = (typeof PRODUCT_TABS)[number]['key']
+export type ProductIssue = (typeof PRODUCT_ISSUES)[number]['key']
 
 export const PRODUCT_SOURCES = [
   { key: '', label: 'All sources' },
@@ -26,7 +33,8 @@ export const PRODUCT_SOURCES = [
 export type ProductSource = (typeof PRODUCT_SOURCES)[number]['key']
 
 export interface ProductListFilters {
-  status: ProductTab
+  view: ProductView
+  issue: ProductIssue | ''
   source: ProductSource
   supplier: string
   q: string
@@ -35,10 +43,13 @@ export interface ProductListFilters {
 /** What a product needs before it can be published (the DB also enforces the category). */
 export const PUBLISHABLE_CONDITIONS = ['category_id.not.is.null', 'image_count.gt.0', 'marg_deleted_at.is.null']
 
-const TAB_CONDITIONS: Record<ProductTab, string[]> = {
+const VIEW_CONDITIONS: Record<ProductView, string[]> = {
   all: [],
   published: ['is_published.is.true'],
   draft: ['is_published.is.false'],
+}
+
+const ISSUE_CONDITIONS: Record<ProductIssue, string[]> = {
   ready: ['is_published.is.false', ...PUBLISHABLE_CONDITIONS],
   'missing-photo': ['image_count.eq.0'],
   'no-category': ['category_id.is.null'],
@@ -60,20 +71,26 @@ const quote = (v: string) => `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"
 
 export function parseProductListFilters(input: Record<string, unknown>): ProductListFilters {
   const s = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
-  const status = PRODUCT_TABS.find((t) => t.key === input.status)?.key ?? 'all'
-  const source = PRODUCT_SOURCES.find((t) => t.key === input.source)?.key ?? ''
+  // Older links used a single `status` param for both axes — still honoured.
+  const legacy = s(input.status)
   return {
-    status,
-    source,
+    view: PRODUCT_VIEWS.find((t) => t.key === (s(input.view) || legacy))?.key ?? 'all',
+    issue: PRODUCT_ISSUES.find((t) => t.key === (s(input.issue) || legacy))?.key ?? '',
+    source: PRODUCT_SOURCES.find((t) => t.key === input.source)?.key ?? '',
     supplier: s(input.supplier).slice(0, 100),
     // `%` and `*` are LIKE wildcards — keep the search plain text.
     q: s(input.q).replace(/[%*]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100),
   }
 }
 
-/** The filters as AND-ed conditions, plus any `extra` ones. */
-export function productFilterConditions(f: ProductListFilters, extra: string[] = []): string[] {
-  const conditions = [...TAB_CONDITIONS[f.status], ...SOURCE_CONDITIONS[f.source], ...extra]
+/** The filters as AND-ed conditions, plus any `extra` ones. Missing fields mean "no filter". */
+export function productFilterConditions(f: Partial<ProductListFilters>, extra: string[] = []): string[] {
+  const conditions = [
+    ...VIEW_CONDITIONS[f.view ?? 'all'],
+    ...(f.issue ? ISSUE_CONDITIONS[f.issue] : []),
+    ...SOURCE_CONDITIONS[f.source ?? ''],
+    ...extra,
+  ]
   if (f.supplier) conditions.push(`marg_company.eq.${quote(f.supplier)}`)
   if (f.q) {
     const like = quote(`%${f.q}%`)
@@ -85,4 +102,17 @@ export function productFilterConditions(f: ProductListFilters, extra: string[] =
 /** A logic tree for `.or()`: an OR of one AND group is just that group. Null = no filter. */
 export function toLogicTree(conditions: string[]): string | null {
   return conditions.length ? `and(${conditions.join(',')})` : null
+}
+
+/** URL for the products list with these filters (defaults omitted). */
+export function productListHref(f: Partial<ProductListFilters> & { page?: number }): string {
+  const params = new URLSearchParams()
+  if (f.view && f.view !== 'all') params.set('view', f.view)
+  if (f.issue) params.set('issue', f.issue)
+  if (f.source) params.set('source', f.source)
+  if (f.supplier) params.set('supplier', f.supplier)
+  if (f.q) params.set('q', f.q)
+  if (f.page && f.page > 1) params.set('page', String(f.page))
+  const qs = params.toString()
+  return qs ? `/admin/products?${qs}` : '/admin/products'
 }

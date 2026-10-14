@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/supabase/auth'
 import { timeAgo } from '@/lib/format'
-import { productFilterConditions, toLogicTree, type ProductSource, type ProductTab } from '@/lib/admin/productFilters'
+import { productFilterConditions, productListHref, toLogicTree, type ProductListFilters } from '@/lib/admin/productFilters'
 import { ENQUIRY_STATUS, ENQUIRY_STATUS_ORDER, ENQUIRY_TYPE } from '@/lib/admin/enquiryLabels'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
@@ -34,9 +34,9 @@ export default async function DashboardPage() {
   const supabase = createServerSupabase()
 
   /** Product counts use the same filters as the Products page tabs, so the numbers match the lists they link to. */
-  const countProducts = async (status: ProductTab, source: ProductSource = '', extra: string[] = []) => {
+  const countProducts = async (f: Partial<ProductListFilters>, extra: string[] = []) => {
     let q = supabase.from('products').select('id', { count: 'exact', head: true })
-    const tree = toLogicTree(productFilterConditions({ status, source, supplier: '', q: '' }, extra))
+    const tree = toLogicTree(productFilterConditions(f, extra))
     if (tree) q = q.or(tree)
     const { count } = await q
     return count ?? 0
@@ -59,15 +59,15 @@ export default async function DashboardPage() {
     { data: lastSuccess },
   ] = await Promise.all([
     getCurrentProfile(),
-    countProducts('published'),
-    countProducts('draft'),
-    countProducts('ready'),
-    countProducts('missing-photo'),
-    countProducts('all', 'marg'),
-    countProducts('published', 'marg'),
-    countProducts('all', 'marg', ['image_count.gt.0']),
-    countProducts('all', 'marg', ['category_id.not.is.null']),
-    countProducts('all', 'marg', ['marg_stock.gt.0']),
+    countProducts({ view: 'published' }),
+    countProducts({ view: 'draft' }),
+    countProducts({ issue: 'ready' }),
+    countProducts({ issue: 'missing-photo' }),
+    countProducts({ source: 'marg' }),
+    countProducts({ view: 'published', source: 'marg' }),
+    countProducts({ source: 'marg' }, ['image_count.gt.0']),
+    countProducts({ source: 'marg' }, ['category_id.not.is.null']),
+    countProducts({ source: 'marg' }, ['marg_stock.gt.0']),
     supabase.from('enquiries').select('status'),
     supabase
       .from('enquiries')
@@ -135,7 +135,7 @@ export default async function DashboardPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/admin/products?status=ready"
+              href={productListHref({ issue: 'ready' })}
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
             >
               <CheckCircleIcon className="h-4 w-4" />
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
           value={live}
           icon={PackageIcon}
           tone="blue"
-          href="/admin/products?status=published"
+          href={productListHref({ view: 'published' })}
           hint={`${plural(drafts, 'draft')} waiting for review`}
         />
         <StatCard
@@ -167,7 +167,7 @@ export default async function DashboardPage() {
           value={ready}
           icon={CheckCircleIcon}
           tone="teal"
-          href="/admin/products?status=ready"
+          href={productListHref({ issue: 'ready' })}
           hint="Photo and category added"
         />
         <StatCard
@@ -175,7 +175,7 @@ export default async function DashboardPage() {
           value={missingPhoto}
           icon={ImageIcon}
           tone="amber"
-          href="/admin/products?status=missing-photo"
+          href={productListHref({ issue: 'missing-photo' })}
           hint="A photo is needed to publish"
         />
         <StatCard

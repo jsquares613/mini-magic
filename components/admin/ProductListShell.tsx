@@ -1,13 +1,38 @@
 'use client'
 
-import { Fragment, useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { PRODUCT_SOURCES, PRODUCT_TABS, type ProductListFilters, type ProductTab } from '@/lib/admin/productFilters'
-import { ChevronLeftIcon, ChevronRightIcon, LayersIcon, PencilIcon, RefreshIcon, SearchIcon, TruckIcon, XIcon } from './icons'
+import { useRouter } from 'next/navigation'
+import {
+  PRODUCT_ISSUES,
+  PRODUCT_SOURCES,
+  PRODUCT_VIEWS,
+  productListHref,
+  type ProductIssue,
+  type ProductListFilters,
+  type ProductView,
+} from '@/lib/admin/productFilters'
+import {
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ImageIcon,
+  LayersIcon,
+  PencilIcon,
+  RefreshIcon,
+  SearchIcon,
+  ShapesIcon,
+  TruckIcon,
+  XCircleIcon,
+  XIcon,
+  type Icon,
+} from './icons'
 import Select from './Select'
 import Spinner from './Spinner'
 import { buttonClass, ui } from './ui'
+
+type ListParams = Partial<ProductListFilters & { page: number }>
 
 const SOURCE_ICON: Record<ProductListFilters['source'], React.ReactNode> = {
   '': <LayersIcon className="h-4 w-4 text-slate-400" />,
@@ -15,27 +40,28 @@ const SOURCE_ICON: Record<ProductListFilters['source'], React.ReactNode> = {
   manual: <PencilIcon className="h-4 w-4 text-amber-600" />,
 }
 
-type ListParams = Partial<Record<keyof ProductListFilters | 'page', string | number>>
-
-/** Tabs after the first three are "needs attention" views — counts there get a colour when non-zero. */
-const COUNT_TONE: Partial<Record<ProductTab, string>> = {
-  ready: 'bg-teal-50 text-teal-700',
-  'missing-photo': 'bg-amber-50 text-amber-700',
-  'no-category': 'bg-amber-50 text-amber-700',
-  'out-of-stock': 'bg-rose-50 text-rose-700',
-  removed: 'bg-rose-50 text-rose-700',
+/** "Needs attention" chips: icon + colours used while the count is non-zero. */
+const ISSUE_STYLE: Record<ProductIssue, { icon: Icon; iconClass: string; countClass: string }> = {
+  ready: { icon: CheckCircleIcon, iconClass: 'text-teal-600', countClass: 'bg-teal-50 text-teal-700' },
+  'missing-photo': { icon: ImageIcon, iconClass: 'text-amber-600', countClass: 'bg-amber-50 text-amber-700' },
+  'no-category': { icon: ShapesIcon, iconClass: 'text-amber-600', countClass: 'bg-amber-50 text-amber-700' },
+  'out-of-stock': { icon: XCircleIcon, iconClass: 'text-rose-600', countClass: 'bg-rose-50 text-rose-700' },
+  removed: { icon: AlertTriangleIcon, iconClass: 'text-rose-600', countClass: 'bg-rose-50 text-rose-700' },
 }
 
-const control = ui.control
+const fmt = (n: number) => n.toLocaleString('en-IN')
 
 /**
- * Status tabs (with counts), search/supplier/source filters and pagination
- * for the products list. Every change navigates inside a transition, so the
- * current table stays on screen (dimmed) until the next one is ready.
+ * Filter bar + pagination for the products list: a view switch (all /
+ * published / drafts), search, supplier and source, and "needs attention"
+ * chips that combine with the view. Every change navigates inside a
+ * transition, so the current table stays on screen (dimmed) until the next
+ * one is ready.
  */
 export default function ProductListShell({
   filters,
-  tabCounts,
+  viewCounts,
+  issueCounts,
   suppliers,
   page,
   pageSize,
@@ -43,7 +69,8 @@ export default function ProductListShell({
   children,
 }: {
   filters: ProductListFilters
-  tabCounts: Record<ProductTab, number>
+  viewCounts: Record<ProductView, number>
+  issueCounts: Record<ProductIssue, number>
   suppliers: { supplier: string; product_count: number }[]
   page: number
   pageSize: number
@@ -51,7 +78,6 @@ export default function ProductListShell({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const pathname = usePathname()
   const [pending, startTransition] = useTransition()
 
   const [q, setQ] = useState(filters.q)
@@ -59,19 +85,10 @@ export default function ProductListShell({
   // what the user has typed since, while back/forward still updates the box.
   const lastPushedQ = useRef(filters.q)
 
-  function hrefFor(params: ListParams) {
-    const merged: ListParams = { ...filters, page, ...params }
-    const search = new URLSearchParams()
-    for (const [k, v] of Object.entries(merged)) {
-      if (v === '' || v == null || (k === 'status' && v === 'all') || (k === 'page' && Number(v) === 1)) continue
-      search.set(k, String(v))
-    }
-    const qs = search.toString()
-    return qs ? `${pathname}?${qs}` : pathname
-  }
+  const hrefFor = (params: ListParams) => productListHref({ ...filters, page, ...params })
 
   function navigate(params: ListParams, scroll = false) {
-    if (params.q !== undefined) lastPushedQ.current = String(params.q)
+    if (params.q !== undefined) lastPushedQ.current = params.q
     startTransition(() => router.push(hrefFor(params), { scroll }))
   }
 
@@ -98,102 +115,135 @@ export default function ProductListShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q])
 
-  const hasFilters = Boolean(filters.q || filters.supplier || filters.source)
+  const hasFilters = Boolean(filters.view !== 'all' || filters.issue || filters.q || filters.supplier || filters.source)
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, total)
 
   return (
     <>
-      {/* Status tabs */}
-      <div className="admin-scroll mb-5 overflow-x-auto border-b border-slate-200">
-        <nav className="-mb-px flex min-w-max" aria-label="Product status">
-          {PRODUCT_TABS.map((t, i) => {
-            const active = filters.status === t.key
-            const n = tabCounts[t.key] ?? 0
-            const tone = active ? 'bg-blue-900 text-white' : n > 0 && COUNT_TONE[t.key] ? COUNT_TONE[t.key] : 'bg-slate-100 text-slate-600'
+      {/* View switch + search & filters */}
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <nav aria-label="Show" className="inline-flex shrink-0 rounded-xl bg-slate-100 p-1 ring-1 ring-inset ring-slate-200/70">
+          {PRODUCT_VIEWS.map((v) => {
+            const on = filters.view === v.key
             return (
-              <Fragment key={t.key}>
-                {i === 3 && <span className="mx-2 my-3 w-px bg-slate-200" aria-hidden="true" />}
-                <Link
-                  href={hrefFor({ status: t.key, page: 1 })}
-                  onClick={(e) => onLinkClick(e, { status: t.key, page: 1 })}
-                  aria-current={active ? 'page' : undefined}
-                  className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition ${
-                    active ? 'border-blue-900 text-blue-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'
-                  }`}
-                >
-                  {t.label}
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${tone}`}>{n.toLocaleString('en-IN')}</span>
-                </Link>
-              </Fragment>
+              <Link
+                key={v.key}
+                href={hrefFor({ view: v.key, page: 1 })}
+                onClick={(e) => onLinkClick(e, { view: v.key, page: 1 })}
+                aria-current={on ? 'page' : undefined}
+                className={`inline-flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-medium transition ${
+                  on ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {v.label}
+                <span className={`text-xs tabular-nums ${on ? 'text-slate-500' : 'text-slate-400'}`}>{fmt(viewCounts[v.key] ?? 0)}</span>
+              </Link>
             )
           })}
         </nav>
+
+        <div className="flex w-full flex-wrap items-center gap-2 lg:ml-auto lg:w-auto lg:flex-nowrap">
+          <div className="relative w-full sm:w-64">
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') navigate({ q: q.trim(), page: 1 })
+              }}
+              placeholder="Search name or Marg code"
+              aria-label="Search products"
+              enterKeyHint="search"
+              className={`${ui.control} w-full pl-9 pr-9`}
+            />
+            {pending ? (
+              <Spinner className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            ) : (
+              q && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQ('')
+                    navigate({ q: '', page: 1 })
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  aria-label="Clear search"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              )
+            )}
+          </div>
+          <Select
+            aria-label="Supplier"
+            className="w-full sm:w-56"
+            value={filters.supplier}
+            onChange={(v) => navigate({ supplier: v, page: 1 })}
+            searchable
+            options={[
+              { value: '', label: 'All suppliers', icon: <TruckIcon className="h-4 w-4 text-slate-400" /> },
+              ...suppliers.map((s) => ({ value: s.supplier, label: s.supplier, meta: fmt(s.product_count) })),
+            ]}
+          />
+          <Select
+            aria-label="Source"
+            className="w-full sm:w-44"
+            value={filters.source}
+            onChange={(v) => navigate({ source: v as ProductListFilters['source'], page: 1 })}
+            options={PRODUCT_SOURCES.map((s) => ({ value: s.key, label: s.label, icon: SOURCE_ICON[s.key] }))}
+          />
+        </div>
       </div>
 
-      {/* Filters */}
+      {/* Needs attention — combines with the view above */}
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <div className="relative w-full sm:w-72">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') navigate({ q: q.trim(), page: 1 })
-            }}
-            placeholder="Search name or Marg code"
-            aria-label="Search products"
-            enterKeyHint="search"
-            className={`${control} w-full pl-9 pr-9`}
-          />
-          {pending ? (
-            <Spinner className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          ) : (
-            q && (
-              <button
-                type="button"
-                onClick={() => {
-                  setQ('')
-                  navigate({ q: '', page: 1 })
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Clear search"
+        <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Needs attention</span>
+        {PRODUCT_ISSUES.map((issue) => {
+          const on = filters.issue === issue.key
+          const n = issueCounts[issue.key] ?? 0
+          const style = ISSUE_STYLE[issue.key]
+          const IssueIcon = style.icon
+          return (
+            <Link
+              key={issue.key}
+              href={hrefFor({ issue: on ? '' : issue.key, page: 1 })}
+              onClick={(e) => onLinkClick(e, { issue: on ? '' : issue.key, page: 1 })}
+              aria-current={on ? 'true' : undefined}
+              title={on ? 'Remove this filter' : `Show only: ${issue.label.toLowerCase()}`}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full border pl-2.5 pr-2 text-sm font-medium transition ${
+                on
+                  ? 'border-blue-900 bg-blue-900 text-white shadow-sm hover:bg-blue-800'
+                  : n > 0
+                    ? 'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50'
+                    : 'border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+              }`}
+            >
+              <IssueIcon className={`h-3.5 w-3.5 ${on ? 'text-white' : n > 0 ? style.iconClass : 'text-slate-300'}`} />
+              {issue.label}
+              <span
+                className={`rounded-full px-1.5 py-px text-xs font-semibold tabular-nums ${
+                  on ? 'bg-white/20 text-white' : n > 0 ? style.countClass : 'text-slate-400'
+                }`}
               >
-                <XIcon className="h-4 w-4" />
-              </button>
-            )
-          )}
-        </div>
-        <Select
-          aria-label="Supplier"
-          className="w-full sm:w-64"
-          value={filters.supplier}
-          onChange={(v) => navigate({ supplier: v, page: 1 })}
-          searchable
-          options={[
-            { value: '', label: 'All suppliers', icon: <TruckIcon className="h-4 w-4 text-slate-400" /> },
-            ...suppliers.map((s) => ({ value: s.supplier, label: s.supplier, meta: s.product_count.toLocaleString('en-IN') })),
-          ]}
-        />
-        <Select
-          aria-label="Source"
-          className="w-full sm:w-48"
-          value={filters.source}
-          onChange={(v) => navigate({ source: v, page: 1 })}
-          options={PRODUCT_SOURCES.map((s) => ({ value: s.key, label: s.label, icon: SOURCE_ICON[s.key] }))}
-        />
+                {fmt(n)}
+              </span>
+              {on && <XIcon className="h-3.5 w-3.5 opacity-80" />}
+            </Link>
+          )
+        })}
         {hasFilters && (
           <button
             type="button"
             onClick={() => {
               setQ('')
-              navigate({ q: '', supplier: '', source: '', page: 1 })
+              navigate({ view: 'all', issue: '', q: '', supplier: '', source: '', page: 1 })
             }}
-            className={buttonClass('ghost')}
+            className={buttonClass('ghost', 'sm', 'ml-auto')}
           >
-            <XIcon className="h-4 w-4" />
-            Clear filters
+            <XIcon className="h-3.5 w-3.5" />
+            Reset filters
           </button>
         )}
       </div>
@@ -205,26 +255,19 @@ export default function ProductListShell({
       {total > 0 && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
           <span>
-            Showing <span className="font-medium text-slate-700">{from.toLocaleString('en-IN')}</span>–
-            <span className="font-medium text-slate-700">{to.toLocaleString('en-IN')}</span> of{' '}
-            <span className="font-medium text-slate-700">{total.toLocaleString('en-IN')}</span>
+            Showing <span className="font-medium text-slate-700">{fmt(from)}</span>–<span className="font-medium text-slate-700">{fmt(to)}</span> of{' '}
+            <span className="font-medium text-slate-700">{fmt(total)}</span>
           </span>
           {pageCount > 1 && (
             <div className="flex items-center gap-2">
-              <PageLink
-                href={page > 1 ? hrefFor({ page: page - 1 }) : null}
-                onClick={(e) => onLinkClick(e, { page: page - 1 }, true)}
-              >
+              <PageLink href={page > 1 ? hrefFor({ page: page - 1 }) : null} onClick={(e) => onLinkClick(e, { page: page - 1 }, true)}>
                 <ChevronLeftIcon className="h-4 w-4" />
                 Prev
               </PageLink>
               <span className="px-1 tabular-nums">
-                Page {page} of {pageCount.toLocaleString('en-IN')}
+                Page {page} of {fmt(pageCount)}
               </span>
-              <PageLink
-                href={page < pageCount ? hrefFor({ page: page + 1 }) : null}
-                onClick={(e) => onLinkClick(e, { page: page + 1 }, true)}
-              >
+              <PageLink href={page < pageCount ? hrefFor({ page: page + 1 }) : null} onClick={(e) => onLinkClick(e, { page: page + 1 }, true)}>
                 Next
                 <ChevronRightIcon className="h-4 w-4" />
               </PageLink>

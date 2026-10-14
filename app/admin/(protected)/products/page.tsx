@@ -5,11 +5,15 @@ import { toSupabaseTransformUrl } from '@/lib/supabase/imageTransform'
 import { formatPrice, timeAgo } from '@/lib/format'
 import { stockStatusOf } from '@/lib/stock'
 import {
-  PRODUCT_TABS,
+  PRODUCT_ISSUES,
+  PRODUCT_VIEWS,
   parseProductListFilters,
   productFilterConditions,
+  productListHref,
   toLogicTree,
-  type ProductTab,
+  type ProductIssue,
+  type ProductListFilters,
+  type ProductView,
 } from '@/lib/admin/productFilters'
 import ProductListShell from '@/components/admin/ProductListShell'
 import ProductTable, { type ProductTableRow } from '@/components/admin/ProductTable'
@@ -49,23 +53,32 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const tree = toLogicTree(productFilterConditions(filters))
   if (tree) query = query.or(tree)
 
-  /** Per-tab counts, with the search/supplier/source filters applied. */
-  const countTab = async (status: ProductTab) => {
+  /** Count with the current filters, overriding some (each switch/chip counts within the others). */
+  const countWith = async (override: Partial<ProductListFilters>) => {
     let q = supabase.from('products').select('id', { count: 'exact', head: true })
-    const t = toLogicTree(productFilterConditions({ ...filters, status }))
+    const t = toLogicTree(productFilterConditions({ ...filters, ...override }))
     if (t) q = q.or(t)
     const { count } = await q
-    return [status, count ?? 0] as const
+    return count ?? 0
   }
 
-  const [{ data: products, count }, counts, { data: categories }, { data: subcategories }, { data: suppliers }, { data: lastSync }, profile] =
-    await Promise.all([
+  const [
+    { data: products, count },
+    viewCountList,
+    issueCountList,
+    { data: categories },
+    { data: subcategories },
+    { data: suppliers },
+    { data: lastSync },
+    profile,
+  ] = await Promise.all([
       query
         .order('is_published', { ascending: false })
         .order('display_order', { ascending: true })
         .order('name', { ascending: true })
         .range(from, from + PAGE_SIZE - 1),
-      Promise.all(PRODUCT_TABS.map((t) => countTab(t.key))),
+      Promise.all(PRODUCT_VIEWS.map(async (v) => [v.key, await countWith({ view: v.key })] as const)),
+      Promise.all(PRODUCT_ISSUES.map(async (i) => [i.key, await countWith({ issue: i.key })] as const)),
       supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
       supabase.from('subcategories').select('id, name, emoji, category_id').order('display_order', { ascending: true }),
       supabase.rpc('marg_supplier_counts'),
@@ -78,7 +91,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         .maybeSingle(),
       getCurrentProfile(),
     ])
-  const tabCounts = Object.fromEntries(counts) as Record<ProductTab, number>
+  const viewCounts = Object.fromEntries(viewCountList) as Record<ProductView, number>
+  const issueCounts = Object.fromEntries(issueCountList) as Record<ProductIssue, number>
 
   // Primary image (else first) per product on this page — one query.
   const ids = (products ?? []).map((p) => p.id)
@@ -126,11 +140,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   })
 
   const total = count ?? 0
-  const filtered = Boolean(filters.status !== 'all' || filters.q || filters.supplier || filters.source)
+  const filtered = Boolean(filters.view !== 'all' || filters.issue || filters.q || filters.supplier || filters.source)
   const lastSyncAt = lastSync ? lastSync.finished_at ?? lastSync.started_at : null
-  const firstPage = new URLSearchParams(
-    Object.entries({ ...filters, status: filters.status === 'all' ? '' : filters.status }).filter(([, v]) => v),
-  ).toString()
 
   return (
     <Page>
@@ -153,7 +164,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
 
       <ProductListShell
         filters={filters}
-        tabCounts={tabCounts}
+        viewCounts={viewCounts}
+        issueCounts={issueCounts}
         suppliers={suppliers ?? []}
         page={page}
         pageSize={PAGE_SIZE}
@@ -171,13 +183,13 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
               ? {
                   title: 'Nothing on this page',
                   message: (
-                    <Link href={firstPage ? `/admin/products?${firstPage}` : '/admin/products'} className="text-blue-700 hover:underline">
+                    <Link href={productListHref(filters)} className="text-blue-700 hover:underline">
                       Back to the first page
                     </Link>
                   ),
                 }
               : filtered
-                ? { title: 'No products match', message: 'Try another tab, or clear the search and filters.' }
+                ? { title: 'No products match', message: 'Try another view, or reset the filters.' }
                 : { title: 'No products yet', message: 'Run a Marg sync, or add a product by hand.' }
           }
         />

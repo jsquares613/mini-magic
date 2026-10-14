@@ -3,7 +3,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/supabase/auth'
 import { missingMargEnv } from '@/lib/marg/client'
 import { timeAgo } from '@/lib/format'
-import { productFilterConditions, toLogicTree, type ProductTab } from '@/lib/admin/productFilters'
+import { productFilterConditions, productListHref, toLogicTree, type ProductListFilters } from '@/lib/admin/productFilters'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
 import { Badge, Card, EmptyState, Page, PageHeader, StatCard, ui, type Tone } from '@/components/admin/ui'
@@ -40,22 +40,22 @@ export default async function MargSyncPage() {
   const supabase = createServerSupabase()
 
   // Each card counts the same products its link lists (lib/admin/productFilters.ts).
-  const countMarg = async (status: ProductTab) => {
+  const countMarg = async (f: Partial<ProductListFilters>) => {
     // source 'marg' always yields a condition, so the tree is never null.
-    const tree = toLogicTree(productFilterConditions({ status, source: 'marg', supplier: '', q: '' })) as string
+    const tree = toLogicTree(productFilterConditions({ ...f, source: 'marg' })) as string
     const { count } = await supabase.from('products').select('*', { count: 'exact', head: true }).or(tree)
     return count ?? 0
   }
 
   const [profile, total, published, drafts, ready, missingPhoto, outOfStock, removed, { data: runs }] = await Promise.all([
     getCurrentProfile(),
-    countMarg('all'),
-    countMarg('published'),
-    countMarg('draft'),
-    countMarg('ready'),
-    countMarg('missing-photo'),
-    countMarg('out-of-stock'),
-    countMarg('removed'),
+    countMarg({}),
+    countMarg({ view: 'published' }),
+    countMarg({ view: 'draft' }),
+    countMarg({ issue: 'ready' }),
+    countMarg({ issue: 'missing-photo' }),
+    countMarg({ issue: 'out-of-stock' }),
+    countMarg({ issue: 'removed' }),
     supabase.from('marg_sync_runs').select('*').order('started_at', { ascending: false }).limit(20),
   ])
 
@@ -65,7 +65,7 @@ export default async function MargSyncPage() {
   const cronEnabled = Boolean(process.env.CRON_SECRET)
   const isAdmin = profile?.role === 'admin'
 
-  const list = (status: ProductTab) => `/admin/products?status=${status}&source=marg`
+  const list = (f: Partial<ProductListFilters>) => productListHref({ ...f, source: 'marg' })
 
   return (
     <Page>
@@ -119,13 +119,13 @@ export default async function MargSyncPage() {
       )}
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Marg products" value={total} icon={PackageIcon} tone="blue" href="/admin/products?source=marg" hint="Everything Marg sends us" />
-        <StatCard label="Published" value={published} icon={EyeIcon} tone="green" href={list('published')} hint="Live on the website" />
-        <StatCard label="Ready to publish" value={ready} icon={CheckCircleIcon} tone="teal" href={list('ready')} hint="Photo and category added" />
-        <StatCard label="Missing photo" value={missingPhoto} icon={ImageIcon} tone="amber" href={list('missing-photo')} hint="Needed before publishing" />
-        <StatCard label="Drafts" value={drafts} icon={FileTextIcon} tone="gray" href={list('draft')} hint="Not on the website yet" />
-        <StatCard label="Out of stock" value={outOfStock} icon={XCircleIcon} tone="red" href={list('out-of-stock')} hint="Marg stock is zero" />
-        <StatCard label="Removed in Marg" value={removed} icon={AlertTriangleIcon} tone="red" href={list('removed')} hint="Deleted or no longer listed" />
+        <StatCard label="Marg products" value={total} icon={PackageIcon} tone="blue" href={list({})} hint="Everything Marg sends us" />
+        <StatCard label="Published" value={published} icon={EyeIcon} tone="green" href={list({ view: 'published' })} hint="Live on the website" />
+        <StatCard label="Ready to publish" value={ready} icon={CheckCircleIcon} tone="teal" href={list({ issue: 'ready' })} hint="Photo and category added" />
+        <StatCard label="Missing photo" value={missingPhoto} icon={ImageIcon} tone="amber" href={list({ issue: 'missing-photo' })} hint="Needed before publishing" />
+        <StatCard label="Drafts" value={drafts} icon={FileTextIcon} tone="gray" href={list({ view: 'draft' })} hint="Not on the website yet" />
+        <StatCard label="Out of stock" value={outOfStock} icon={XCircleIcon} tone="red" href={list({ issue: 'out-of-stock' })} hint="Marg stock is zero" />
+        <StatCard label="Removed in Marg" value={removed} icon={AlertTriangleIcon} tone="red" href={list({ issue: 'removed' })} hint="Deleted or no longer listed" />
         <StatCard
           label="Automatic sync"
           value={cronEnabled ? 'On' : 'Off'}
@@ -202,7 +202,7 @@ export default async function MargSyncPage() {
               </>
             }
             action={
-              <Link href="/admin/products?source=marg" className="text-sm font-medium text-blue-700 hover:underline">
+              <Link href={list({})} className="text-sm font-medium text-blue-700 hover:underline">
                 View Marg products
               </Link>
             }
