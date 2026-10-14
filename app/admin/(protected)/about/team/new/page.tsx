@@ -1,15 +1,12 @@
-import Link from 'next/link'
 import TeamMemberForm from '@/components/admin/TeamMemberForm'
+import { Page, PageHeader } from '@/components/admin/ui'
 import { createTeamMember } from '../../actions'
 
-export default function NewTeamMemberPage() {
+export default function PageTeamMemberFormNew() {
   return (
-    <div className="p-4 md:p-8">
-      <Link href="/admin/about" className="text-sm text-blue-600 hover:underline">
-        ← About Us
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold text-gray-900">New Team Member</h1>
+    <Page>
+      <PageHeader back={{ href: '/admin/about', label: 'About Us' }} title="New team member" description="Shown in the team section of the About page." />
       <TeamMemberForm action={createTeamMember} />
-    </div>
+    </Page>
   )
 }

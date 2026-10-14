@@ -1,15 +1,12 @@
-import Link from 'next/link'
 import BannerForm from '@/components/admin/BannerForm'
+import { Page, PageHeader } from '@/components/admin/ui'
 import { createBanner } from '../../actions'
 
-export default function NewBannerPage() {
+export default function PageBannerFormNew() {
   return (
-    <div className="p-4 md:p-8">
-      <Link href="/admin/homepage" className="text-sm text-blue-600 hover:underline">
-        ← Homepage
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold text-gray-900">New Promotional Banner</h1>
+    <Page>
+      <PageHeader back={{ href: '/admin/homepage', label: 'Homepage' }} title="New promotional banner" description="An offer block on the homepage." />
       <BannerForm action={createBanner} />
-    </div>
+    </Page>
   )
 }

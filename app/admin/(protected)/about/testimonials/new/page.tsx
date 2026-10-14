@@ -1,15 +1,12 @@
-import Link from 'next/link'
 import TestimonialForm from '@/components/admin/TestimonialForm'
+import { Page, PageHeader } from '@/components/admin/ui'
 import { createTestimonial } from '../../actions'
 
-export default function NewTestimonialPage() {
+export default function PageTestimonialFormNew() {
   return (
-    <div className="p-4 md:p-8">
-      <Link href="/admin/about" className="text-sm text-blue-600 hover:underline">
-        ← About Us
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold text-gray-900">New Testimonial</h1>
+    <Page>
+      <PageHeader back={{ href: '/admin/about', label: 'About Us' }} title="New testimonial" description="A quote from a happy customer." />
       <TestimonialForm action={createTestimonial} />
-    </div>
+    </Page>
   )
 }

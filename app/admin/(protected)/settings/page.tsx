@@ -1,11 +1,10 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
+import { Card, Field, Page, PageHeader, Switch, ui } from '@/components/admin/ui'
+import { MapPinIcon, MegaphoneIcon, TypeIcon } from '@/components/admin/icons'
 import { updateContactInfo, updateFooterText, updateBannerSettings } from './actions'
 import { siteConfig } from '@/config/site'
-
-const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
-const label = 'mb-1 block text-sm font-medium text-gray-700'
 
 export default async function SettingsPage() {
   const supabase = createServerSupabase()
@@ -20,152 +19,100 @@ export default async function SettingsPage() {
   const announcements: string[] = (announcementsSetting?.value as string[]) ?? [...siteConfig.announcements]
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
-      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+    <Page>
+      <PageHeader title="Settings" description="Site-wide text and the contact details shown in the footer and on the Contact page." />
 
-      {/* Scrolling Banner */}
-      <ActionForm action={updateBannerSettings} successMessage="Banner updated successfully">
-        <section className="rounded-2xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-1 font-bold text-gray-900">Scrolling Banner</h2>
-          <p className="mb-5 text-sm text-gray-500">
-            The announcement bar shown at the top of every page. Add, remove, or edit messages — one per line.
-          </p>
-
-          <div className="space-y-5">
-            <div>
-              <label className={label}>Messages <span className="text-gray-400">(one per line)</span></label>
-              <textarea
-                name="messages"
-                rows={5}
-                defaultValue={announcements.join('\n')}
-                placeholder={'Special Weekend Offers Available In-Store\nNew Arrivals Just Landed\nBirthday Gift Collections Available'}
-                className={input}
-              />
-            </div>
-
-            <label className="flex cursor-pointer items-center gap-3">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  name="marquee_enabled"
-                  defaultChecked={marqueeEnabled}
-                  className="sr-only peer"
-                />
-                <div className="h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-blue-600 transition-colors" />
-                <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          {/* Scrolling banner */}
+          <ActionForm action={updateBannerSettings} successMessage="Banner updated successfully">
+            <Card
+              title="Announcement bar"
+              description="The strip at the very top of every page."
+              icon={MegaphoneIcon}
+              tone="red"
+              footer={
+                <div className="flex justify-end py-1">
+                  <SubmitButton pendingText="Saving…">Save banner</SubmitButton>
+                </div>
+              }
+            >
+              <div className="space-y-5">
+                <Field label="Messages" hint="One message per line.">
+                  <textarea
+                    name="messages"
+                    rows={5}
+                    defaultValue={announcements.join('\n')}
+                    placeholder={'Special Weekend Offers Available In-Store\nNew Arrivals Just Landed\nBirthday Gift Collections Available'}
+                    className={ui.input}
+                  />
+                </Field>
+                <Switch name="marquee_enabled" defaultChecked={marqueeEnabled} label="Scrolling animation" description="Turn off to show the messages without movement." />
               </div>
-              <span className="text-sm font-medium text-gray-700">Enable scrolling animation</span>
-            </label>
-          </div>
+            </Card>
+          </ActionForm>
 
-          <div className="mt-6">
-            <SubmitButton pendingText="Saving…" className="px-6 py-2.5">
-              Save Banner
-            </SubmitButton>
-          </div>
-        </section>
-      </ActionForm>
+          {/* Footer text */}
+          <ActionForm action={updateFooterText} successMessage="Footer text saved successfully">
+            <Card
+              title="Footer tagline"
+              description="Shown under the brand name in the footer."
+              icon={TypeIcon}
+              tone="gray"
+              footer={
+                <div className="flex justify-end py-1">
+                  <SubmitButton pendingText="Saving…">Save tagline</SubmitButton>
+                </div>
+              }
+            >
+              <Field label="Tagline" hint={`Leave blank to use the default: “${siteConfig.tagline}”.`}>
+                <input name="footer_text" placeholder={siteConfig.tagline} defaultValue={footerText} className={ui.input} />
+              </Field>
+            </Card>
+          </ActionForm>
+        </div>
 
-      {/* Footer Text */}
-      <ActionForm action={updateFooterText} successMessage="Footer text saved successfully">
-        <section className="rounded-2xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-1 font-bold text-gray-900">Footer Tagline</h2>
-          <p className="mb-5 text-sm text-gray-500">
-            The tagline shown below the brand name in the footer. Defaults to{' '}
-            <span className="italic text-gray-400">&ldquo;{siteConfig.tagline}&rdquo;</span> when left blank.
-          </p>
-          <div className="space-y-4">
-            <div>
-              <label className={label}>Tagline text</label>
-              <input
-                name="footer_text"
-                placeholder={siteConfig.tagline}
-                defaultValue={footerText}
-                className={input}
-              />
-            </div>
-          </div>
-          <div className="mt-6">
-            <SubmitButton pendingText="Saving…" className="px-6 py-2.5">
-              Save Tagline
-            </SubmitButton>
-          </div>
-        </section>
-      </ActionForm>
-
-      {/* Contact Information */}
-      <ActionForm action={updateContactInfo} successMessage="Contact information saved successfully">
-        <section className="rounded-2xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-1 font-bold text-gray-900">Contact Information</h2>
-          <p className="mb-5 text-sm text-gray-500">
-            Shown in the footer and on the Contact page. Leave a field blank to hide it.
-          </p>
-
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={label}>Phone</label>
-                <input
-                  name="phone"
-                  type="tel"
-                  placeholder="+91 72594 07351"
-                  defaultValue={contact?.phone ?? ''}
-                  className={input}
-                />
+        {/* Contact information */}
+        <ActionForm action={updateContactInfo} successMessage="Contact information saved successfully">
+          <Card
+            title="Contact information"
+            description="Leave a field blank to hide it on the website."
+            icon={MapPinIcon}
+            tone="blue"
+            footer={
+              <div className="flex justify-end py-1">
+                <SubmitButton pendingText="Saving…">Save contact info</SubmitButton>
               </div>
-              <div>
-                <label className={label}>WhatsApp number</label>
-                <input
-                  name="whatsapp"
-                  type="tel"
-                  placeholder="+917259407351"
-                  defaultValue={contact?.whatsapp ?? ''}
-                  className={input}
-                />
+            }
+          >
+            <div className="space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Phone">
+                  <input name="phone" type="tel" placeholder="+91 72594 07351" defaultValue={contact?.phone ?? ''} className={ui.input} />
+                </Field>
+                <Field label="WhatsApp number">
+                  <input name="whatsapp" type="tel" placeholder="+917259407351" defaultValue={contact?.whatsapp ?? ''} className={ui.input} />
+                </Field>
               </div>
+              <Field label="Email">
+                <input name="email" type="email" placeholder="minimagic@gmail.com" defaultValue={contact?.email ?? ''} className={ui.input} />
+              </Field>
+              <Field label="Address">
+                <textarea
+                  name="address"
+                  rows={3}
+                  placeholder="MINI MAGIC, U.K. Dream Centre, Kallapu, Mangalore – 575017"
+                  defaultValue={contact?.address ?? ''}
+                  className={ui.input}
+                />
+              </Field>
+              <Field label="Google Maps link" hint="Optional.">
+                <input name="map_url" type="url" placeholder="https://maps.google.com/..." defaultValue={contact?.map_url ?? ''} className={ui.input} />
+              </Field>
             </div>
-
-            <div>
-              <label className={label}>Email</label>
-              <input
-                name="email"
-                type="email"
-                placeholder="minimagic@gmail.com"
-                defaultValue={contact?.email ?? ''}
-                className={input}
-              />
-            </div>
-
-            <div>
-              <label className={label}>Address</label>
-              <textarea
-                name="address"
-                rows={3}
-                placeholder="MINI MAGIC, U.K. Dream Centre, Kallapu, Mangalore – 575017"
-                defaultValue={contact?.address ?? ''}
-                className={input}
-              />
-            </div>
-
-            <div>
-              <label className={label}>Google Maps URL <span className="text-gray-400">(optional)</span></label>
-              <input
-                name="map_url"
-                type="url"
-                placeholder="https://maps.google.com/..."
-                defaultValue={contact?.map_url ?? ''}
-                className={input}
-              />
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <SubmitButton pendingText="Saving…" className="px-6 py-2.5">
-              Save Contact Info
-            </SubmitButton>
-          </div>
-        </section>
-      </ActionForm>
-    </div>
+          </Card>
+        </ActionForm>
+      </div>
+    </Page>
   )
 }

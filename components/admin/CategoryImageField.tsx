@@ -8,6 +8,7 @@ import { updateCategoryImage } from '@/app/admin/(protected)/categories/actions'
 import { unwrapAction } from '@/lib/admin/actionResult'
 import Spinner from './Spinner'
 import ImageCropModal from './ImageCropModal'
+import { TrashIcon, UploadIcon } from './icons'
 
 export default function CategoryImageField({
   categoryId,
@@ -75,26 +76,45 @@ export default function CategoryImageField({
     }
   }
 
+  const box = aspectRatio === 1 ? 'h-36 w-36' : 'h-36 w-64'
+
   return (
     <div>
-      <p className="mb-1 text-sm font-medium text-gray-700">{label}</p>
-      {hint && <p className="mb-1.5 text-xs text-gray-400">Recommended size: {hint}</p>}
+      <p className="text-sm font-medium text-slate-700">{label}</p>
+      {hint && <p className="mb-2 text-xs text-slate-500">Recommended: {hint}</p>}
       {current ? (
-        <div className="relative inline-block">
+        <div className={`group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 ${box}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={current} alt={label} className="h-28 w-28 rounded-lg border border-gray-200 object-cover" />
-          <button
-            onClick={remove}
-            disabled={busy}
-            className="absolute -right-2 -top-2 rounded-full bg-red-500 px-2 text-xs text-white disabled:opacity-60"
-          >
-            {busy ? <Spinner className="h-3 w-3" /> : '×'}
-          </button>
+          <img src={current} alt={label} className="h-full w-full object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-slate-900/50 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+            {busy ? (
+              <Spinner className="h-5 w-5 text-white" />
+            ) : (
+              <>
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
+                  <UploadIcon className="h-3.5 w-3.5" />
+                  Replace
+                  <input type="file" accept="image/*" onChange={onFile} disabled={busy} className="hidden" />
+                </label>
+                <button
+                  type="button"
+                  onClick={remove}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-600 shadow-sm hover:bg-rose-50"
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                  Remove
+                </button>
+              </>
+            )}
+          </div>
         </div>
       ) : (
-        <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-gray-300 text-center text-xs text-gray-500 hover:border-blue-400">
-          {busy && <Spinner className="h-3.5 w-3.5" />}
-          {busy ? 'Uploading…' : '+ Upload'}
+        <label
+          className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 text-center text-xs font-medium text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-700 ${box}`}
+        >
+          {busy ? <Spinner className="h-5 w-5" /> : <UploadIcon className="h-5 w-5" />}
+          {busy ? 'Uploading…' : 'Upload image'}
           <input type="file" accept="image/*" onChange={onFile} disabled={busy} className="hidden" />
         </label>
       )}

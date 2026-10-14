@@ -13,9 +13,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const profile = await requireStaff()
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar email={profile.email} role={profile.role} />
-      <main className="flex-1 overflow-x-hidden pt-14 md:pt-0">{children}</main>
+      {/* overflow-x-clip (not hidden) keeps wide content contained without
+          breaking `position: sticky` (form save bars) inside the page. */}
+      <main className="min-w-0 flex-1 overflow-x-clip pt-14 md:pt-0">
+        <div className="mx-auto w-full max-w-[1440px]">{children}</div>
+      </main>
       <Toaster richColors position="top-right" closeButton />
     </div>
   )

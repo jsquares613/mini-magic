@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import EasyCrop, { type Area, type CropperProps } from 'react-easy-crop'
 import { getCroppedImageBlob } from '@/lib/admin/cropImage'
+import { buttonClass, iconButtonClass } from './ui'
+import { XIcon } from './icons'
 
 // react-easy-crop's `Cropper` is a class component typed against React 18,
 // which @types/react@19 (pinned in this project, ahead of the react@18
@@ -56,52 +58,53 @@ export default function ImageCropModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">{title}</h2>
-
-        <div className="relative h-80 w-full overflow-hidden rounded-lg bg-gray-900">
-          <Cropper
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            aspect={aspectRatio}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-          />
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-900/5">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+          <button type="button" onClick={onCancel} className={iconButtonClass()} aria-label="Close">
+            <XIcon className="h-4 w-4" />
+          </button>
         </div>
 
-        <input
-          type="range"
-          min={1}
-          max={3}
-          step={0.05}
-          value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          aria-label="Zoom"
-          className="mt-4 w-full"
-        />
+        <div className="p-6">
+          <div className="relative h-80 w-full overflow-hidden rounded-xl bg-slate-900">
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={aspectRatio}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
 
-        <div className="mt-4 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-full px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100"
-          >
+          <div className="mt-5 flex items-center gap-3">
+            <span className="text-xs font-medium text-slate-500">Zoom</span>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.05}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              aria-label="Zoom"
+              className="w-full accent-blue-900"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-4">
+          <button type="button" onClick={onCancel} className={buttonClass('ghost')}>
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={confirm}
-            disabled={busy || !croppedAreaPixels}
-            className="rounded-full bg-blue-900 px-5 py-2 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-60"
-          >
-            {busy ? 'Cropping…' : 'Crop & Use'}
+          <button type="button" onClick={confirm} disabled={busy || !croppedAreaPixels} className={buttonClass()}>
+            {busy ? 'Cropping…' : 'Crop & use'}
           </button>
         </div>
       </div>

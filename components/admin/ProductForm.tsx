@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import type { Tables } from '@/lib/supabase/database.types'
@@ -10,14 +11,25 @@ import { isActionError, unwrapAction, type ActionResult } from '@/lib/admin/acti
 import ActionForm, { usePending } from './ActionForm'
 import SubmitButton from './SubmitButton'
 import ImageCropModal from './ImageCropModal'
+import { Card, Field, FormActions, Switch, buttonClass, ui } from './ui'
+import {
+  BadgePercentIcon,
+  EyeIcon,
+  FileTextIcon,
+  GlobeIcon,
+  ImagesIcon,
+  PackageIcon,
+  ShapesIcon,
+  StarIcon,
+  TagIcon,
+  UploadIcon,
+  XIcon,
+} from './icons'
 
 type Product = Tables<'products'>
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>
 type AgeGroup = Pick<Tables<'age_groups'>, 'id' | 'label'>
 type Subcategory = Pick<Tables<'subcategories'>, 'id' | 'name' | 'emoji' | 'category_id'>
-
-const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
-const label = 'mb-1 block text-sm font-medium text-gray-700'
 
 /**
  * "Marg: …" note under a Marg-owned field. When the admin's value overrides
@@ -52,8 +64,8 @@ function MargHint({
   }
 
   return (
-    <p className="mt-1 text-xs text-gray-400">
-      Marg: {display}
+    <p className={ui.hint}>
+      <span className="font-medium text-slate-600">Marg:</span> {display}
       {overridden ? (
         <>
           {' — your edit is kept. '}
@@ -61,7 +73,7 @@ function MargHint({
             type="button"
             onClick={resetToMarg}
             disabled={pending}
-            className="font-medium text-blue-600 hover:underline disabled:opacity-60"
+            className="font-semibold text-blue-700 hover:underline disabled:opacity-60"
           >
             Reset to Marg
           </button>
@@ -177,44 +189,50 @@ export default function ProductForm({
     router.push(`/admin/products/${id}`)
   }
 
+  const subsForCategory = subcategories.filter((s) => s.category_id === selectedCategoryId)
+  const needsPhoto = !!product && !product.is_published && imageCount === 0
+
   return (
     <ActionForm
       action={product ? action : createWithImages}
       successMessage={product ? 'Product saved successfully' : 'Product created successfully'}
-      className="space-y-6"
     >
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main column */}
-        <div className="space-y-5 lg:col-span-2">
+        <div className="space-y-6 lg:col-span-2">
           {!product && (
-            <section className="rounded-2xl border border-gray-200 bg-white p-6">
-              <h2 className="mb-4 font-bold text-gray-900">Images</h2>
-              <label className="mb-1 flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 transition hover:border-blue-400 hover:text-blue-600">
-                + Upload images
-                <input type="file" accept="image/*" multiple onChange={queueFilesForCrop} className="hidden" />
-              </label>
-              <p className="mb-4 text-xs text-gray-400">
-                Recommended size: 1000 × 1000px (square) — same on mobile & desktop
-              </p>
-              {stagedImages.length === 0 ? (
-                <p className="text-sm text-gray-400">No images yet — they upload once you create the product.</p>
-              ) : (
-                <div className="grid grid-cols-3 gap-3">
-                  {stagedImages.map((staged, i) => (
-                    <div key={staged.preview} className="group relative overflow-hidden rounded-lg border border-gray-200">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={staged.preview} alt="" className="aspect-square w-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeStagedFile(i)}
-                        className="absolute right-1 top-1 rounded-full bg-red-500 px-1.5 text-xs text-white"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <Card
+              title="Photos"
+              description="Square photos work best (1000 × 1000 px). They upload when you create the product."
+              icon={ImagesIcon}
+              tone="violet"
+            >
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {stagedImages.map((staged, i) => (
+                  <div key={staged.preview} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={staged.preview} alt="" className="aspect-square w-full object-cover" />
+                    {i === 0 && (
+                      <span className="absolute left-2 top-2 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                        Main
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeStagedFile(i)}
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm transition hover:bg-rose-50 hover:text-rose-600"
+                      aria-label="Remove photo"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 text-center text-xs font-medium text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-700">
+                  <UploadIcon className="h-5 w-5" />
+                  Add photos
+                  <input type="file" accept="image/*" multiple onChange={queueFilesForCrop} className="hidden" />
+                </label>
+              </div>
 
               {cropQueue.length > 0 && (
                 <ImageCropModal
@@ -225,242 +243,259 @@ export default function ProductForm({
                   onCropped={stageCroppedImage}
                 />
               )}
-            </section>
+            </Card>
           )}
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-4 font-bold text-gray-900">Basics</h2>
-            <div className="space-y-4">
+          <Card title="Basics" description="What customers see on the product page." icon={FileTextIcon}>
+            <div className="space-y-5">
               <div>
-                <label className={label}>Name *</label>
-                <input name="name" required defaultValue={product?.name} className={input} />
+                <label htmlFor="product-name" className={ui.label}>
+                  Name<span className="ml-0.5 text-rose-500">*</span>
+                </label>
+                <input id="product-name" name="name" required defaultValue={product?.name} className={ui.input} />
                 <MargHint product={product} field="name" margValue={product?.marg_name ?? null} display={product?.marg_name ?? ''} />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className={label}>Slug</label>
-                  <input name="slug" defaultValue={product?.slug} placeholder="auto from name" className={input} />
-                </div>
-                <div>
-                  <label className={label}>SKU</label>
-                  <input name="sku" defaultValue={product?.sku ?? ''} className={input} />
-                </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="URL slug" hint="Leave blank to generate it from the name.">
+                  <input name="slug" defaultValue={product?.slug} placeholder="auto from name" className={ui.input} />
+                </Field>
+                <Field label="SKU">
+                  <input name="sku" defaultValue={product?.sku ?? ''} className={ui.input} />
+                </Field>
               </div>
-              <div>
-                <label className={label}>Short description</label>
-                <input name="short_description" defaultValue={product?.short_description ?? ''} className={input} />
-              </div>
-              <div>
-                <label className={label}>Description</label>
-                <textarea name="description" rows={5} defaultValue={product?.description ?? ''} className={input} />
-              </div>
-              <div>
-                <label className={label}>Features (one per line — “Why Kids Love It”)</label>
-                <textarea
-                  name="features"
-                  rows={4}
-                  defaultValue={(product?.features ?? []).join('\n')}
-                  className={input}
-                />
-              </div>
+              <Field label="Short description" hint="One line, shown on product cards.">
+                <input name="short_description" defaultValue={product?.short_description ?? ''} className={ui.input} />
+              </Field>
+              <Field label="Description">
+                <textarea name="description" rows={5} defaultValue={product?.description ?? ''} className={ui.input} />
+              </Field>
+              <Field label="Why kids love it" hint="One feature per line.">
+                <textarea name="features" rows={4} defaultValue={(product?.features ?? []).join('\n')} className={ui.input} />
+              </Field>
             </div>
-          </section>
+          </Card>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-4 font-bold text-gray-900">Pricing</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
+          <Card
+            title="Pricing"
+            description={product?.marg_code ? 'The price follows Marg’s MRP unless you change it here.' : undefined}
+            icon={TagIcon}
+            tone="green"
+          >
+            <div className="grid gap-5 sm:grid-cols-3">
               <div>
-                <label className={label}>Price (₹)</label>
-                <input name="price" type="number" step="0.01" defaultValue={product?.price ?? ''} className={input} />
+                <label htmlFor="product-price" className={ui.label}>
+                  Price (₹)
+                </label>
+                <input id="product-price" name="price" type="number" step="0.01" defaultValue={product?.price ?? ''} className={ui.input} />
                 <MargHint
                   product={product}
                   field="price"
                   margValue={product?.marg_mrp != null ? String(Number(product.marg_mrp)) : null}
-                  display={`₹${product?.marg_mrp} (MRP)`}
+                  display={`₹${product?.marg_mrp} MRP`}
                 />
               </div>
-              <div>
-                <label className={label}>Sale price (₹)</label>
-                <input name="sale_price" type="number" step="0.01" defaultValue={product?.sale_price ?? ''} className={input} />
-              </div>
-              <div>
-                <label className={label}>Price display</label>
-                <select name="price_display" defaultValue={product?.price_display ?? 'show'} className={input}>
+              <Field label="Sale price (₹)" hint="Leave blank when not on offer.">
+                <input name="sale_price" type="number" step="0.01" defaultValue={product?.sale_price ?? ''} className={ui.input} />
+              </Field>
+              <Field label="Price display">
+                <select name="price_display" defaultValue={product?.price_display ?? 'show'} className={ui.input}>
                   <option value="show">Show price</option>
                   <option value="hide">Hide price</option>
                   <option value="enquire">Enquire for price</option>
                 </select>
-              </div>
+              </Field>
             </div>
-          </section>
+          </Card>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-4 font-bold text-gray-900">Attributes</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={label}>Material</label>
-                <input name="material" defaultValue={product?.material ?? ''} className={input} />
+          <Card title="Details" description="Helps customers filter and compare." icon={ShapesIcon} tone="teal">
+            <div className="space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Material">
+                  <input name="material" defaultValue={product?.material ?? ''} className={ui.input} />
+                </Field>
+                <Field label="Colour">
+                  <input name="color" defaultValue={product?.color ?? ''} className={ui.input} />
+                </Field>
               </div>
-              <div>
-                <label className={label}>Color</label>
-                <input name="color" defaultValue={product?.color ?? ''} className={input} />
-              </div>
+              <Field label="Tags" hint="Comma separated, e.g. wooden, eco-friendly.">
+                <input name="tags" defaultValue={(product?.tags ?? []).join(', ')} className={ui.input} />
+              </Field>
+              <fieldset>
+                <legend className={ui.label}>Age groups</legend>
+                <div className="flex flex-wrap gap-2">
+                  {ageGroups.map((a) => (
+                    <label
+                      key={a.id}
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 has-[:checked]:border-blue-900 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900"
+                    >
+                      <input
+                        type="checkbox"
+                        name="age_group_ids"
+                        value={a.id}
+                        defaultChecked={selectedAgeIds.includes(a.id)}
+                        className={ui.checkbox}
+                      />
+                      {a.label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
-            <div className="mt-4">
-              <label className={label}>Tags (comma separated)</label>
-              <input name="tags" defaultValue={(product?.tags ?? []).join(', ')} className={input} />
-            </div>
-            <div className="mt-4">
-              <label className={label}>Age groups</label>
-              <div className="flex flex-wrap gap-3">
-                {ageGroups.map((a) => (
-                  <label key={a.id} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm">
-                    <input
-                      type="checkbox"
-                      name="age_group_ids"
-                      value={a.id}
-                      defaultChecked={selectedAgeIds.includes(a.id)}
-                    />
-                    {a.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </section>
+          </Card>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-4 font-bold text-gray-900">SEO</h2>
-            <div className="space-y-4">
-              <div>
-                <label className={label}>Meta title</label>
-                <input name="seo_title" defaultValue={product?.seo_title ?? ''} className={input} />
-              </div>
-              <div>
-                <label className={label}>Meta description</label>
-                <textarea name="seo_description" rows={2} defaultValue={product?.seo_description ?? ''} className={input} />
-              </div>
+          <Card title="Search engines" description="Optional — how this product appears on Google." icon={GlobeIcon} tone="gray">
+            <div className="space-y-5">
+              <Field label="Meta title">
+                <input name="seo_title" defaultValue={product?.seo_title ?? ''} className={ui.input} />
+              </Field>
+              <Field label="Meta description">
+                <textarea name="seo_description" rows={2} defaultValue={product?.seo_description ?? ''} className={ui.input} />
+              </Field>
             </div>
-          </section>
+          </Card>
         </div>
 
         {/* Sidebar column */}
-        <div className="space-y-5">
-          <section className="rounded-2xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-4 font-bold text-gray-900">Organisation</h2>
-            <div className="space-y-4">
-              <div>
-                <label className={label}>Category <span className="text-gray-400">(required to publish)</span></label>
+        <div className="space-y-6">
+          <Card title="Visibility" icon={EyeIcon}>
+            <Switch
+              name="is_published"
+              defaultChecked={product?.is_published ?? true}
+              label="Published on website"
+              description={
+                needsPhoto ? (
+                  <span className="text-amber-700">Add a photo above before publishing.</span>
+                ) : (
+                  'Publishing needs a category and at least one photo.'
+                )
+              }
+            />
+          </Card>
+
+          <Card title="Organisation" icon={ShapesIcon} tone="teal">
+            <div className="space-y-5">
+              <Field label="Category" hint="Required to publish.">
                 <select
                   name="category_id"
                   defaultValue={product?.category_id ?? ''}
                   onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  className={input}
+                  className={ui.input}
                 >
-                  <option value="">Select…</option>
+                  <option value="">Select a category…</option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
-              </div>
-              {(() => {
-                const filtered = subcategories.filter((s) => s.category_id === selectedCategoryId)
-                if (!filtered.length) return null
-                return (
-                  <div>
-                    <label className={label}>Subcategory</label>
-                    <select
-                      name="subcategory_id"
-                      defaultValue={product?.subcategory_id ?? ''}
-                      className={input}
-                    >
-                      <option value="">None</option>
-                      {filtered.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.emoji ? `${s.emoji} ` : ''}{s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )
-              })()}
-              <div>
-                <label className={label}>Display order</label>
-                <input name="display_order" type="number" defaultValue={product?.display_order ?? 0} className={input} />
-              </div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <input type="checkbox" name="is_published" defaultChecked={product?.is_published ?? true} /> Published on website
-              </label>
-              <p className={`-mt-2 text-xs ${product && !product.is_published && imageCount === 0 ? 'text-orange-600' : 'text-gray-400'}`}>
-                {product && !product.is_published && imageCount === 0
-                  ? 'Add a photo above before publishing.'
-                  : 'Publishing needs a category and at least one photo.'}
-              </p>
-              {product?.marg_code ? (
-                <div>
-                  <label className={label}>
-                    Stock shown to customers{' '}
-                    <span className="text-gray-400">(Marg stock: {Number(product.marg_stock ?? 0)})</span>
-                  </label>
-                  <select name="stock_status_override" defaultValue={product.stock_status_override ?? ''} className={input}>
+              </Field>
+              {subsForCategory.length > 0 && (
+                <Field label="Subcategory">
+                  <select name="subcategory_id" defaultValue={product?.subcategory_id ?? ''} className={ui.input}>
+                    <option value="">None</option>
+                    {subsForCategory.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.emoji ? `${s.emoji} ` : ''}
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              <Field label="Display order" hint="Lower numbers show first.">
+                <input name="display_order" type="number" defaultValue={product?.display_order ?? 0} className={ui.input} />
+              </Field>
+            </div>
+          </Card>
+
+          <Card title="Stock" icon={PackageIcon} tone="amber">
+            {product?.marg_code ? (
+              <div className="space-y-4">
+                <div className="flex items-baseline justify-between rounded-xl bg-slate-50 px-4 py-3">
+                  <span className="text-sm text-slate-500">Marg stock</span>
+                  <span className="text-lg font-semibold tabular-nums text-slate-900">
+                    {Number(product.marg_stock ?? 0).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <Field label="Shown to customers">
+                  <select name="stock_status_override" defaultValue={product.stock_status_override ?? ''} className={ui.input}>
                     <option value="">Automatic from Marg stock</option>
                     <option value="in-stock">Always in stock</option>
                     <option value="low-stock">Low stock</option>
                     <option value="out-of-stock">Out of stock</option>
                     <option value="pre-order">Pre-order</option>
                   </select>
-                </div>
-              ) : (
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" name="available" defaultChecked={product?.available ?? true} /> Available
-                </label>
-              )}
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" name="popular" defaultChecked={product?.popular ?? false} /> Popular
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" name="new_arrival" defaultChecked={product?.new_arrival ?? false} /> New arrival
-              </label>
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-1 font-bold text-gray-900">Promo Tag</h2>
-            <p className="mb-4 text-xs text-gray-500">
-              Badge shown on the product card and detail page. Use line breaks to control how text stacks (e.g. &ldquo;BUY 1 / GET 1 / FREE&rdquo;). Leave blank for no badge.
-            </p>
-            <div className="space-y-3">
-              <textarea
-                name="promo_tag"
-                rows={3}
-                placeholder={'BUY 1\nGET 1\nFREE'}
-                defaultValue={product?.promo_tag ?? ''}
-                className={input}
+                </Field>
+              </div>
+            ) : (
+              <Switch
+                name="available"
+                defaultChecked={product?.available ?? true}
+                label="In stock"
+                description="Turn off to show “Out of stock”."
               />
-              {product?.promo_tag && (
-                <div className="flex items-start gap-3">
-                  <span className="text-xs text-gray-400">Preview:</span>
-                  <div
-                    className="inline-block overflow-hidden rounded-br-xl shadow-[3px_3px_16px_rgba(0,0,0,0.5)]"
-                    style={{ background: 'linear-gradient(155deg, #1e3fad 0%, #080f2e 100%)' }}
-                  >
-                    <div className="px-4 py-2.5">
-                      {product.promo_tag.split('\n').map((line, i) => (
-                        <p key={i} className={`text-center text-[16px] font-black uppercase leading-none tracking-widest drop-shadow ${i === 0 ? 'text-white' : 'text-yellow-400'}`}>
-                          {line}
-                        </p>
-                      ))}
-                    </div>
+            )}
+          </Card>
+
+          <Card title="Highlights" icon={StarIcon} tone="amber">
+            <div className="space-y-4">
+              <Switch name="popular" defaultChecked={product?.popular ?? false} label="Popular" description="Shown in the popular toys rail." />
+              <Switch
+                name="new_arrival"
+                defaultChecked={product?.new_arrival ?? false}
+                label="New arrival"
+                description="Shown in the new arrivals rail."
+              />
+            </div>
+          </Card>
+
+          <Card
+            title="Promo tag"
+            description="Badge on the product card. Line breaks control how it stacks."
+            icon={BadgePercentIcon}
+            tone="red"
+          >
+            <textarea
+              name="promo_tag"
+              rows={3}
+              placeholder={'BUY 1\nGET 1\nFREE'}
+              defaultValue={product?.promo_tag ?? ''}
+              className={ui.input}
+            />
+            {product?.promo_tag && (
+              <div className="mt-4 flex items-start gap-3">
+                <span className="pt-1 text-xs text-slate-400">Preview</span>
+                <div
+                  className="inline-block overflow-hidden rounded-br-xl shadow-[3px_3px_16px_rgba(0,0,0,0.35)]"
+                  style={{ background: 'linear-gradient(155deg, #1e3fad 0%, #080f2e 100%)' }}
+                >
+                  <div className="px-4 py-2.5">
+                    {product.promo_tag.split('\n').map((line, i) => (
+                      <p
+                        key={i}
+                        className={`text-center text-[16px] font-black uppercase leading-none tracking-widest drop-shadow ${
+                          i === 0 ? 'text-white' : 'text-yellow-400'
+                        }`}
+                      >
+                        {line}
+                      </p>
+                    ))}
                   </div>
                 </div>
-              )}
-            </div>
-          </section>
-
-          <SubmitButton pendingText={product ? 'Saving…' : 'Creating…'} className="w-full py-3">
-            {product ? 'Save changes' : 'Create product'}
-          </SubmitButton>
+              </div>
+            )}
+          </Card>
         </div>
       </div>
+
+      <FormActions note={product ? undefined : 'New products are saved as drafts until they have a photo and a category.'}>
+        <Link href="/admin/products" className={buttonClass('ghost')}>
+          Cancel
+        </Link>
+        <SubmitButton pendingText={product ? 'Saving…' : 'Creating…'} size="lg">
+          {product ? 'Save changes' : 'Create product'}
+        </SubmitButton>
+      </FormActions>
     </ActionForm>
   )
 }

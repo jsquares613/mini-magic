@@ -1,15 +1,12 @@
+import Link from 'next/link'
 import type { Tables } from '@/lib/supabase/database.types'
 import MediaUploadField from '@/components/admin/MediaUploadField'
 import ActionForm from './ActionForm'
 import SubmitButton from './SubmitButton'
+import { Card, Field, FormActions, Switch, buttonClass, ui } from './ui'
+import { EyeIcon, FileTextIcon, ImagesIcon } from './icons'
 
 type HeroSlide = Tables<'homepage_hero_slides'>
-
-const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
-const label = 'mb-1 block text-sm font-medium text-gray-700'
-
-const hasContent = (slide?: HeroSlide) =>
-  !!(slide?.title || slide?.subtitle || slide?.description || slide?.button_text)
 
 export default function HeroSlideForm({
   action,
@@ -19,67 +16,56 @@ export default function HeroSlideForm({
   slide?: HeroSlide
 }) {
   return (
-    <ActionForm
-      action={action}
-      successMessage={slide ? 'Hero slide updated successfully' : 'Hero slide created successfully'}
-      className="max-w-2xl space-y-5"
-    >
-      <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
-        <MediaUploadField
-          bucket="hero"
-          name="image"
-          label="Slide media (image or video)"
-          defaultUrl={slide?.image ?? null}
-          hint="1280 × 440px — image or MP4 video"
-        />
+    <ActionForm action={action} successMessage={slide ? 'Hero slide updated successfully' : 'Hero slide created successfully'}>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <Card title="Media" description="An image or MP4 video, 1280 × 440 px." icon={ImagesIcon} tone="violet">
+            <MediaUploadField bucket="hero" name="image" label="Slide media" defaultUrl={slide?.image ?? null} hint="1280 × 440 px — image or MP4 video" />
+          </Card>
 
-        <details open={hasContent(slide)} className="group">
-          <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
-            <span className="text-base group-open:hidden">＋</span>
-            <span className="hidden text-base group-open:inline">－</span>
-            Add content (title, description, buttons)
-          </summary>
-
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className={label}>Title</label>
-              <input name="title" defaultValue={slide?.title ?? ''} className={input} />
-            </div>
-            <div>
-              <label className={label}>Subtitle / badge</label>
-              <input name="subtitle" defaultValue={slide?.subtitle ?? ''} className={input} />
-            </div>
-            <div>
-              <label className={label}>Description</label>
-              <textarea name="description" rows={3} defaultValue={slide?.description ?? ''} className={input} />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={label}>Button text</label>
-                <input name="button_text" defaultValue={slide?.button_text ?? ''} className={input} />
+          <Card title="Text & button" description="Optional — leave blank for an image-only slide." icon={FileTextIcon}>
+            <div className="space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Title">
+                  <input name="title" defaultValue={slide?.title ?? ''} className={ui.input} />
+                </Field>
+                <Field label="Subtitle / badge">
+                  <input name="subtitle" defaultValue={slide?.subtitle ?? ''} className={ui.input} />
+                </Field>
               </div>
-              <div>
-                <label className={label}>Button link</label>
-                <input name="button_link" defaultValue={slide?.button_link ?? ''} placeholder="/categories" className={input} />
+              <Field label="Description">
+                <textarea name="description" rows={3} defaultValue={slide?.description ?? ''} className={ui.input} />
+              </Field>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Button text">
+                  <input name="button_text" defaultValue={slide?.button_text ?? ''} className={ui.input} />
+                </Field>
+                <Field label="Button link">
+                  <input name="button_link" defaultValue={slide?.button_link ?? ''} placeholder="/categories" className={ui.input} />
+                </Field>
               </div>
             </div>
-          </div>
-        </details>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={label}>Display order</label>
-            <input name="display_order" type="number" defaultValue={slide?.display_order ?? 0} className={input} />
-          </div>
-          <label className="mt-6 flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" name="active" defaultChecked={slide?.active ?? true} /> Active
-          </label>
+          </Card>
         </div>
-      </section>
 
-      <SubmitButton pendingText={slide ? 'Saving…' : 'Creating…'} className="px-6 py-3">
-        {slide ? 'Save slide' : 'Create slide'}
-      </SubmitButton>
+        <Card title="Visibility" icon={EyeIcon}>
+          <div className="space-y-5">
+            <Switch name="active" defaultChecked={slide?.active ?? true} label="Show on homepage" />
+            <Field label="Display order" hint="Lower numbers show first.">
+              <input name="display_order" type="number" defaultValue={slide?.display_order ?? 0} className={ui.input} />
+            </Field>
+          </div>
+        </Card>
+      </div>
+
+      <FormActions>
+        <Link href="/admin/homepage" className={buttonClass('ghost')}>
+          Cancel
+        </Link>
+        <SubmitButton pendingText={slide ? 'Saving…' : 'Creating…'} size="lg">
+          {slide ? 'Save slide' : 'Create slide'}
+        </SubmitButton>
+      </FormActions>
     </ActionForm>
   )
 }

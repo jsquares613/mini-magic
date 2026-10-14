@@ -1,92 +1,128 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { timeAgo } from '@/lib/format'
+import { ENQUIRY_CHANNEL, ENQUIRY_STATUS, ENQUIRY_STATUS_ORDER, ENQUIRY_TYPE } from '@/lib/admin/enquiryLabels'
+import { Avatar, Badge, Card, EmptyState, Page, PageHeader, TabLinks, ui } from '@/components/admin/ui'
+import { ChevronRightIcon, InboxIcon, XIcon } from '@/components/admin/icons'
+import type { Enums } from '@/lib/supabase/database.types'
 
-const STATUSES = ['all', 'new', 'contacted', 'in_progress', 'converted', 'lost'] as const
+type Status = Enums<'enquiry_status'>
+type EnquiryType = Enums<'enquiry_type'>
 
-const STATUS_STYLE: Record<string, string> = {
-  new: 'bg-red-100 text-red-700',
-  contacted: 'bg-yellow-100 text-yellow-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  converted: 'bg-green-100 text-green-700',
-  lost: 'bg-gray-100 text-gray-500',
-}
+export default async function EnquiriesPage({ searchParams }: { searchParams: { status?: string; type?: string } }) {
+  const status = ENQUIRY_STATUS_ORDER.includes(searchParams.status as Status) ? (searchParams.status as Status) : null
+  const type = searchParams.type && searchParams.type in ENQUIRY_TYPE ? (searchParams.type as EnquiryType) : null
 
-export default async function EnquiriesPage({
-  searchParams,
-}: {
-  searchParams: { status?: string; type?: string }
-}) {
   const supabase = createServerSupabase()
   let query = supabase.from('enquiries').select('*').order('created_at', { ascending: false })
-  if (searchParams.status && searchParams.status !== 'all') query = query.eq('status', searchParams.status as never)
-  if (searchParams.type) query = query.eq('enquiry_type', searchParams.type as never)
-  const { data: enquiries } = await query
+  if (status) query = query.eq('status', status)
+  if (type) query = query.eq('enquiry_type', type)
 
-  const activeStatus = searchParams.status ?? 'all'
+  let countQuery = supabase.from('enquiries').select('status')
+  if (type) countQuery = countQuery.eq('enquiry_type', type)
+
+  const [{ data: enquiries }, { data: statusRows }] = await Promise.all([query, countQuery])
+
+  const counts = Object.fromEntries(ENQUIRY_STATUS_ORDER.map((s) => [s, 0])) as Record<Status, number>
+  for (const r of statusRows ?? []) counts[r.status] += 1
+  const total = statusRows?.length ?? 0
+
+  const href = (s: Status | null) => {
+    const params = new URLSearchParams()
+    if (s) params.set('status', s)
+    if (type) params.set('type', type)
+    const qs = params.toString()
+    return qs ? `/admin/enquiries?${qs}` : '/admin/enquiries'
+  }
 
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="mb-1 text-2xl font-bold text-gray-900">Enquiries</h1>
-      <p className="mb-6 text-sm text-gray-500">{enquiries?.length ?? 0} leads</p>
-
-      <div className="mb-5 flex flex-wrap gap-2">
-        {STATUSES.map((s) => (
-          <Link
-            key={s}
-            href={s === 'all' ? '/admin/enquiries' : `/admin/enquiries?status=${s}`}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-              activeStatus === s ? 'bg-blue-900 text-white' : 'border border-gray-200 bg-white text-gray-600'
-            }`}
-          >
-            {s.replace('_', ' ')}
+    <Page>
+      <PageHeader
+        title="Enquiries"
+        description="Leads from the website, WhatsApp and phone. Open one to follow up, add notes and record the outcome."
+        meta={type ? (
+          <Link href={status ? `/admin/enquiries?status=${status}` : '/admin/enquiries'} className="inline-flex">
+            <Badge tone="blue" icon={XIcon}>
+              {ENQUIRY_TYPE[type]} only
+            </Badge>
           </Link>
-        ))}
-      </div>
+        ) : undefined}
+      />
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-400">
-            <tr>
-              <th className="px-6 py-3 font-medium">Name</th>
-              <th className="px-6 py-3 font-medium">Type</th>
-              <th className="px-6 py-3 font-medium">Subject</th>
-              <th className="px-6 py-3 font-medium">Channel</th>
-              <th className="px-6 py-3 font-medium">Status</th>
-              <th className="px-6 py-3 font-medium">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(enquiries ?? []).map((e) => (
-              <tr key={e.id} className="cursor-pointer border-t border-gray-50 hover:bg-gray-50">
-                <td className="px-6 py-3 font-medium text-gray-900">
-                  <Link href={`/admin/enquiries/${e.id}`} className="hover:underline">
-                    {e.name}
-                  </Link>
-                  <div className="text-xs text-gray-400">{e.phone}</div>
-                </td>
-                <td className="px-6 py-3 text-gray-500">{e.enquiry_type}</td>
-                <td className="px-6 py-3 text-gray-500">{e.subject ?? '—'}</td>
-                <td className="px-6 py-3 text-gray-500">{e.channel}</td>
-                <td className="px-6 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[e.status] ?? 'bg-gray-100'}`}>
-                    {e.status.replace('_', ' ')}
-                  </span>
-                </td>
-                <td className="px-6 py-3 text-gray-400">{new Date(e.created_at).toLocaleDateString('en-IN')}</td>
-              </tr>
-            ))}
-            {(!enquiries || enquiries.length === 0) && (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                  No enquiries{activeStatus !== 'all' ? ` with status “${activeStatus}”` : ''}.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        </div>
-      </div>
-    </div>
+      <TabLinks
+        label="Enquiry status"
+        active={status ?? 'all'}
+        tabs={[
+          { key: 'all', label: 'All', href: href(null), count: total },
+          ...ENQUIRY_STATUS_ORDER.map((s) => ({ key: s, label: ENQUIRY_STATUS[s].label, href: href(s), count: counts[s] })),
+        ]}
+      />
+
+      <Card bodyClassName="p-0">
+        {enquiries && enquiries.length > 0 ? (
+          <div className="admin-scroll overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className={ui.thead}>
+                <tr>
+                  <th className={ui.th}>Contact</th>
+                  <th className={ui.th}>Enquiry</th>
+                  <th className={ui.th}>Channel</th>
+                  <th className={ui.th}>Status</th>
+                  <th className={ui.th}>Received</th>
+                  <th className={ui.th}>
+                    <span className="sr-only">Open</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {enquiries.map((e) => (
+                  <tr key={e.id} className="group transition hover:bg-slate-50/70">
+                    <td className={ui.td}>
+                      <div className="flex items-center gap-3">
+                        <Avatar name={e.name} size="sm" />
+                        <div className="min-w-0">
+                          <Link href={`/admin/enquiries/${e.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
+                            {e.name}
+                          </Link>
+                          <p className="text-xs text-slate-500">{e.phone}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={ui.td}>
+                      <p className="font-medium text-slate-700">{ENQUIRY_TYPE[e.enquiry_type]}</p>
+                      {e.subject && <p className="max-w-xs truncate text-xs text-slate-500">{e.subject}</p>}
+                    </td>
+                    <td className={`${ui.td} text-slate-600`}>{ENQUIRY_CHANNEL[e.channel]}</td>
+                    <td className={ui.td}>
+                      <Badge tone={ENQUIRY_STATUS[e.status].tone} dot>
+                        {ENQUIRY_STATUS[e.status].label}
+                      </Badge>
+                    </td>
+                    <td className={`${ui.td} whitespace-nowrap text-slate-500`} title={new Date(e.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}>
+                      {timeAgo(e.created_at)}
+                    </td>
+                    <td className={`${ui.td} text-right`}>
+                      <Link
+                        href={`/admin/enquiries/${e.id}`}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                        aria-label={`Open enquiry from ${e.name}`}
+                      >
+                        <ChevronRightIcon className="h-4 w-4" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            icon={InboxIcon}
+            title={status ? `No ${ENQUIRY_STATUS[status].label.toLowerCase()} enquiries` : 'No enquiries yet'}
+            description="New leads from the website will appear here."
+          />
+        )}
+      </Card>
+    </Page>
   )
 }

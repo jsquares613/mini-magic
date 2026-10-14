@@ -23,6 +23,7 @@ import {
   XIcon,
   type Icon,
 } from './icons'
+import { iconButtonClass } from './ui'
 import type { Role } from '@/lib/supabase/auth'
 
 interface NavItem {
@@ -49,15 +50,18 @@ const NAV: { title?: string; items: NavItem[] }[] = [
       { label: 'Offers', href: '/admin/offers', icon: BadgePercentIcon },
       { label: 'Play Area', href: '/admin/play-area', icon: TentIcon },
       { label: 'About Us', href: '/admin/about', icon: InfoIcon },
+      { label: 'Settings', href: '/admin/settings', icon: SettingsIcon },
     ],
   },
   { title: 'Customers', items: [{ label: 'Enquiries', href: '/admin/enquiries', icon: InboxIcon }] },
-  { title: 'System', items: [{ label: 'Settings', href: '/admin/settings', icon: SettingsIcon }] },
 ]
 
 function Monogram({ className = '' }: { className?: string }) {
   return (
-    <span className={`flex items-center justify-center rounded-xl bg-primary font-extrabold text-blue-900 ${className}`} aria-hidden="true">
+    <span
+      className={`flex items-center justify-center rounded-xl bg-primary font-extrabold text-blue-900 shadow-sm ring-1 ring-inset ring-black/5 ${className}`}
+      aria-hidden="true"
+    >
       M
     </span>
   )
@@ -75,15 +79,15 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
   return (
     <>
       {/* ── Mobile top header ── */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 md:hidden">
-        <Link href="/admin" className="flex items-center gap-2 text-lg font-bold text-blue-900" onClick={close}>
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-md md:hidden">
+        <Link href="/admin" className="flex items-center gap-2 text-base font-semibold text-slate-900" onClick={close}>
           <Monogram className="h-8 w-8 text-sm" />
           Minimagic
         </Link>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
+          className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
         >
@@ -92,13 +96,13 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
       </header>
 
       {/* ── Backdrop (mobile only) ── */}
-      {open && <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={close} aria-hidden="true" />}
+      {open && <div className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden" onClick={close} aria-hidden="true" />}
 
       {/* ── Sidebar panel ── */}
       <aside
         className={[
           // Base: fixed drawer on mobile
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300',
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-300',
           // Toggle on mobile
           open ? 'translate-x-0' : '-translate-x-full',
           // Desktop: in the flex flow, pinned to the viewport while the page scrolls
@@ -106,22 +110,22 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
         ].join(' ')}
       >
         {/* Logo — desktop only (mobile uses the fixed header above) */}
-        <Link href="/admin" className="hidden items-center gap-3 border-b border-gray-100 px-5 py-5 md:flex">
+        <Link href="/admin" className="hidden shrink-0 items-center gap-3 px-5 pb-3 pt-5 md:flex">
           <Monogram className="h-9 w-9 text-base" />
           <span>
-            <span className="block text-base font-bold leading-tight text-blue-900">Minimagic</span>
-            <span className="block text-xs text-gray-400">Admin panel</span>
+            <span className="block text-[15px] font-semibold leading-tight text-slate-900">Minimagic</span>
+            <span className="block text-xs text-slate-500">Admin panel</span>
           </span>
         </Link>
 
         {/* Spacer so nav items don't sit under the mobile header */}
         <div className="h-14 shrink-0 md:hidden" />
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Admin">
+        <nav className="admin-scroll flex-1 overflow-y-auto px-3 pb-4 pt-2" aria-label="Admin">
           {NAV.map((section, i) => (
-            <div key={section.title ?? i} className={i > 0 ? 'mt-5' : ''}>
+            <div key={section.title ?? i} className={i > 0 ? 'mt-4' : ''}>
               {section.title && (
-                <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{section.title}</p>
+                <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{section.title}</p>
               )}
               <ul className="space-y-0.5">
                 {section.items.map((item) => {
@@ -133,13 +137,13 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
                         href={item.href}
                         onClick={close}
                         aria-current={active ? 'page' : undefined}
-                        className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                          active ? 'bg-blue-50 text-blue-900' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        className={`group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                          active ? 'bg-blue-50 text-blue-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                         }`}
                       >
-                        {active && <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-blue-900" aria-hidden="true" />}
+                        {active && <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-blue-900" aria-hidden="true" />}
                         <ItemIcon
-                          className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-blue-900' : 'text-gray-400 group-hover:text-gray-600'}`}
+                          className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-blue-900' : 'text-slate-400 group-hover:text-slate-600'}`}
                         />
                         {item.label}
                       </Link>
@@ -151,28 +155,24 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
           ))}
         </nav>
 
-        <div className="space-y-1 border-t border-gray-100 p-3">
-          <Link
-            href="/"
-            target="_blank"
-            className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-          >
-            <ExternalLinkIcon className="h-[18px] w-[18px] text-gray-400 group-hover:text-gray-600" />
-            View storefront
-          </Link>
-          <div className="flex items-center gap-3 rounded-lg px-3 py-2">
+        <div className="shrink-0 border-t border-slate-200 p-3">
+          <div className="flex items-center gap-2.5 rounded-xl px-2 py-1.5">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold uppercase text-blue-900">
               {email?.charAt(0) ?? '?'}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-gray-800" title={email ?? undefined}>
+              <span className="block truncate text-sm font-medium text-slate-800" title={email ?? undefined}>
                 {email}
               </span>
-              <span className="block text-xs capitalize text-gray-400">{role}</span>
+              <span className="block text-xs capitalize text-slate-500">{role}</span>
             </span>
+            <Link href="/" target="_blank" className={iconButtonClass()} title="View storefront">
+              <ExternalLinkIcon className="h-4 w-4" />
+              <span className="sr-only">View storefront</span>
+            </Link>
             <ActionForm action={signOut} successMessage="Signed out">
-              <SubmitButton pendingText="" variant="link" className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600">
-                <LogOutIcon className="h-[18px] w-[18px]" />
+              <SubmitButton pendingText="" variant="icon-danger">
+                <LogOutIcon className="h-4 w-4" />
                 <span className="sr-only">Sign out</span>
               </SubmitButton>
             </ActionForm>

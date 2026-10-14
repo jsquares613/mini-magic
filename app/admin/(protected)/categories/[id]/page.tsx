@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import CategoryForm from '@/components/admin/CategoryForm'
@@ -6,7 +5,28 @@ import CategoryImageField from '@/components/admin/CategoryImageField'
 import DeleteCategoryButton from '@/components/admin/DeleteCategoryButton'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
-import { updateCategory, createPromotion, deletePromotion, togglePromotion, createSubcategory, updateSubcategory, deleteSubcategory } from '../actions'
+import { Badge, Card, Page, PageHeader, buttonClass, ui } from '@/components/admin/ui'
+import {
+  CheckIcon,
+  ExternalLinkIcon,
+  EyeIcon,
+  EyeOffIcon,
+  ImagesIcon,
+  MegaphoneIcon,
+  PlusIcon,
+  ShapesIcon,
+  StarIcon,
+  TrashIcon,
+} from '@/components/admin/icons'
+import {
+  updateCategory,
+  createPromotion,
+  deletePromotion,
+  togglePromotion,
+  createSubcategory,
+  updateSubcategory,
+  deleteSubcategory,
+} from '../actions'
 
 export default async function EditCategoryPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase()
@@ -21,33 +41,46 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
   const update = updateCategory.bind(null, category.id)
   const addPromo = createPromotion.bind(null, category.id)
   const addSub = createSubcategory.bind(null, category.id)
-  const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
+  const emojiInput = `${ui.control} w-14 shrink-0 text-center`
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <Link href="/admin/categories" className="text-sm text-blue-600 hover:underline">
-            ← Categories
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">
-            {category.emoji} {category.name}
-          </h1>
-        </div>
-        <DeleteCategoryButton id={category.id} />
-      </div>
+    <Page>
+      <PageHeader
+        back={{ href: '/admin/categories', label: 'Categories' }}
+        title={
+          <>
+            {category.emoji && <span className="mr-2">{category.emoji}</span>}
+            {category.name}
+          </>
+        }
+        meta={
+          category.featured ? (
+            <Badge tone="amber" icon={StarIcon}>
+              Featured
+            </Badge>
+          ) : undefined
+        }
+        description={`/categories/${category.slug}`}
+        actions={
+          <>
+            <a href={`/categories/${category.slug}`} target="_blank" rel="noreferrer" className={buttonClass('secondary')}>
+              <ExternalLinkIcon className="h-4 w-4" />
+              View on website
+            </a>
+            <DeleteCategoryButton id={category.id} />
+          </>
+        }
+      />
 
-      {/* Images */}
-      <section className="mb-6 rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 font-bold text-gray-900">Images</h2>
-        <div className="flex flex-wrap gap-6">
+      <Card className="mb-6" title="Images" description="Changes save as soon as you upload." icon={ImagesIcon} tone="violet">
+        <div className="flex flex-wrap gap-8">
           <CategoryImageField
             categoryId={category.id}
             field="image"
             label="Card image"
             current={category.image}
             aspectRatio={1}
-            hint="400 × 400px (square) — same on mobile & desktop"
+            hint="400 × 400 px, square"
           />
           <CategoryImageField
             categoryId={category.id}
@@ -55,124 +88,130 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
             label="Banner"
             current={category.banner_image}
             aspectRatio={16 / 9}
-            hint="1280 × 720px (16:9)"
+            hint="1280 × 720 px, 16:9"
           />
         </div>
-      </section>
+      </Card>
 
       <CategoryForm action={update} category={category} />
 
-      {/* Subcategories */}
-      <section className="mt-8 max-w-2xl rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 font-bold text-gray-900">Subcategories</h2>
-
-        <div className="mb-6 space-y-2">
-          {(subcategories ?? []).map((sub) => (
-            <div key={sub.id} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2">
-              <ActionForm
-                action={updateSubcategory.bind(null, sub.id, category.id)}
-                successMessage="Subcategory updated"
-                className="flex flex-1 items-center gap-2"
-              >
-                <input
-                  name="emoji"
-                  defaultValue={sub.emoji ?? ''}
-                  placeholder="🏷️"
-                  className="w-12 rounded border border-gray-200 px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <input
-                  name="name"
-                  required
-                  defaultValue={sub.name}
-                  className={`flex-1 ${input}`}
-                />
-                <input type="hidden" name="display_order" value={sub.display_order} />
-                <SubmitButton pendingText="Saving…" variant="link" className="text-xs text-blue-600">
-                  Save
-                </SubmitButton>
-              </ActionForm>
-              <ActionForm
-                action={deleteSubcategory.bind(null, sub.id, category.id)}
-                successMessage="Subcategory deleted"
-                confirmMessage="Delete this subcategory?"
-              >
-                <SubmitButton pendingText="…" variant="link" className="text-xs text-red-600">
-                  Delete
-                </SubmitButton>
-              </ActionForm>
-            </div>
-          ))}
-          {(!subcategories || subcategories.length === 0) && (
-            <p className="text-sm text-gray-400">No subcategories yet.</p>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {/* Subcategories */}
+        <Card
+          title="Subcategories"
+          description="Optional filters inside this category."
+          icon={ShapesIcon}
+          tone="teal"
+          bodyClassName="p-0"
+          footer={
+            <ActionForm action={addSub} successMessage="Subcategory added" className="flex gap-2 py-1">
+              <input name="emoji" placeholder="🏷️" aria-label="Emoji" className={emojiInput} />
+              <input name="name" required placeholder="New subcategory name" aria-label="Subcategory name" className={`${ui.input} min-w-0 flex-1`} />
+              <SubmitButton pendingText="Adding…">
+                <PlusIcon className="h-4 w-4" />
+                Add
+              </SubmitButton>
+            </ActionForm>
+          }
+        >
+          {subcategories && subcategories.length > 0 ? (
+            <ul className="divide-y divide-slate-100">
+              {subcategories.map((sub) => (
+                <li key={sub.id} className="flex items-center gap-2 px-6 py-3">
+                  <ActionForm
+                    action={updateSubcategory.bind(null, sub.id, category.id)}
+                    successMessage="Subcategory updated"
+                    className="flex min-w-0 flex-1 items-center gap-2"
+                  >
+                    <input name="emoji" defaultValue={sub.emoji ?? ''} placeholder="🏷️" aria-label="Emoji" className={emojiInput} />
+                    <input name="name" required defaultValue={sub.name} aria-label="Subcategory name" className={`${ui.input} min-w-0 flex-1`} />
+                    <input type="hidden" name="display_order" value={sub.display_order} />
+                    <SubmitButton pendingText="" variant="icon">
+                      <CheckIcon className="h-4 w-4" />
+                      <span className="sr-only">Save {sub.name}</span>
+                    </SubmitButton>
+                  </ActionForm>
+                  <ActionForm
+                    action={deleteSubcategory.bind(null, sub.id, category.id)}
+                    successMessage="Subcategory deleted"
+                    confirmMessage="Delete this subcategory?"
+                  >
+                    <SubmitButton pendingText="" variant="icon-danger">
+                      <TrashIcon className="h-4 w-4" />
+                      <span className="sr-only">Delete {sub.name}</span>
+                    </SubmitButton>
+                  </ActionForm>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-6 py-5 text-sm text-slate-500">No subcategories yet.</p>
           )}
-        </div>
+        </Card>
 
-        <ActionForm action={addSub} successMessage="Subcategory added" className="space-y-3 border-t border-gray-100 pt-4">
-          <p className="text-sm font-medium text-gray-700">Add subcategory</p>
-          <div className="flex gap-2">
-            <input
-              name="emoji"
-              placeholder="🏷️"
-              className="w-14 rounded-lg border border-gray-300 px-3 py-2 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="name"
-              required
-              placeholder="Subcategory name"
-              className={`flex-1 ${input}`}
-            />
-          </div>
-          <SubmitButton pendingText="Adding…">Add subcategory</SubmitButton>
-        </ActionForm>
-      </section>
-
-      {/* Promotions */}
-      <section className="mt-8 max-w-2xl rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 font-bold text-gray-900">Promotions (banners only — do not change product prices)</h2>
-
-        <div className="mb-6 space-y-2">
-          {(promotions ?? []).map((p) => (
-            <div key={p.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-2">
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <span className="font-medium text-gray-900">{p.title}</span>{' '}
-                {p.badge_text && <span className="text-sm text-red-500">{p.badge_text}</span>}
-                {!p.active && <span className="ml-2 text-xs text-gray-400">(inactive)</span>}
+        {/* Promotions */}
+        <Card
+          title="Promotions"
+          description="Banners on the category page — they don't change product prices."
+          icon={MegaphoneIcon}
+          tone="red"
+          bodyClassName="p-0"
+          footer={
+            <ActionForm action={addPromo} successMessage="Promotion created successfully" className="space-y-2 py-1">
+              <input name="title" required placeholder="Title, e.g. Toys Sale" aria-label="Promotion title" className={ui.input} />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input name="badge_text" placeholder="Badge, e.g. 40% Off" aria-label="Badge" className={ui.input} />
+                <input name="link" placeholder="Link (optional)" aria-label="Link" className={ui.input} />
               </div>
-              <div className="flex flex-shrink-0 gap-2">
-                <ActionForm
-                  action={togglePromotion.bind(null, p.id, category.id, !p.active)}
-                  successMessage={p.active ? 'Promotion disabled' : 'Promotion enabled'}
-                >
-                  <SubmitButton pendingText="Working…" variant="link" className="text-xs text-blue-600">
-                    {p.active ? 'Disable' : 'Enable'}
-                  </SubmitButton>
-                </ActionForm>
-                <ActionForm
-                  action={deletePromotion.bind(null, p.id, category.id)}
-                  successMessage="Promotion deleted successfully"
-                  confirmMessage="Delete this promotion?"
-                >
-                  <SubmitButton pendingText="Deleting…" variant="link" className="text-xs text-red-600">
-                    Delete
-                  </SubmitButton>
-                </ActionForm>
+              <div className="flex gap-2">
+                <input name="description" placeholder="Description (optional)" aria-label="Description" className={`${ui.input} min-w-0 flex-1`} />
+                <SubmitButton pendingText="Adding…">
+                  <PlusIcon className="h-4 w-4" />
+                  Add
+                </SubmitButton>
               </div>
-            </div>
-          ))}
-          {(!promotions || promotions.length === 0) && <p className="text-sm text-gray-400">No promotions yet.</p>}
-        </div>
-
-        <ActionForm action={addPromo} successMessage="Promotion created successfully" className="space-y-3 border-t border-gray-100 pt-4">
-          <p className="text-sm font-medium text-gray-700">Add promotion</p>
-          <input name="title" required placeholder="Title (e.g. Toys Sale)" className={input} />
-          <div className="grid grid-cols-2 gap-3">
-            <input name="badge_text" placeholder="Badge (e.g. 40% Off)" className={input} />
-            <input name="link" placeholder="Link (optional)" className={input} />
-          </div>
-          <input name="description" placeholder="Description (optional)" className={input} />
-          <SubmitButton pendingText="Adding…">Add promotion</SubmitButton>
-        </ActionForm>
-      </section>
-    </div>
+            </ActionForm>
+          }
+        >
+          {promotions && promotions.length > 0 ? (
+            <ul className="divide-y divide-slate-100">
+              {promotions.map((p) => (
+                <li key={p.id} className={ui.row}>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate font-medium text-slate-900">{p.title}</span>
+                      {p.badge_text && <Badge tone="red">{p.badge_text}</Badge>}
+                      {!p.active && <Badge tone="gray">Hidden</Badge>}
+                    </div>
+                    {p.description && <p className="mt-0.5 truncate text-xs text-slate-500">{p.description}</p>}
+                  </div>
+                  <ActionForm
+                    action={togglePromotion.bind(null, p.id, category.id, !p.active)}
+                    successMessage={p.active ? 'Promotion hidden' : 'Promotion shown'}
+                  >
+                    <SubmitButton pendingText="" variant="icon">
+                      {p.active ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                      <span className="sr-only">{p.active ? 'Hide' : 'Show'} {p.title}</span>
+                    </SubmitButton>
+                  </ActionForm>
+                  <ActionForm
+                    action={deletePromotion.bind(null, p.id, category.id)}
+                    successMessage="Promotion deleted successfully"
+                    confirmMessage="Delete this promotion?"
+                  >
+                    <SubmitButton pendingText="" variant="icon-danger">
+                      <TrashIcon className="h-4 w-4" />
+                      <span className="sr-only">Delete {p.title}</span>
+                    </SubmitButton>
+                  </ActionForm>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-6 py-5 text-sm text-slate-500">No promotions yet.</p>
+          )}
+        </Card>
+      </div>
+    </Page>
   )
 }

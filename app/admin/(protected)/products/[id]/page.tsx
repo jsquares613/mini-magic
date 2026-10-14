@@ -1,11 +1,13 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { formatPrice, timeAgo } from '@/lib/format'
 import ProductForm from '@/components/admin/ProductForm'
 import ImageManager from '@/components/admin/ImageManager'
 import DeleteProductButton from '@/components/admin/DeleteProductButton'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
+import { Badge, Card, Page, PageHeader, buttonClass, ui } from '@/components/admin/ui'
+import { AlertTriangleIcon, ExternalLinkIcon, PackageIcon, PlusIcon, RefreshIcon, TrashIcon } from '@/components/admin/icons'
 import { addRelatedProduct, removeRelatedProduct, updateProduct } from '../actions'
 
 export default async function EditProductPage({ params }: { params: { id: string } }) {
@@ -49,55 +51,77 @@ export default async function EditProductPage({ params }: { params: { id: string
   const update = updateProduct.bind(null, product.id)
   const addRelated = addRelatedProduct.bind(null, product.id)
 
-  return (
-    <div className="p-4 md:p-8">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/admin/products" className="text-sm text-blue-600 hover:underline">
-            ← Products
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">{product.name}</h1>
-          {product.is_published ? (
-            <Link href={`/products/${product.slug}`} target="_blank" className="text-xs text-blue-600 hover:underline">
-              View on storefront ↗
-            </Link>
-          ) : (
-            <span className="text-xs text-gray-400">Draft — not visible on the website</span>
-          )}
-        </div>
-        <DeleteProductButton id={product.id} />
-      </div>
+  const margRows: [string, string][] = product.marg_code
+    ? [
+        ['Item code', product.marg_code],
+        ['Billing name', product.marg_name ?? '—'],
+        ['Supplier', product.marg_company ?? '—'],
+        ['MRP', product.marg_mrp != null ? formatPrice(Number(product.marg_mrp)) : '—'],
+        ['Stock', Number(product.marg_stock ?? 0).toLocaleString('en-IN')],
+        ['Last synced', product.marg_synced_at ? timeAgo(product.marg_synced_at) : '—'],
+      ]
+    : []
 
-      {product.marg_code && (
-        <section className="mb-6 max-w-2xl rounded-2xl border border-blue-100 bg-blue-50/50 p-5 text-sm">
-          <h2 className="mb-3 font-bold text-gray-900">From Marg ERP</h2>
-          {(product.marg_deleted_at || product.marg_missing_since) && (
-            <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-red-700">
-              {product.marg_deleted_at
-                ? 'This item was deleted in Marg and has been unpublished.'
-                : 'Marg no longer lists this item. Check it in Marg, then unpublish or delete it here.'}
-            </p>
-          )}
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3">
-            {[
-              ['Item code', product.marg_code],
-              ['Billing name', product.marg_name ?? '—'],
-              ['Supplier', product.marg_company ?? '—'],
-              ['MRP', product.marg_mrp != null ? `₹${product.marg_mrp}` : '—'],
-              ['Stock', String(Number(product.marg_stock ?? 0))],
-              ['Last synced', product.marg_synced_at ? new Date(product.marg_synced_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'],
-            ].map(([k, v]) => (
-              <div key={k}>
-                <dt className="text-xs text-gray-400">{k}</dt>
-                <dd className="font-medium text-gray-800">{v}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+  return (
+    <Page>
+      <PageHeader
+        back={{ href: '/admin/products', label: 'Products' }}
+        title={product.name}
+        meta={
+          <>
+            {product.is_published ? (
+              <Badge tone="green" dot>
+                Published
+              </Badge>
+            ) : (
+              <Badge tone="gray" dot>
+                Draft
+              </Badge>
+            )}
+            {product.marg_code && <Badge tone="blue">Marg #{product.marg_code}</Badge>}
+          </>
+        }
+        description={product.is_published ? undefined : 'Not visible on the website yet.'}
+        actions={
+          <>
+            {product.is_published && (
+              <a href={`/products/${product.slug}`} target="_blank" rel="noreferrer" className={buttonClass('secondary')}>
+                <ExternalLinkIcon className="h-4 w-4" />
+                View on website
+              </a>
+            )}
+            <DeleteProductButton id={product.id} />
+          </>
+        }
+      />
+
+      {(product.marg_deleted_at || product.marg_missing_since) && (
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
+          <AlertTriangleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+          <p>
+            {product.marg_deleted_at
+              ? 'This item was deleted in Marg and has been unpublished.'
+              : 'Marg no longer lists this item. Check it in Marg, then unpublish or delete it here.'}
+          </p>
+        </div>
       )}
 
-      <div className="mb-6 max-w-md">
-        <ImageManager productId={product.id} images={images ?? []} />
+      <div className={`mb-6 grid gap-6 ${product.marg_code ? 'lg:grid-cols-3' : ''}`}>
+        <div className={product.marg_code ? 'lg:col-span-2' : ''}>
+          <ImageManager productId={product.id} images={images ?? []} />
+        </div>
+        {product.marg_code && (
+          <Card title="From Marg ERP" description="Synced automatically — change these in Marg." icon={RefreshIcon} tone="blue">
+            <dl className="space-y-3 text-sm">
+              {margRows.map(([k, v]) => (
+                <div key={k} className="flex items-start justify-between gap-4">
+                  <dt className="shrink-0 text-slate-500">{k}</dt>
+                  <dd className="min-w-0 text-right font-medium text-slate-900">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </Card>
+        )}
       </div>
 
       <ProductForm
@@ -112,31 +136,41 @@ export default async function EditProductPage({ params }: { params: { id: string
 
       {/* Related products — curated "You may also like" picks. Optional: the
           storefront falls back to same-category products when empty. */}
-      <section className="mt-8 max-w-2xl rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-1 font-bold text-gray-900">Related Products</h2>
-        <p className="mb-4 text-sm text-gray-500">
-          Shown as &ldquo;You may also like&rdquo; on the product page. Leave empty to fall back to other products in the same category.
-        </p>
-
-        <div className="mb-6 space-y-2">
-          {relatedList.map((r) => (
-            <div key={r.relationId} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-2">
-              <span className="font-medium text-gray-900">{r.name}</span>
-              <ActionForm action={removeRelatedProduct.bind(null, r.relationId, product.id)} successMessage="Related product removed">
-                <SubmitButton pendingText="Removing…" variant="link" className="text-xs text-red-600">
-                  Remove
-                </SubmitButton>
-              </ActionForm>
-            </div>
-          ))}
-          {relatedList.length === 0 && <p className="text-sm text-gray-400">No related products curated yet.</p>}
-        </div>
+      <Card
+        className="mt-6"
+        title="Related products"
+        description="Shown as “You may also like”. Leave empty to show other products from the same category."
+        icon={PackageIcon}
+        tone="gray"
+        bodyClassName="p-0"
+      >
+        {relatedList.length > 0 ? (
+          <ul className="divide-y divide-slate-100">
+            {relatedList.map((r) => (
+              <li key={r.relationId} className={ui.row}>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">{r.name}</span>
+                <ActionForm action={removeRelatedProduct.bind(null, r.relationId, product.id)} successMessage="Related product removed">
+                  <SubmitButton pendingText="" variant="icon-danger">
+                    <TrashIcon className="h-4 w-4" />
+                    <span className="sr-only">Remove {r.name}</span>
+                  </SubmitButton>
+                </ActionForm>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="px-6 py-5 text-sm text-slate-500">No related products picked yet.</p>
+        )}
 
         {addableProducts.length > 0 && (
-          <ActionForm action={addRelated} successMessage="Related product added" className="flex gap-3 border-t border-gray-100 pt-4">
-            <select name="related_product_id" required className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm">
+          <ActionForm
+            action={addRelated}
+            successMessage="Related product added"
+            className="flex flex-wrap gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-4"
+          >
+            <select name="related_product_id" required defaultValue="" className={`${ui.control} min-w-0 flex-1`}>
               <option value="" disabled>
-                Select a product to relate…
+                Choose a product to relate…
               </option>
               {addableProducts.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -144,10 +178,13 @@ export default async function EditProductPage({ params }: { params: { id: string
                 </option>
               ))}
             </select>
-            <SubmitButton pendingText="Adding…">Add</SubmitButton>
+            <SubmitButton pendingText="Adding…">
+              <PlusIcon className="h-4 w-4" />
+              Add
+            </SubmitButton>
           </ActionForm>
         )}
-      </section>
-    </div>
+      </Card>
+    </Page>
   )
 }

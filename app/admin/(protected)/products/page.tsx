@@ -12,7 +12,8 @@ import {
   type ProductTab,
 } from '@/lib/admin/productFilters'
 import ProductListShell from '@/components/admin/ProductListShell'
-import ProductTable, { type ProductTableRow, type Tone } from '@/components/admin/ProductTable'
+import ProductTable, { type ProductTableRow } from '@/components/admin/ProductTable'
+import { Page, PageHeader, buttonClass, type Tone } from '@/components/admin/ui'
 import { PlusIcon, RefreshIcon } from '@/components/admin/icons'
 import type { StockStatus } from '@/types'
 
@@ -132,32 +133,23 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   ).toString()
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Stock and prices come from Marg. Names, photos and categories are managed here.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/admin/marg"
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-600 shadow-sm transition hover:bg-gray-50"
-            title="Marg sync"
-          >
-            <RefreshIcon className="h-4 w-4 text-gray-400" />
-            {lastSyncAt ? `Synced ${timeAgo(lastSyncAt)}` : 'Not synced yet'}
-          </Link>
-          <Link
-            href="/admin/products/new"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
-          >
-            <PlusIcon className="h-4 w-4" />
-            New product
-          </Link>
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        title="Products"
+        description="Stock and prices come from Marg. Names, photos and categories are managed here."
+        actions={
+          <>
+            <Link href="/admin/marg" className={buttonClass('secondary')} title="Marg sync">
+              <RefreshIcon className="h-4 w-4 text-slate-400" />
+              {lastSyncAt ? `Synced ${timeAgo(lastSyncAt)}` : 'Not synced yet'}
+            </Link>
+            <Link href="/admin/products/new" className={buttonClass()}>
+              <PlusIcon className="h-4 w-4" />
+              New product
+            </Link>
+          </>
+        }
+      />
 
       <ProductListShell
         filters={filters}
@@ -190,6 +182,6 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
           }
         />
       </ProductListShell>
-    </div>
+    </Page>
   )
 }

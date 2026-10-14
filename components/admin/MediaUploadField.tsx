@@ -6,6 +6,7 @@ import { createBrowserSupabase } from '@/lib/supabase/browser'
 import { isVideo } from '@/lib/media'
 import Spinner from './Spinner'
 import ImageCropModal from './ImageCropModal'
+import { TrashIcon, UploadIcon, VideoIcon } from './icons'
 
 const MAX_IMAGE_DIM = 2400
 const MAX_VIDEO_MB = 100
@@ -101,37 +102,51 @@ export default function MediaUploadField({
 
   return (
     <div>
-      <p className="mb-1 text-sm font-medium text-gray-700">{label}</p>
-      {hint && <p className="mb-1.5 text-xs text-gray-400">Recommended size: {hint}</p>}
+      <p className="text-sm font-medium text-slate-700">{label}</p>
+      {hint && <p className="mb-2 text-xs text-slate-500">Recommended: {hint}</p>}
       <input type="hidden" name={name} value={url ?? ''} readOnly />
 
       {url ? (
-        <div className="relative inline-block">
+        <div className="group relative h-36 w-64 max-w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-900/5">
           {isVid ? (
-            <video src={url} muted playsInline className="h-24 w-40 rounded-lg border border-gray-200 object-cover" />
+            <video src={url} muted playsInline className="h-full w-full object-cover" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={url} alt={label} className="h-24 w-40 rounded-lg border border-gray-200 object-cover" />
+            <img src={url} alt={label} className="h-full w-full object-cover" />
           )}
-          <button
-            type="button"
-            onClick={() => setUrl(null)}
-            className="absolute -right-2 -top-2 rounded-full bg-red-500 px-2 text-xs text-white"
-          >
-            ×
-          </button>
+          {isVid && (
+            <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+              <VideoIcon className="h-3 w-3" />
+              Video
+            </span>
+          )}
+          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-slate-900/50 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
+              <UploadIcon className="h-3.5 w-3.5" />
+              Replace
+              <input type="file" accept="image/*,video/*" onChange={onFile} disabled={busy} className="hidden" />
+            </label>
+            <button
+              type="button"
+              onClick={() => setUrl(null)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-600 shadow-sm hover:bg-rose-50"
+            >
+              <TrashIcon className="h-3.5 w-3.5" />
+              Remove
+            </button>
+          </div>
+          {busy && (
+            <span className="absolute inset-0 flex items-center justify-center bg-white/70">
+              <Spinner className="h-5 w-5 text-slate-600" />
+            </span>
+          )}
         </div>
       ) : (
-        <label className="flex h-24 w-40 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 text-xs text-gray-500 hover:border-blue-400">
-          {busy && <Spinner className="h-3.5 w-3.5" />}
-          {busy ? 'Uploading…' : '+ Image or Video'}
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={onFile}
-            disabled={busy}
-            className="hidden"
-          />
+        <label className="flex h-36 w-64 max-w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 px-4 text-center text-xs font-medium text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-700">
+          {busy ? <Spinner className="h-5 w-5" /> : <UploadIcon className="h-5 w-5" />}
+          {busy ? 'Uploading…' : 'Upload image or video'}
+          {!busy && <span className="font-normal text-slate-400">MP4 up to {MAX_VIDEO_MB} MB</span>}
+          <input type="file" accept="image/*,video/*" onChange={onFile} disabled={busy} className="hidden" />
         </label>
       )}
 

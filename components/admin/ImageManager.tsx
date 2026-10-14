@@ -9,6 +9,8 @@ import { unwrapAction } from '@/lib/admin/actionResult'
 import type { Tables } from '@/lib/supabase/database.types'
 import Spinner from './Spinner'
 import ImageCropModal from './ImageCropModal'
+import { Card, buttonClass } from './ui'
+import { ImagesIcon, StarIcon, TrashIcon, UploadIcon } from './icons'
 
 type ProductImage = Tables<'product_images'>
 
@@ -96,25 +98,82 @@ export default function ImageManager({
     }
   }
 
-  return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 font-bold text-gray-900">Images</h2>
+  const uploadInput = (
+    <input type="file" accept="image/*" multiple onChange={queueFilesForCrop} disabled={uploading} className="hidden" />
+  )
 
-      <label className="mb-1 flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 transition hover:border-blue-400 hover:text-blue-600">
-        {uploading && <Spinner className="h-4 w-4" />}
-        {uploading ? 'Uploading…' : '+ Upload images'}
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={queueFilesForCrop}
-          disabled={uploading}
-          className="hidden"
-        />
-      </label>
-      <p className="mb-4 text-xs text-gray-400">
-        Recommended size: 1000 × 1000px (square) — same on mobile & desktop
-      </p>
+  return (
+    <Card
+      title="Photos"
+      description="Square photos work best (1000 × 1000 px). The main photo is used on product cards."
+      icon={ImagesIcon}
+      tone="violet"
+      actions={
+        images.length > 0 && (
+          <label className={buttonClass('secondary', 'sm', `cursor-pointer ${uploading ? 'pointer-events-none opacity-60' : ''}`)}>
+            {uploading ? <Spinner className="h-3.5 w-3.5" /> : <UploadIcon className="h-3.5 w-3.5" />}
+            {uploading ? 'Uploading…' : 'Upload'}
+            {uploadInput}
+          </label>
+        )
+      }
+    >
+      {images.length === 0 ? (
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 px-6 py-10 text-center transition hover:border-blue-400 hover:bg-blue-50/40">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200">
+            {uploading ? <Spinner className="h-5 w-5" /> : <UploadIcon className="h-5 w-5" />}
+          </span>
+          <span className="text-sm font-semibold text-slate-800">{uploading ? 'Uploading…' : 'Upload photos'}</span>
+          <span className="text-xs text-slate-500">A product needs at least one photo before it can be published.</span>
+          {uploadInput}
+        </label>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+          {images.map((img) => {
+            const busy = busyImageId === img.id
+            return (
+              <div key={img.id} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.image_url} alt={img.alt_text ?? ''} className="aspect-square w-full object-cover" />
+                {img.is_primary && (
+                  <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                    <StarIcon className="h-3 w-3" />
+                    Main
+                  </span>
+                )}
+                {busy && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-white/60">
+                    <Spinner className="h-5 w-5 text-slate-600" />
+                  </span>
+                )}
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-slate-900/70 to-transparent p-2 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                  {!img.is_primary ? (
+                    <button
+                      type="button"
+                      onClick={() => handleSetPrimary(img.id)}
+                      disabled={busy}
+                      className="rounded-md bg-white/90 px-2 py-1 text-[11px] font-semibold text-slate-800 transition hover:bg-white disabled:opacity-60"
+                    >
+                      Make main
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(img.id)}
+                    disabled={busy}
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-white/90 text-slate-700 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-60"
+                    aria-label="Delete photo"
+                  >
+                    <TrashIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {cropQueue.length > 0 && (
         <ImageCropModal
@@ -125,45 +184,6 @@ export default function ImageManager({
           onCropped={uploadCropped}
         />
       )}
-
-      {images.length === 0 ? (
-        <p className="text-sm text-gray-400">No images yet.</p>
-      ) : (
-        <div className="grid grid-cols-3 gap-3">
-          {images.map((img) => {
-            const busy = busyImageId === img.id
-            return (
-              <div key={img.id} className="group relative overflow-hidden rounded-lg border border-gray-200">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img.image_url} alt={img.alt_text ?? ''} className="aspect-square w-full object-cover" />
-                {img.is_primary && (
-                  <span className="absolute left-1 top-1 rounded bg-blue-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                    Primary
-                  </span>
-                )}
-                <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/50 p-1 opacity-0 transition group-hover:opacity-100">
-                  {!img.is_primary && (
-                    <button
-                      onClick={() => handleSetPrimary(img.id)}
-                      disabled={busy}
-                      className="text-[10px] font-medium text-white hover:underline disabled:opacity-60"
-                    >
-                      {busy ? 'Working…' : 'Set primary'}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(img.id)}
-                    disabled={busy}
-                    className="ml-auto text-[10px] font-medium text-red-300 hover:underline disabled:opacity-60"
-                  >
-                    {busy ? 'Working…' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </section>
+    </Card>
   )
 }

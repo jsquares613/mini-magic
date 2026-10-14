@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import ProductForm from '@/components/admin/ProductForm'
+import { Page, PageHeader } from '@/components/admin/ui'
 import { createProduct } from '../actions'
 
 export default async function NewProductPage() {
@@ -12,17 +12,18 @@ export default async function NewProductPage() {
   ])
 
   return (
-    <div className="p-4 md:p-8">
-      <Link href="/admin/products" className="text-sm text-blue-600 hover:underline">
-        ← Products
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold text-gray-900">New Product</h1>
+    <Page>
+      <PageHeader
+        back={{ href: '/admin/products', label: 'Products' }}
+        title="New product"
+        description="Add a product by hand. Products from Marg are created automatically by the sync."
+      />
       <ProductForm
         action={createProduct}
         categories={categories ?? []}
         ageGroups={ageGroups ?? []}
         subcategories={subcategories ?? []}
       />
-    </div>
+    </Page>
   )
 }

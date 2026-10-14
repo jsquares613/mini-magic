@@ -1,153 +1,215 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { isVideo } from '@/lib/media'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
+import { Badge, Card, EmptyState, Page, PageHeader, buttonClass, iconButtonClass, ui } from '@/components/admin/ui'
 import {
-  deleteHeroSlide,
-  addFeaturedProduct,
-  removeFeaturedProduct,
-  deleteBanner,
-  toggleBanner,
-} from './actions'
+  CalendarIcon,
+  ExternalLinkIcon,
+  EyeIcon,
+  EyeOffIcon,
+  ImagesIcon,
+  MegaphoneIcon,
+  PencilIcon,
+  PlusIcon,
+  StarIcon,
+  TrashIcon,
+  VideoIcon,
+} from '@/components/admin/icons'
+import { deleteHeroSlide, addFeaturedProduct, removeFeaturedProduct, deleteBanner, toggleBanner } from './actions'
 
-const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })
+
+function MediaThumb({ url }: { url: string | null }) {
+  const box = 'flex h-12 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 text-slate-400'
+  if (!url) return <span className={box}><ImagesIcon className="h-5 w-5" /></span>
+  if (isVideo(url)) return <span className={box}><VideoIcon className="h-5 w-5" /></span>
+  return (
+    <span className={box}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt="" className="h-full w-full object-cover" />
+    </span>
+  )
+}
 
 export default async function HomepageAdminPage() {
   const supabase = createServerSupabase()
-  const [{ data: heroSlides }, { data: banners }, { data: featured }, { data: products }] =
-    await Promise.all([
-      supabase.from('homepage_hero_slides').select('*').order('display_order', { ascending: true }),
-      supabase.from('promotional_banners').select('*').order('display_order', { ascending: true }),
-      supabase.from('homepage_featured_products').select('id, product_id, sort_order').order('sort_order', { ascending: true }),
-      supabase.from('products').select('id, name').eq('is_published', true).order('name', { ascending: true }),
-    ])
+  const [{ data: heroSlides }, { data: banners }, { data: featured }, { data: products }] = await Promise.all([
+    supabase.from('homepage_hero_slides').select('*').order('display_order', { ascending: true }),
+    supabase.from('promotional_banners').select('*').order('display_order', { ascending: true }),
+    supabase.from('homepage_featured_products').select('id, product_id, sort_order').order('sort_order', { ascending: true }),
+    supabase.from('products').select('id, name').eq('is_published', true).order('name', { ascending: true }),
+  ])
 
   const productName = new Map((products ?? []).map((p) => [p.id, p.name]))
   const featuredIds = new Set((featured ?? []).map((f) => f.product_id))
   const availableToFeature = (products ?? []).filter((p) => !featuredIds.has(p.id))
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
-      <h1 className="text-2xl font-bold text-gray-900">Homepage</h1>
+    <Page className="space-y-6">
+      <PageHeader
+        title="Homepage"
+        description="The hero carousel, hand-picked products and promotional banners on the home page."
+        actions={
+          <a href="/" target="_blank" rel="noreferrer" className={buttonClass('secondary')}>
+            <ExternalLinkIcon className="h-4 w-4" />
+            View homepage
+          </a>
+        }
+      />
 
       {/* Hero slides */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-bold text-gray-900">Hero Slides</h2>
-          <Link href="/admin/homepage/hero/new" className="rounded-lg bg-blue-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800">
-            + Add slide
+      <Card
+        title="Hero slides"
+        description="The large carousel at the top. Images or MP4 videos, 1280 × 440 px."
+        icon={ImagesIcon}
+        tone="violet"
+        bodyClassName="p-0"
+        actions={
+          <Link href="/admin/homepage/hero/new" className={buttonClass('primary', 'sm')}>
+            <PlusIcon className="h-3.5 w-3.5" />
+            Add slide
           </Link>
-        </div>
-        <div className="space-y-2">
-          {(heroSlides ?? []).map((s) => (
-            <div key={s.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-2">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {s.image && <img src={s.image} alt="" className="h-10 w-16 flex-shrink-0 rounded object-cover" />}
-                <div className="min-w-0">
-                  <span className="block truncate font-medium text-gray-900">{s.title}</span>
-                  {!s.active && <span className="ml-2 text-xs text-gray-400">(inactive)</span>}
+        }
+      >
+        {heroSlides && heroSlides.length > 0 ? (
+          <ul className="divide-y divide-slate-100">
+            {heroSlides.map((s, i) => (
+              <li key={s.id} className={ui.row}>
+                <MediaThumb url={s.image} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate font-medium text-slate-900">{s.title || `Slide ${i + 1}`}</span>
+                    {!s.active && <Badge tone="gray">Hidden</Badge>}
+                  </div>
+                  {s.subtitle && <p className="truncate text-xs text-slate-500">{s.subtitle}</p>}
                 </div>
-              </div>
-              <div className="flex flex-shrink-0 gap-3">
-                <Link href={`/admin/homepage/hero/${s.id}`} className="text-sm font-medium text-blue-600 hover:underline">
-                  Edit
+                <Link href={`/admin/homepage/hero/${s.id}`} className={iconButtonClass()} title="Edit">
+                  <PencilIcon className="h-4 w-4" />
+                  <span className="sr-only">Edit slide</span>
                 </Link>
-                <ActionForm
-                  action={deleteHeroSlide.bind(null, s.id)}
-                  successMessage="Hero slide deleted successfully"
-                  confirmMessage="Delete this hero slide?"
-                >
-                  <SubmitButton pendingText="Deleting…" variant="link" className="text-sm text-red-600">
-                    Delete
+                <ActionForm action={deleteHeroSlide.bind(null, s.id)} successMessage="Hero slide deleted successfully" confirmMessage="Delete this hero slide?">
+                  <SubmitButton pendingText="" variant="icon-danger">
+                    <TrashIcon className="h-4 w-4" />
+                    <span className="sr-only">Delete slide</span>
                   </SubmitButton>
                 </ActionForm>
-              </div>
-            </div>
-          ))}
-          {(!heroSlides || heroSlides.length === 0) && <p className="text-sm text-gray-400">No slides yet.</p>}
-        </div>
-      </section>
-
-      {/* Featured products */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 font-bold text-gray-900">Featured Products (curated)</h2>
-        <div className="mb-4 space-y-2">
-          {(featured ?? []).map((f) => (
-            <div key={f.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-2">
-              <span className="min-w-0 flex-1 truncate font-medium text-gray-900">{productName.get(f.product_id) ?? f.product_id}</span>
-              <ActionForm action={removeFeaturedProduct.bind(null, f.id)} successMessage="Featured product removed">
-                <SubmitButton pendingText="Removing…" variant="link" className="text-sm text-red-600">
-                  Remove
-                </SubmitButton>
-              </ActionForm>
-            </div>
-          ))}
-          {(!featured || featured.length === 0) && <p className="text-sm text-gray-400">No featured products yet.</p>}
-        </div>
-        <ActionForm action={addFeaturedProduct} successMessage="Featured product added" className="flex flex-wrap gap-2">
-          <select name="product_id" required className={input}>
-            <option value="">Select a product…</option>
-            {availableToFeature.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
+              </li>
             ))}
-          </select>
-          <SubmitButton pendingText="Adding…">Add</SubmitButton>
-        </ActionForm>
-      </section>
+          </ul>
+        ) : (
+          <EmptyState icon={ImagesIcon} title="No slides yet" description="Add a slide to show a banner at the top of the homepage." />
+        )}
+      </Card>
 
-      {/* Promotional banners */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-bold text-gray-900">Promotional Banners</h2>
-          <Link href="/admin/homepage/banners/new" className="rounded-lg bg-blue-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800">
-            + Add banner
-          </Link>
-        </div>
-        <div className="space-y-2">
-          {(banners ?? []).map((b) => (
-            <div key={b.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-2">
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <span className="font-medium text-gray-900">{b.title}</span>{' '}
-                {b.badge_text && <span className="text-sm text-red-500">{b.badge_text}</span>}
-                {!b.active && <span className="ml-2 text-xs text-gray-400">(inactive)</span>}
-                {(b.starts_at || b.ends_at) && (
-                  <span className="ml-2 text-xs text-blue-500">
-                    🕒 {b.starts_at ? new Date(b.starts_at).toLocaleDateString() : 'now'}
-                    {' → '}
-                    {b.ends_at ? new Date(b.ends_at).toLocaleDateString() : 'no end'}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Featured products */}
+        <Card
+          title="Featured products"
+          description="Hand-picked products shown on the homepage."
+          icon={StarIcon}
+          tone="amber"
+          bodyClassName="p-0"
+          footer={
+            <ActionForm action={addFeaturedProduct} successMessage="Featured product added" className="flex gap-2 py-1">
+              <select name="product_id" required defaultValue="" aria-label="Product" className={`${ui.control} min-w-0 flex-1`}>
+                <option value="" disabled>
+                  Choose a published product…
+                </option>
+                {availableToFeature.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <SubmitButton pendingText="Adding…">
+                <PlusIcon className="h-4 w-4" />
+                Add
+              </SubmitButton>
+            </ActionForm>
+          }
+        >
+          {featured && featured.length > 0 ? (
+            <ul className="divide-y divide-slate-100">
+              {featured.map((f, i) => (
+                <li key={f.id} className={ui.row}>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-50 text-xs font-semibold text-amber-700">
+                    {i + 1}
                   </span>
-                )}
-              </div>
-              <div className="flex flex-shrink-0 gap-3">
-                <ActionForm
-                  action={toggleBanner.bind(null, b.id, !b.active)}
-                  successMessage={b.active ? 'Banner disabled' : 'Banner enabled'}
-                >
-                  <SubmitButton pendingText="Working…" variant="link" className="text-sm text-blue-600">
-                    {b.active ? 'Disable' : 'Enable'}
-                  </SubmitButton>
-                </ActionForm>
-                <Link href={`/admin/homepage/banners/${b.id}`} className="text-sm font-medium text-blue-600 hover:underline">
-                  Edit
-                </Link>
-                <ActionForm
-                  action={deleteBanner.bind(null, b.id)}
-                  successMessage="Banner deleted successfully"
-                  confirmMessage="Delete this banner?"
-                >
-                  <SubmitButton pendingText="Deleting…" variant="link" className="text-sm text-red-600">
-                    Delete
-                  </SubmitButton>
-                </ActionForm>
-              </div>
-            </div>
-          ))}
-          {(!banners || banners.length === 0) && <p className="text-sm text-gray-400">No banners yet.</p>}
-        </div>
-      </section>
-    </div>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
+                    {productName.get(f.product_id) ?? 'Unpublished product'}
+                  </span>
+                  <ActionForm action={removeFeaturedProduct.bind(null, f.id)} successMessage="Featured product removed">
+                    <SubmitButton pendingText="" variant="icon-danger">
+                      <TrashIcon className="h-4 w-4" />
+                      <span className="sr-only">Remove from featured</span>
+                    </SubmitButton>
+                  </ActionForm>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-6 py-5 text-sm text-slate-500">No featured products yet.</p>
+          )}
+        </Card>
+
+        {/* Promotional banners */}
+        <Card
+          title="Promotional banners"
+          description="Offer blocks such as “40% off — Explore”."
+          icon={MegaphoneIcon}
+          tone="red"
+          bodyClassName="p-0"
+          actions={
+            <Link href="/admin/homepage/banners/new" className={buttonClass('primary', 'sm')}>
+              <PlusIcon className="h-3.5 w-3.5" />
+              Add banner
+            </Link>
+          }
+        >
+          {banners && banners.length > 0 ? (
+            <ul className="divide-y divide-slate-100">
+              {banners.map((b) => (
+                <li key={b.id} className={ui.row}>
+                  <MediaThumb url={b.image} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate font-medium text-slate-900">{b.title}</span>
+                      {b.badge_text && <Badge tone="red">{b.badge_text}</Badge>}
+                      {!b.active && <Badge tone="gray">Hidden</Badge>}
+                    </div>
+                    {(b.starts_at || b.ends_at) && (
+                      <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-slate-500">
+                        <CalendarIcon className="h-3.5 w-3.5" />
+                        {b.starts_at ? shortDate(b.starts_at) : 'Now'} → {b.ends_at ? shortDate(b.ends_at) : 'no end'}
+                      </p>
+                    )}
+                  </div>
+                  <ActionForm action={toggleBanner.bind(null, b.id, !b.active)} successMessage={b.active ? 'Banner hidden' : 'Banner shown'}>
+                    <SubmitButton pendingText="" variant="icon">
+                      {b.active ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                      <span className="sr-only">{b.active ? 'Hide' : 'Show'} banner</span>
+                    </SubmitButton>
+                  </ActionForm>
+                  <Link href={`/admin/homepage/banners/${b.id}`} className={iconButtonClass()} title="Edit">
+                    <PencilIcon className="h-4 w-4" />
+                    <span className="sr-only">Edit banner</span>
+                  </Link>
+                  <ActionForm action={deleteBanner.bind(null, b.id)} successMessage="Banner deleted successfully" confirmMessage="Delete this banner?">
+                    <SubmitButton pendingText="" variant="icon-danger">
+                      <TrashIcon className="h-4 w-4" />
+                      <span className="sr-only">Delete banner</span>
+                    </SubmitButton>
+                  </ActionForm>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState icon={MegaphoneIcon} title="No banners yet" description="Add a banner to promote an offer on the homepage." />
+          )}
+        </Card>
+      </div>
+    </Page>
   )
 }

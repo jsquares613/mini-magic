@@ -1,15 +1,12 @@
-import Link from 'next/link'
 import FeatureForm from '@/components/admin/FeatureForm'
+import { Page, PageHeader } from '@/components/admin/ui'
 import { createFeature } from '../../actions'
 
-export default function NewFeaturePage() {
+export default function PageFeatureFormNew() {
   return (
-    <div className="p-4 md:p-8">
-      <Link href="/admin/play-area" className="text-sm text-blue-600 hover:underline">
-        ← Play Area
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold text-gray-900">New Feature</h1>
+    <Page>
+      <PageHeader back={{ href: '/admin/play-area', label: 'Play Area' }} title="New feature" description="A reason parents trust the play area." />
       <FeatureForm action={createFeature} />
-    </div>
+    </Page>
   )
 }

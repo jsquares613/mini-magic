@@ -3,6 +3,7 @@
 import { deleteCategory } from '@/app/admin/(protected)/categories/actions'
 import ActionForm from './ActionForm'
 import SubmitButton from './SubmitButton'
+import { TrashIcon } from './icons'
 
 export default function DeleteCategoryButton({ id }: { id: string }) {
   return (
@@ -12,7 +13,8 @@ export default function DeleteCategoryButton({ id }: { id: string }) {
       confirmMessage="Delete this category?"
     >
       <SubmitButton pendingText="Deleting…" variant="danger">
-        Delete category
+        <TrashIcon className="h-4 w-4" />
+        Delete
       </SubmitButton>
     </ActionForm>
   )

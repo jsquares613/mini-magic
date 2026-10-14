@@ -10,8 +10,7 @@ import type { ProductListFilters } from '@/lib/admin/productFilters'
 import type { Tables } from '@/lib/supabase/database.types'
 import { AlertTriangleIcon, ExternalLinkIcon, ImageIcon, PencilIcon, SearchIcon, SparklesIcon, StarIcon } from './icons'
 import Spinner from './Spinner'
-
-export type Tone = 'green' | 'amber' | 'red' | 'blue' | 'teal' | 'gray'
+import { Badge, EmptyState, buttonClass, iconButtonClass, ui, type Tone } from './ui'
 
 /** Display-ready product row, computed by the (server) products page. */
 export interface ProductTableRow {
@@ -43,30 +42,8 @@ export interface ProductTableRow {
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>
 type Subcategory = Pick<Tables<'subcategories'>, 'id' | 'name' | 'emoji' | 'category_id'>
 
-const TONE: Record<Tone, string> = {
-  green: 'bg-green-50 text-green-700 ring-green-600/20',
-  amber: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-  red: 'bg-red-50 text-red-700 ring-red-600/20',
-  blue: 'bg-blue-50 text-blue-700 ring-blue-600/20',
-  teal: 'bg-teal-50 text-teal-700 ring-teal-600/20',
-  gray: 'bg-gray-50 text-gray-600 ring-gray-500/20',
-}
-
-function Pill({ tone, title, children }: { tone: Tone; title?: string; children: React.ReactNode }) {
-  return (
-    <span
-      title={title}
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TONE[tone]}`}
-    >
-      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
-      {children}
-    </span>
-  )
-}
-
-const control =
-  'h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100'
-const checkbox = 'h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-900'
+const control = ui.control
+const checkbox = ui.checkbox
 
 /**
  * Products table with row selection and bulk actions (set category, publish,
@@ -157,10 +134,10 @@ export default function ProductTable({
 
   return (
     <>
-      <div className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ${selectionCount > 0 ? 'mb-28' : ''}`}>
-        <div className="overflow-x-auto">
+      <div className={`overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${selectionCount > 0 ? 'mb-28' : ''}`}>
+        <div className="admin-scroll overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50/80 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+            <thead className={`${ui.thead} text-left text-xs font-medium uppercase tracking-wide text-slate-500`}>
               <tr>
                 {canWrite && (
                   <th className="w-12 py-3 pl-5 pr-2">
@@ -186,11 +163,11 @@ export default function ProductTable({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-100">
               {rows.map((p) => {
                 const isSelected = allMatching || selected.has(p.id)
                 return (
-                  <tr key={p.id} className={`group transition-colors ${isSelected ? 'bg-blue-50/60' : 'hover:bg-gray-50/80'}`}>
+                  <tr key={p.id} className={`group transition-colors ${isSelected ? 'bg-blue-50/60' : 'hover:bg-slate-50/80'}`}>
                     {canWrite && (
                       <td className="py-3 pl-5 pr-2">
                         <input
@@ -212,11 +189,11 @@ export default function ProductTable({
                             src={p.thumb}
                             alt=""
                             loading="lazy"
-                            className="h-11 w-11 shrink-0 rounded-lg border border-gray-100 bg-gray-50 object-cover"
+                            className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 bg-slate-50 object-cover"
                           />
                         ) : (
                           <span
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-gray-300"
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-300"
                             title="No photo"
                           >
                             <ImageIcon className="h-5 w-5" />
@@ -224,60 +201,58 @@ export default function ProductTable({
                         )}
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <Link href={`/admin/products/${p.id}`} className="font-medium text-gray-900 hover:text-blue-700 hover:underline">
+                            <Link href={`/admin/products/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
                               {p.name}
                             </Link>
                             {p.popular && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
-                                <StarIcon className="h-3 w-3" />
+                              <Badge tone="amber" icon={StarIcon}>
                                 Popular
-                              </span>
+                              </Badge>
                             )}
                             {p.newArrival && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
-                                <SparklesIcon className="h-3 w-3" />
+                              <Badge tone="blue" icon={SparklesIcon}>
                                 New
-                              </span>
+                              </Badge>
                             )}
                           </div>
                           {(p.margCode || p.supplier) && (
-                            <p className="mt-0.5 truncate text-xs text-gray-400">
+                            <p className="mt-0.5 truncate text-xs text-slate-400">
                               {p.margCode && <span className="font-mono">#{p.margCode}</span>}
                               {p.margCode && p.supplier && ' · '}
                               {p.supplier}
                             </p>
                           )}
-                          {p.margName && <p className="truncate text-xs text-gray-400">Marg name: {p.margName}</p>}
+                          {p.margName && <p className="truncate text-xs text-slate-400">Marg name: {p.margName}</p>}
                         </div>
                       </div>
                     </td>
 
-                    <td className="px-4 py-3 text-gray-600">{p.category ?? <span className="text-gray-300">—</span>}</td>
+                    <td className="px-4 py-3 text-slate-600">{p.category ?? <span className="text-slate-300">—</span>}</td>
 
                     <td className="whitespace-nowrap px-4 py-3">
                       <span
                         className={
-                          p.priceMuted ? 'text-gray-400' : p.originalPriceText ? 'font-semibold text-green-700' : 'font-medium text-gray-800'
+                          p.priceMuted ? 'text-slate-400' : p.originalPriceText ? 'font-semibold text-emerald-700' : 'font-medium text-slate-800'
                         }
                       >
                         {p.priceText}
                       </span>
-                      {p.originalPriceText && <span className="ml-1.5 text-xs text-gray-400 line-through">{p.originalPriceText}</span>}
+                      {p.originalPriceText && <span className="ml-1.5 text-xs text-slate-400 line-through">{p.originalPriceText}</span>}
                     </td>
 
                     <td className="px-4 py-3">
-                      <Pill tone={p.stock.tone} title={p.stock.title}>
+                      <Badge tone={p.stock.tone} title={p.stock.title} dot>
                         {p.stock.label}
-                      </Pill>
+                      </Badge>
                     </td>
 
                     <td className="px-4 py-3">
                       {p.published ? (
-                        <Pill tone="green">Published</Pill>
+                        <Badge dot tone="green">Published</Badge>
                       ) : p.ready ? (
-                        <Pill tone="teal">Ready to publish</Pill>
+                        <Badge dot tone="teal">Ready to publish</Badge>
                       ) : (
-                        <Pill tone="gray">Draft</Pill>
+                        <Badge dot tone="gray">Draft</Badge>
                       )}
                       {p.needs.length > 0 && (
                         <p className="mt-1 whitespace-nowrap text-xs text-amber-600">
@@ -286,7 +261,7 @@ export default function ProductTable({
                         </p>
                       )}
                       {p.removed && (
-                        <p className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-red-600">
+                        <p className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-rose-600">
                           <AlertTriangleIcon className="h-3.5 w-3.5" />
                           {p.removed}
                         </p>
@@ -301,7 +276,7 @@ export default function ProductTable({
                             target="_blank"
                             rel="noreferrer"
                             title="View on website"
-                            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                            className={iconButtonClass()}
                           >
                             <ExternalLinkIcon className="h-4 w-4" />
                             <span className="sr-only">View {p.name} on the website</span>
@@ -310,7 +285,7 @@ export default function ProductTable({
                         <Link
                           href={`/admin/products/${p.id}`}
                           title="Edit"
-                          className="rounded-lg p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-700"
+                          className={iconButtonClass('default', 'hover:bg-blue-50 hover:text-blue-700')}
                         >
                           <PencilIcon className="h-4 w-4" />
                           <span className="sr-only">Edit {p.name}</span>
@@ -322,14 +297,8 @@ export default function ProductTable({
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={columns} className="px-6 py-16">
-                    <div className="mx-auto flex max-w-sm flex-col items-center text-center">
-                      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                        <SearchIcon className="h-6 w-6" />
-                      </span>
-                      <p className="font-medium text-gray-800">{empty.title}</p>
-                      <div className="mt-1 text-sm text-gray-500">{empty.message}</div>
-                    </div>
+                  <td colSpan={columns} className="py-6">
+                    <EmptyState icon={SearchIcon} title={empty.title} description={empty.message} />
                   </td>
                 </tr>
               )}
@@ -339,9 +308,9 @@ export default function ProductTable({
       </div>
 
       {canWrite && selectionCount > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:left-60 md:px-8">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:left-60 md:px-8">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="inline-flex items-center gap-2 font-semibold text-gray-900">
+            <span className="inline-flex items-center gap-2 font-semibold text-slate-900">
               <span className="rounded-md bg-blue-900 px-2 py-0.5 text-xs font-bold tabular-nums text-white">
                 {selectionCount.toLocaleString('en-IN')}
               </span>
@@ -353,7 +322,7 @@ export default function ProductTable({
               </button>
             )}
 
-            <span className="hidden h-6 w-px bg-gray-200 sm:block" aria-hidden="true" />
+            <span className="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
 
             <select value={op} onChange={(e) => setOp(e.target.value as BulkOperation | '')} className={control} aria-label="Bulk action">
               <option value="">Choose action…</option>
@@ -394,7 +363,7 @@ export default function ProductTable({
               </>
             )}
             {op === 'publish' && (
-              <span className="text-xs text-gray-500">Only products with a category and at least one photo are published.</span>
+              <span className="text-xs text-slate-500">Only products with a category and at least one photo are published.</span>
             )}
 
             <div className="ml-auto flex gap-2">
@@ -402,7 +371,7 @@ export default function ProductTable({
                 type="button"
                 onClick={clearSelection}
                 disabled={pending}
-                className="h-9 rounded-lg border border-gray-300 px-3 font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+                className={buttonClass('secondary')}
               >
                 Cancel
               </button>
@@ -410,7 +379,7 @@ export default function ProductTable({
                 type="button"
                 onClick={apply}
                 disabled={pending || !op}
-                className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-900 px-4 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className={buttonClass()}
               >
                 {pending && <Spinner />}
                 {pending ? 'Applying…' : 'Apply'}

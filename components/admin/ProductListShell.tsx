@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { PRODUCT_SOURCES, PRODUCT_TABS, type ProductListFilters, type ProductTab } from '@/lib/admin/productFilters'
 import { ChevronLeftIcon, ChevronRightIcon, SearchIcon, XIcon } from './icons'
 import Spinner from './Spinner'
+import { buttonClass, ui } from './ui'
 
 type ListParams = Partial<Record<keyof ProductListFilters | 'page', string | number>>
 
@@ -14,12 +15,11 @@ const COUNT_TONE: Partial<Record<ProductTab, string>> = {
   ready: 'bg-teal-50 text-teal-700',
   'missing-photo': 'bg-amber-50 text-amber-700',
   'no-category': 'bg-amber-50 text-amber-700',
-  'out-of-stock': 'bg-red-50 text-red-700',
-  removed: 'bg-red-50 text-red-700',
+  'out-of-stock': 'bg-rose-50 text-rose-700',
+  removed: 'bg-rose-50 text-rose-700',
 }
 
-const control =
-  'h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100'
+const control = ui.control
 
 /**
  * Status tabs (with counts), search/supplier/source filters and pagination
@@ -99,21 +99,21 @@ export default function ProductListShell({
   return (
     <>
       {/* Status tabs */}
-      <div className="mb-4 overflow-x-auto border-b border-gray-200">
+      <div className="admin-scroll mb-5 overflow-x-auto border-b border-slate-200">
         <nav className="-mb-px flex min-w-max" aria-label="Product status">
           {PRODUCT_TABS.map((t, i) => {
             const active = filters.status === t.key
             const n = tabCounts[t.key] ?? 0
-            const tone = active ? 'bg-blue-900 text-white' : n > 0 && COUNT_TONE[t.key] ? COUNT_TONE[t.key] : 'bg-gray-100 text-gray-600'
+            const tone = active ? 'bg-blue-900 text-white' : n > 0 && COUNT_TONE[t.key] ? COUNT_TONE[t.key] : 'bg-slate-100 text-slate-600'
             return (
               <Fragment key={t.key}>
-                {i === 3 && <span className="mx-2 my-3 w-px bg-gray-200" aria-hidden="true" />}
+                {i === 3 && <span className="mx-2 my-3 w-px bg-slate-200" aria-hidden="true" />}
                 <Link
                   href={hrefFor({ status: t.key, page: 1 })}
                   onClick={(e) => onLinkClick(e, { status: t.key, page: 1 })}
                   aria-current={active ? 'page' : undefined}
                   className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition ${
-                    active ? 'border-blue-900 text-blue-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800'
+                    active ? 'border-blue-900 text-blue-900' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'
                   }`}
                 >
                   {t.label}
@@ -126,9 +126,9 @@ export default function ProductListShell({
       </div>
 
       {/* Filters */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-5 flex flex-wrap items-center gap-2">
         <div className="relative w-full sm:w-72">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -141,7 +141,7 @@ export default function ProductListShell({
             className={`${control} w-full pl-9 pr-9`}
           />
           {pending ? (
-            <Spinner className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Spinner className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           ) : (
             q && (
               <button
@@ -150,7 +150,7 @@ export default function ProductListShell({
                   setQ('')
                   navigate({ q: '', page: 1 })
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                 aria-label="Clear search"
               >
                 <XIcon className="h-4 w-4" />
@@ -190,7 +190,7 @@ export default function ProductListShell({
               setQ('')
               navigate({ q: '', supplier: '', source: '', page: 1 })
             }}
-            className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+            className={buttonClass('ghost')}
           >
             <XIcon className="h-4 w-4" />
             Clear filters
@@ -203,11 +203,11 @@ export default function ProductListShell({
       </div>
 
       {total > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
           <span>
-            Showing <span className="font-medium text-gray-700">{from.toLocaleString('en-IN')}</span>–
-            <span className="font-medium text-gray-700">{to.toLocaleString('en-IN')}</span> of{' '}
-            <span className="font-medium text-gray-700">{total.toLocaleString('en-IN')}</span>
+            Showing <span className="font-medium text-slate-700">{from.toLocaleString('en-IN')}</span>–
+            <span className="font-medium text-slate-700">{to.toLocaleString('en-IN')}</span> of{' '}
+            <span className="font-medium text-slate-700">{total.toLocaleString('en-IN')}</span>
           </span>
           {pageCount > 1 && (
             <div className="flex items-center gap-2">
@@ -245,16 +245,16 @@ function PageLink({
   onClick: (e: React.MouseEvent<HTMLAnchorElement>) => void
   children: React.ReactNode
 }) {
-  const cls = 'inline-flex h-9 items-center gap-1 rounded-lg border px-3 font-medium'
+  const cls = buttonClass('secondary', 'sm', 'h-9')
   if (!href) {
     return (
-      <span className={`${cls} cursor-not-allowed border-gray-200 text-gray-300`} aria-disabled="true">
+      <span className={`${cls} cursor-not-allowed opacity-50`} aria-disabled="true">
         {children}
       </span>
     )
   }
   return (
-    <Link href={href} onClick={onClick} className={`${cls} border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50`}>
+    <Link href={href} onClick={onClick} className={cls}>
       {children}
     </Link>
   )

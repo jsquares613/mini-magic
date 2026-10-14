@@ -1,12 +1,12 @@
+import Link from 'next/link'
 import type { Tables } from '@/lib/supabase/database.types'
 import ImageUploadField from '@/components/admin/ImageUploadField'
 import ActionForm from './ActionForm'
 import SubmitButton from './SubmitButton'
+import { Card, Field, FormActions, Switch, buttonClass, ui } from './ui'
+import { EyeIcon, UserIcon } from './icons'
 
 type TeamMember = Tables<'team_members'>
-
-const input = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
-const label = 'mb-1 block text-sm font-medium text-gray-700'
 
 export default function TeamMemberForm({
   action,
@@ -16,47 +16,49 @@ export default function TeamMemberForm({
   member?: TeamMember
 }) {
   return (
-    <ActionForm
-      action={action}
-      successMessage={member ? 'Team member updated successfully' : 'Team member created successfully'}
-      className="max-w-2xl space-y-5"
-    >
-      <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={label}>Name *</label>
-            <input name="name" required defaultValue={member?.name} className={input} />
+    <ActionForm action={action} successMessage={member ? 'Team member updated successfully' : 'Team member created successfully'}>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2" title="Profile" icon={UserIcon} tone="teal">
+          <div className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Name" required>
+                <input name="name" required defaultValue={member?.name} className={ui.input} />
+              </Field>
+              <Field label="Designation">
+                <input name="designation" defaultValue={member?.designation ?? ''} placeholder="e.g. Founder" className={ui.input} />
+              </Field>
+            </div>
+            <Field label="Bio">
+              <textarea name="bio" rows={4} defaultValue={member?.bio ?? ''} className={ui.input} />
+            </Field>
+            <ImageUploadField
+              bucket="about"
+              name="image"
+              label="Photo"
+              defaultUrl={member?.image ?? null}
+              hint="600 × 600 px, square"
+            />
           </div>
-          <div>
-            <label className={label}>Designation</label>
-            <input name="designation" defaultValue={member?.designation ?? ''} className={input} />
-          </div>
-        </div>
-        <div>
-          <label className={label}>Bio</label>
-          <textarea name="bio" rows={3} defaultValue={member?.bio ?? ''} className={input} />
-        </div>
-        <ImageUploadField
-          bucket="about"
-          name="image"
-          label="Photo"
-          defaultUrl={member?.image ?? null}
-          hint="600 × 600px (square) — same on mobile & desktop"
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={label}>Display order</label>
-            <input name="display_order" type="number" defaultValue={member?.display_order ?? 0} className={input} />
-          </div>
-          <label className="mt-6 flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" name="active" defaultChecked={member?.active ?? true} /> Active
-          </label>
-        </div>
-      </section>
+        </Card>
 
-      <SubmitButton pendingText={member ? 'Saving…' : 'Creating…'} className="px-6 py-3">
-        {member ? 'Save team member' : 'Create team member'}
-      </SubmitButton>
+        <Card title="Visibility" icon={EyeIcon}>
+          <div className="space-y-5">
+            <Switch name="active" defaultChecked={member?.active ?? true} label="Show on About page" />
+            <Field label="Display order" hint="Lower numbers show first.">
+              <input name="display_order" type="number" defaultValue={member?.display_order ?? 0} className={ui.input} />
+            </Field>
+          </div>
+        </Card>
+      </div>
+
+      <FormActions>
+        <Link href="/admin/about" className={buttonClass('ghost')}>
+          Cancel
+        </Link>
+        <SubmitButton pendingText={member ? 'Saving…' : 'Creating…'} size="lg">
+          {member ? 'Save team member' : 'Create team member'}
+        </SubmitButton>
+      </FormActions>
     </ActionForm>
   )
 }
