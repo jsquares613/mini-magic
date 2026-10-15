@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/admin/(protected)/actions'
 import ActionForm from './ActionForm'
+import Spinner from './Spinner'
 import SubmitButton from './SubmitButton'
 import {
   BadgePercentIcon,
@@ -70,11 +71,26 @@ function Monogram({ className = '' }: { className?: string }) {
 export default function Sidebar({ email, role }: { email: string | null; role: Role }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  // The section the user just clicked: highlighted at once, before its page has loaded.
+  const [pendingHref, setPendingHref] = useState<string | null>(null)
+
+  useEffect(() => setPendingHref(null), [pathname])
+  useEffect(() => {
+    if (!pendingHref) return
+    const t = setTimeout(() => setPendingHref(null), 15_000) // navigation never landed
+    return () => clearTimeout(t)
+  }, [pendingHref])
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
 
   const close = () => setOpen(false)
+
+  const onNavClick = (href: string) => (e: React.MouseEvent) => {
+    close()
+    const newTab = e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
+    if (!newTab && href !== pathname) setPendingHref(href)
+  }
 
   return (
     <>
@@ -129,14 +145,16 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
               )}
               <ul className="space-y-0.5">
                 {section.items.map((item) => {
-                  const active = isActive(item.href, item.exact)
+                  const pending = pendingHref === item.href
+                  const active = pendingHref ? pending : isActive(item.href, item.exact)
                   const ItemIcon = item.icon
                   return (
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        onClick={close}
+                        onClick={onNavClick(item.href)}
                         aria-current={active ? 'page' : undefined}
+                        aria-busy={pending || undefined}
                         className={`group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                           active ? 'bg-blue-50 text-blue-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                         }`}
@@ -146,6 +164,7 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
                           className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-blue-900' : 'text-slate-400 group-hover:text-slate-600'}`}
                         />
                         {item.label}
+                        {pending && <Spinner className="ml-auto h-3.5 w-3.5 text-blue-900/60" />}
                       </Link>
                     </li>
                   )

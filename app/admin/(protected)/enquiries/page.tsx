@@ -4,6 +4,7 @@ import { timeAgo } from '@/lib/format'
 import { ENQUIRY_CHANNEL, ENQUIRY_STATUS, ENQUIRY_STATUS_ORDER, ENQUIRY_TYPE } from '@/lib/admin/enquiryLabels'
 import { enquiryStatusCounts } from '@/lib/admin/counts'
 import { Avatar, Badge, Card, EmptyState, Page, PageHeader, TabLinks, buttonClass, ui } from '@/components/admin/ui'
+import IntentLink from '@/components/admin/IntentLink'
 import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, XIcon } from '@/components/admin/icons'
 import type { Enums } from '@/lib/supabase/database.types'
 
@@ -91,9 +92,9 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: { 
                       <div className="flex items-center gap-3">
                         <Avatar name={e.name} size="sm" />
                         <div className="min-w-0">
-                          <Link prefetch={false} href={`/admin/enquiries/${e.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
+                          <IntentLink href={`/admin/enquiries/${e.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
                             {e.name}
-                          </Link>
+                          </IntentLink>
                           <p className="text-xs text-slate-500">{e.phone}</p>
                         </div>
                       </div>
@@ -112,14 +113,13 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: { 
                       {timeAgo(e.created_at)}
                     </td>
                     <td className={`${ui.td} text-right`}>
-                      <Link
-                        prefetch={false}
+                      <IntentLink
                         href={`/admin/enquiries/${e.id}`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                         aria-label={`Open enquiry from ${e.name}`}
                       >
                         <ChevronRightIcon className="h-4 w-4" />
-                      </Link>
+                      </IntentLink>
                     </td>
                   </tr>
                 ))}

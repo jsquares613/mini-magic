@@ -54,9 +54,11 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Verifies the session token and refreshes it when it is about to expire. With asymmetric
+  // JWT signing keys the signature is checked locally (no Supabase Auth round trip on every
+  // admin request); with the legacy shared secret it falls back to getUser().
+  const { data } = await supabase.auth.getClaims()
+  const user = data?.claims ?? null
 
   if (!user && !isLogin) {
     const url = request.nextUrl.clone()

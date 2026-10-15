@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { bulkUpdateProducts, type BulkOperation } from '@/app/admin/(protected)/products/actions'
@@ -21,6 +20,7 @@ import {
   StarIcon,
 } from './icons'
 import AdminImage from './AdminImage'
+import IntentLink from './IntentLink'
 import Select from './Select'
 import Spinner from './Spinner'
 import { Badge, EmptyState, buttonClass, iconButtonClass, ui, type Tone } from './ui'
@@ -207,9 +207,9 @@ export default function ProductTable({
                         )}
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <Link prefetch={false} href={`/admin/products/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
+                            <IntentLink href={`/admin/products/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
                               {p.name}
-                            </Link>
+                            </IntentLink>
                             {p.popular && (
                               <Badge tone="amber" icon={StarIcon}>
                                 Popular
@@ -288,15 +288,14 @@ export default function ProductTable({
                             <span className="sr-only">View {p.name} on the website</span>
                           </a>
                         )}
-                        <Link
-                          prefetch={false}
+                        <IntentLink
                           href={`/admin/products/${p.id}`}
                           title="Edit"
                           className={iconButtonClass('default', 'hover:bg-blue-50 hover:text-blue-700')}
                         >
                           <PencilIcon className="h-4 w-4" />
                           <span className="sr-only">Edit {p.name}</span>
-                        </Link>
+                        </IntentLink>
                       </div>
                     </td>
                   </tr>

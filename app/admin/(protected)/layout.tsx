@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { Toaster } from 'sonner'
 import { requireStaff } from '@/lib/supabase/auth'
 import Sidebar from '@/components/admin/Sidebar'
+import NavigationProgress from '@/components/admin/NavigationProgress'
 
 export const metadata: Metadata = {
   title: 'Admin — Minimagic',
@@ -14,6 +16,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen bg-slate-50">
+      {/* Reads search params, so it gets its own boundary instead of suspending the shell. */}
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       <Sidebar email={profile.email} role={profile.role} />
       {/* overflow-x-clip (not hidden) keeps wide content contained without
           breaking `position: sticky` (form save bars) inside the page. */}

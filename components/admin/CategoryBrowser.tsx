@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { reorderCategories, setCategoryFeatured } from '@/app/admin/(protected)/categories/actions'
@@ -21,6 +20,7 @@ import {
   XIcon,
 } from './icons'
 import AdminImage from './AdminImage'
+import IntentLink from './IntentLink'
 import Spinner from './Spinner'
 import { Badge, Card, EmptyState, iconButtonClass, ui } from './ui'
 
@@ -278,7 +278,7 @@ export default function CategoryBrowser({ categories, canWrite }: { categories: 
               key={c.id}
               className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
             >
-              <Link prefetch={false} href={`/admin/categories/${c.id}`} className="block">
+              <IntentLink href={`/admin/categories/${c.id}`} className="block">
                 <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
                   {c.image ? (
                     <AdminImage src={c.image} width={360} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
@@ -325,7 +325,7 @@ export default function CategoryBrowser({ categories, canWrite }: { categories: 
                     )}
                   </div>
                 </div>
-              </Link>
+              </IntentLink>
 
               {/* Quick actions */}
               <div className="absolute right-2 top-2 flex gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
@@ -441,9 +441,9 @@ export default function CategoryBrowser({ categories, canWrite }: { categories: 
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-lg">{c.emoji || '🗂️'}</span>
                         )}
                         <div className="min-w-0">
-                          <Link prefetch={false} href={`/admin/categories/${c.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
+                          <IntentLink href={`/admin/categories/${c.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
                             {c.name}
-                          </Link>
+                          </IntentLink>
                           <p className="truncate text-xs text-slate-500">/{c.slug}</p>
                         </div>
                       </div>
@@ -494,15 +494,14 @@ export default function CategoryBrowser({ categories, canWrite }: { categories: 
                         >
                           <ExternalLinkIcon className="h-4 w-4" />
                         </a>
-                        <Link
-                          prefetch={false}
+                        <IntentLink
                           href={`/admin/categories/${c.id}`}
                           className={iconButtonClass('default', 'hover:bg-blue-50 hover:text-blue-700')}
                           title="Edit"
                           aria-label={`Edit ${c.name}`}
                         >
                           <PencilIcon className="h-4 w-4" />
-                        </Link>
+                        </IntentLink>
                       </div>
                     </td>
                   </tr>

@@ -8,6 +8,7 @@ import { enquiryStatusCounts } from '@/lib/admin/counts'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
 import { Avatar, Badge, Card, EmptyState, Page, ProgressBar, StatCard, buttonClass, ui, type Tone } from '@/components/admin/ui'
+import IntentLink from '@/components/admin/IntentLink'
 import {
   ArrowRightIcon,
   CheckCircleIcon,
@@ -214,11 +215,11 @@ export default async function DashboardPage() {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-slate-500">
                   {ENQUIRY_STATUS_ORDER.map((s) => (
-                    <Link key={s} prefetch={false} href={`/admin/enquiries?status=${s}`} className="inline-flex items-center gap-1.5 hover:text-slate-800">
+                    <IntentLink key={s} href={`/admin/enquiries?status=${s}`} className="inline-flex items-center gap-1.5 hover:text-slate-800">
                       <span className={`h-2 w-2 rounded-full ${PIPELINE_COLOUR[s]}`} />
                       {ENQUIRY_STATUS[s].label}
                       <span className="font-semibold tabular-nums text-slate-700">{statusCounts[s]}</span>
-                    </Link>
+                    </IntentLink>
                   ))}
                 </div>
               </div>
@@ -229,7 +230,7 @@ export default async function DashboardPage() {
             <ul className="divide-y divide-slate-100">
               {recent.map((e) => (
                 <li key={e.id}>
-                  <Link prefetch={false} href={`/admin/enquiries/${e.id}`} className={ui.row}>
+                  <IntentLink href={`/admin/enquiries/${e.id}`} className={ui.row}>
                     <Avatar name={e.name} size="sm" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-900">{e.name}</p>
@@ -242,7 +243,7 @@ export default async function DashboardPage() {
                       {ENQUIRY_STATUS[e.status].label}
                     </Badge>
                     <span className="hidden w-24 shrink-0 text-right text-xs text-slate-400 sm:block">{timeAgo(e.created_at)}</span>
-                  </Link>
+                  </IntentLink>
                 </li>
               ))}
             </ul>

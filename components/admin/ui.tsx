@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { ChevronLeftIcon, type Icon } from './icons'
+import IntentLink from './IntentLink'
 
 /**
  * Admin design system — one place for the panel's look.
@@ -264,9 +265,9 @@ export function StatCard({
   )
   const base = 'block rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition'
   return href ? (
-    <Link prefetch={false} href={href} className={`${base} hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md`}>
+    <IntentLink href={href} className={`${base} hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md`}>
       {body}
-    </Link>
+    </IntentLink>
   ) : (
     <div className={base}>{body}</div>
   )

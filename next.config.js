@@ -5,6 +5,13 @@ const nextConfig = {
   poweredByHeader: false,
   // Emit a self-contained server bundle; required by the multi-stage Dockerfile.
   output: 'standalone',
+  // `next dev` only: keep compiled routes for the whole session. The default drops any
+  // route idle for 60 s once 5 others are newer, so admin sections recompiled on almost
+  // every visit. Ignored by `next build` / production.
+  onDemandEntries: {
+    maxInactiveAge: 60 * 60 * 1000,
+    pagesBufferLength: 50,
+  },
   images: {
     // Serve AVIF first (25–50 % smaller than WebP), fall back to WebP.
     // First request per image takes slightly longer to encode; subsequent
