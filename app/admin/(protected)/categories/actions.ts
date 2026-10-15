@@ -70,6 +70,35 @@ export async function deleteCategory(id: string): Promise<{ error: string } | vo
   redirect('/admin/categories')
 }
 
+/** Show/hide a category in the homepage rail, straight from the list. */
+export async function setCategoryFeatured(id: string, featured: boolean): Promise<{ error: string } | void> {
+  await requireStaff('editor')
+  const supabase = createAdminSupabase()
+  const { error } = await supabase.from('categories').update({ featured }).eq('id', id)
+  if (error) return { error: error.message }
+  revalidateStorefront()
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Save a new display order (`ids` top to bottom). Steps of 10 leave room to
+ * slot a category in between by hand from its edit page.
+ */
+export async function reorderCategories(ids: string[]): Promise<{ error: string } | void> {
+  await requireStaff('editor')
+  if (!ids.length || ids.some((id) => !UUID.test(id)) || new Set(ids).size !== ids.length) {
+    return { error: 'Invalid category order.' }
+  }
+  const supabase = createAdminSupabase()
+  const results = await Promise.all(
+    ids.map((id, i) => supabase.from('categories').update({ display_order: (i + 1) * 10 }).eq('id', id)),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) return { error: failed.error.message }
+  revalidateStorefront()
+}
+
 /** Set the category image or banner URL (called after a Storage upload). */
 export async function updateCategoryImage(id: string, field: 'image' | 'banner_image', url: string | null): Promise<{ error: string } | void> {
   await requireStaff('editor')

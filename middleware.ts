@@ -20,6 +20,21 @@ export async function middleware(request: NextRequest) {
     )
   }
 
+  const { pathname } = request.nextUrl
+  const isLogin = pathname.startsWith('/admin/login')
+
+  // No Supabase session cookie at all → definitely signed out. Decide without
+  // a network round trip to Supabase Auth (login page loads, expired visitors).
+  const hasSessionCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
+  if (!hasSessionCookie) {
+    if (isLogin) return NextResponse.next()
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/admin/login'
+    loginUrl.search = ''
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -42,9 +57,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
-  const isLogin = pathname.startsWith('/admin/login')
 
   if (!user && !isLogin) {
     const url = request.nextUrl.clone()

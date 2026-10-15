@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
 import Spinner from '@/components/admin/Spinner'
 import { buttonClass, ui } from '@/components/admin/ui'
 import {
@@ -38,7 +38,7 @@ function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const supabase = createBrowserSupabase()
+    const supabase = await getBrowserSupabase()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(error.message)

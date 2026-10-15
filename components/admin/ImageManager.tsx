@@ -1,16 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
 import { addProductImage, deleteProductImage, setPrimaryImage } from '@/app/admin/(protected)/products/actions'
 import { unwrapAction } from '@/lib/admin/actionResult'
 import type { Tables } from '@/lib/supabase/database.types'
+import AdminImage from './AdminImage'
 import Spinner from './Spinner'
-import ImageCropModal from './ImageCropModal'
 import { Card, buttonClass } from './ui'
 import { ImagesIcon, StarIcon, TrashIcon, UploadIcon } from './icons'
+
+// The cropper (react-easy-crop) loads only when a crop dialog opens.
+const ImageCropModal = dynamic(() => import('./ImageCropModal'), { ssr: false })
 
 type ProductImage = Tables<'product_images'>
 
@@ -54,7 +58,7 @@ export default function ImageManager({
     const name = cropQueue[0].file.name
     setUploading(true)
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = await getBrowserSupabase()
       const path = `${productId}/${Date.now()}-${name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`
       const { error: upErr } = await supabase.storage.from('product-images').upload(path, blob)
       if (upErr) throw upErr
@@ -133,8 +137,7 @@ export default function ImageManager({
             const busy = busyImageId === img.id
             return (
               <div key={img.id} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img.image_url} alt={img.alt_text ?? ''} className="aspect-square w-full object-cover" />
+                <AdminImage src={img.image_url} alt={img.alt_text ?? ''} width={240} className="aspect-square w-full object-cover" />
                 {img.is_primary && (
                   <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
                     <StarIcon className="h-3 w-3" />

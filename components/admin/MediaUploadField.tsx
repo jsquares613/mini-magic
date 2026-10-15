@@ -1,12 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
-import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
 import { isVideo } from '@/lib/media'
+import AdminImage from './AdminImage'
 import Spinner from './Spinner'
-import ImageCropModal from './ImageCropModal'
 import { TrashIcon, UploadIcon, VideoIcon } from './icons'
+
+// The cropper (react-easy-crop) loads only when a crop dialog opens.
+const ImageCropModal = dynamic(() => import('./ImageCropModal'), { ssr: false })
 
 const MAX_IMAGE_DIM = 2400
 const MAX_VIDEO_MB = 100
@@ -54,7 +58,7 @@ export default function MediaUploadField({
   async function upload(path: string, body: Blob, contentType?: string) {
     setBusy(true)
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = await getBrowserSupabase()
       const { error: upErr } = await supabase.storage
         .from(bucket)
         .upload(path, body, contentType ? { contentType } : undefined)
@@ -109,10 +113,9 @@ export default function MediaUploadField({
       {url ? (
         <div className="group relative h-36 w-64 max-w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-900/5">
           {isVid ? (
-            <video src={url} muted playsInline className="h-full w-full object-cover" />
+            <video src={url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={url} alt={label} className="h-full w-full object-cover" />
+            <AdminImage src={url} alt={label} width={256} className="h-full w-full object-cover" />
           )}
           {isVid && (
             <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">

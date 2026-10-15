@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from './server'
 import type { Tables } from './database.types'
@@ -5,25 +6,26 @@ import type { Tables } from './database.types'
 export type Profile = Tables<'profiles'>
 export type Role = Profile['role']
 
-/** The current authenticated user (or null). */
-export async function getSessionUser() {
+/**
+ * The current authenticated user (or null). Memoised per request with React
+ * `cache`, so the layout and the page share one Supabase Auth round trip.
+ */
+export const getSessionUser = cache(async () => {
   const supabase = createServerSupabase()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   return user
-}
+})
 
-/** The current user's profile row (role etc.), or null if not signed in. */
-export async function getCurrentProfile(): Promise<Profile | null> {
-  const supabase = createServerSupabase()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+/** The current user's profile row (role etc.), or null if not signed in. Memoised per request. */
+export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
+  const user = await getSessionUser()
   if (!user) return null
+  const supabase = createServerSupabase()
   const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
   return data
-}
+})
 
 const STAFF_ROLES: Role[] = ['admin', 'editor', 'viewer']
 

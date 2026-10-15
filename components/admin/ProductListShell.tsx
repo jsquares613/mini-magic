@@ -130,6 +130,7 @@ export default function ProductListShell({
             return (
               <Link
                 key={v.key}
+                prefetch={false}
                 href={hrefFor({ view: v.key, page: 1 })}
                 onClick={(e) => onLinkClick(e, { view: v.key, page: 1 })}
                 aria-current={on ? 'page' : undefined}
@@ -208,6 +209,7 @@ export default function ProductListShell({
           return (
             <Link
               key={issue.key}
+              prefetch={false}
               href={hrefFor({ issue: on ? '' : issue.key, page: 1 })}
               onClick={(e) => onLinkClick(e, { issue: on ? '' : issue.key, page: 1 })}
               aria-current={on ? 'true' : undefined}
@@ -297,7 +299,7 @@ function PageLink({
     )
   }
   return (
-    <Link href={href} onClick={onClick} className={cls}>
+    <Link prefetch={false} href={href} onClick={onClick} className={cls}>
       {children}
     </Link>
   )

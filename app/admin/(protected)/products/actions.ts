@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createAdminSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase, createServerSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
@@ -282,6 +282,40 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
 
   revalidatePath('/', 'layout')
   return result
+}
+
+/* ------------------------------ Search --------------------------------- */
+export interface ProductSearchResult {
+  id: string
+  name: string
+  marg_code: string | null
+}
+
+const SEARCH_LIMIT = 20
+
+/**
+ * Published products matching `query`, for the related / featured product
+ * pickers — they search on demand instead of shipping the whole catalogue
+ * to the browser. Runs as the signed-in staff member (RLS applies).
+ */
+export async function searchPublishedProducts(query: string, excludeIds: string[] = []): Promise<ProductSearchResult[]> {
+  await requireStaff('viewer')
+  const supabase = createServerSupabase()
+  const q = String(query ?? '').replace(/[%*\\]/g, ' ').trim().slice(0, 80)
+  const exclude = excludeIds.filter((id) => UUID.test(id)).slice(0, MAX_SELECTED_IDS)
+
+  let req = supabase
+    .from('products')
+    .select('id, name, marg_code')
+    .eq('is_published', true)
+    .order('name', { ascending: true })
+    .limit(SEARCH_LIMIT)
+  if (q) req = req.ilike('name', `%${q}%`)
+  if (exclude.length) req = req.not('id', 'in', `(${exclude.join(',')})`)
+
+  const { data, error } = await req
+  if (error) throw new Error(error.message)
+  return data ?? []
 }
 
 export async function deleteProduct(id: string): Promise<{ error: string } | void> {

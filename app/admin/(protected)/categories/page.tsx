@@ -1,90 +1,96 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
-import { Badge, Card, EmptyState, Page, PageHeader, buttonClass } from '@/components/admin/ui'
-import { PlusIcon, ShapesIcon, StarIcon } from '@/components/admin/icons'
+import { canWrite, getCurrentProfile } from '@/lib/supabase/auth'
+import { productListHref } from '@/lib/admin/productFilters'
+import { categoryProductCounts } from '@/lib/admin/counts'
+import CategoryBrowser, { type CategoryItem } from '@/components/admin/CategoryBrowser'
+import { Badge, Page, PageHeader, buttonClass } from '@/components/admin/ui'
+import { ArrowRightIcon, ExternalLinkIcon, PlusIcon, ShapesIcon } from '@/components/admin/icons'
 
 export default async function AdminCategoriesPage() {
   const supabase = createServerSupabase()
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('id, name, slug, emoji, image, featured, display_order')
-    .order('display_order', { ascending: true })
-
-  // One head-count per category (a single row select would stop at 1,000 rows).
-  const counts = new Map(
-    await Promise.all(
-      (categories ?? []).map(async (c) => {
-        const { count } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('category_id', c.id)
-        return [c.id, count ?? 0] as const
-      }),
-    ),
+  // Run once, shared by the page and the counts fallback (awaiting a query builder twice would re-run it).
+  const categoriesQuery = Promise.resolve(
+    supabase
+      .from('categories')
+      .select('id, name, slug, emoji, image, banner_image, featured, display_order')
+      .order('display_order', { ascending: true })
+      .order('name', { ascending: true }),
   )
+
+  const [{ data: categories, error }, counts, { data: subcategories }, { data: promotions }, { count: uncategorised }, profile] =
+    await Promise.all([
+      categoriesQuery,
+      // One grouped query for every category's product counts.
+      categoryProductCounts(
+        supabase,
+        categoriesQuery.then((r) => (r.data ?? []).map((c) => c.id)),
+      ),
+      supabase.from('subcategories').select('category_id'),
+      supabase.from('category_promotions').select('category_id, active'),
+      supabase.from('products').select('id', { count: 'exact', head: true }).is('category_id', null),
+      getCurrentProfile(),
+    ])
+  if (error) throw new Error(`Could not load categories: ${error.message}`)
+  const tally = (rows: { category_id: string }[] | null) => {
+    const m = new Map<string, number>()
+    for (const r of rows ?? []) m.set(r.category_id, (m.get(r.category_id) ?? 0) + 1)
+    return m
+  }
+  const subCounts = tally(subcategories)
+  const promoCounts = tally((promotions ?? []).filter((p) => p.active))
+
+  const items: CategoryItem[] = (categories ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    emoji: c.emoji,
+    image: c.image,
+    hasBanner: Boolean(c.banner_image),
+    featured: c.featured,
+    products: counts.get(c.id)?.total ?? 0,
+    live: counts.get(c.id)?.live ?? 0,
+    subcategories: subCounts.get(c.id) ?? 0,
+    promotions: promoCounts.get(c.id) ?? 0,
+  }))
 
   return (
     <Page>
       <PageHeader
         title="Categories"
-        description="Group products for the storefront menus, filters and category pages."
-        meta={<Badge tone="gray">{(categories?.length ?? 0).toLocaleString('en-IN')} total</Badge>}
+        description="Group products for the storefront menus, filters and category pages. Featured categories appear on the homepage."
+        meta={<Badge tone="gray">{items.length.toLocaleString('en-IN')} total</Badge>}
         actions={
-          <Link href="/admin/categories/new" className={buttonClass()}>
-            <PlusIcon className="h-4 w-4" />
-            New category
-          </Link>
+          <>
+            <a href="/categories" target="_blank" rel="noreferrer" className={buttonClass('secondary')}>
+              <ExternalLinkIcon className="h-4 w-4" />
+              View on website
+            </a>
+            <Link href="/admin/categories/new" className={buttonClass()}>
+              <PlusIcon className="h-4 w-4" />
+              New category
+            </Link>
+          </>
         }
       />
 
-      {categories && categories.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={`/admin/categories/${c.id}`}
-              className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-            >
-              <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
-                {c.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.image} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-                ) : (
-                  <span className="flex h-full items-center justify-center text-5xl">{c.emoji || '🗂️'}</span>
-                )}
-                {c.featured && (
-                  <span className="absolute left-3 top-3">
-                    <Badge tone="amber" icon={StarIcon}>
-                      Featured
-                    </Badge>
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-3 p-4">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-900">{c.name}</p>
-                  <p className="truncate text-xs text-slate-500">/{c.slug}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-lg font-semibold tabular-nums text-slate-900">{(counts.get(c.id) ?? 0).toLocaleString('en-IN')}</p>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">products</p>
-                </div>
-              </div>
-            </Link>
-          ))}
+      {(uncategorised ?? 0) > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white px-5 py-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+            <ShapesIcon className="h-4 w-4" />
+          </span>
+          <p className="min-w-0 flex-1 text-sm text-amber-900">
+            <span className="font-semibold">{(uncategorised ?? 0).toLocaleString('en-IN')} products</span> don&apos;t have a category yet — they
+            can&apos;t be published until they do.
+          </p>
+          <Link href={productListHref({ issue: 'no-category' })} className={buttonClass('secondary', 'sm')}>
+            Assign categories
+            <ArrowRightIcon className="h-3.5 w-3.5" />
+          </Link>
         </div>
-      ) : (
-        <Card>
-          <EmptyState
-            icon={ShapesIcon}
-            title="No categories yet"
-            description="Create your first category to start organising products."
-            action={
-              <Link href="/admin/categories/new" className={buttonClass('primary', 'sm')}>
-                <PlusIcon className="h-3.5 w-3.5" />
-                New category
-              </Link>
-            }
-          />
-        </Card>
       )}
+
+      <CategoryBrowser categories={items} canWrite={!!profile && canWrite(profile.role)} />
     </Page>
   )
 }

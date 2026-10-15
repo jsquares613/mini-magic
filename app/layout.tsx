@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { siteConfig } from '@/config/site'
-import WishlistProvider from '@/components/WishlistProvider'
-import BottomNav from '@/components/BottomNav'
+import SiteShell from '@/components/SiteShell'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -38,10 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <WishlistProvider>
-          <div className="pb-32 md:pb-0">{children}</div>
-          <BottomNav />
-        </WishlistProvider>
+        <SiteShell>{children}</SiteShell>
       </body>
     </html>
   )

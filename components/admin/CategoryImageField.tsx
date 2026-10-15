@@ -1,14 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
 import { updateCategoryImage } from '@/app/admin/(protected)/categories/actions'
 import { unwrapAction } from '@/lib/admin/actionResult'
+import AdminImage from './AdminImage'
 import Spinner from './Spinner'
-import ImageCropModal from './ImageCropModal'
 import { TrashIcon, UploadIcon } from './icons'
+
+// The cropper (react-easy-crop) loads only when a crop dialog opens.
+const ImageCropModal = dynamic(() => import('./ImageCropModal'), { ssr: false })
 
 export default function CategoryImageField({
   categoryId,
@@ -34,7 +38,7 @@ export default function CategoryImageField({
   async function uploadBlob(blob: Blob, extension: string) {
     setBusy(true)
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = await getBrowserSupabase()
       const path = `${categoryId}/${field}-${Date.now()}.${extension}`
       const { error: upErr } = await supabase.storage.from('category-images').upload(path, blob, { upsert: true })
       if (upErr) throw upErr
@@ -84,8 +88,7 @@ export default function CategoryImageField({
       {hint && <p className="mb-2 text-xs text-slate-500">Recommended: {hint}</p>}
       {current ? (
         <div className={`group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 ${box}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={current} alt={label} className="h-full w-full object-cover" />
+          <AdminImage src={current} alt={label} width={256} className="h-full w-full object-cover" />
           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-slate-900/50 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
             {busy ? (
               <Spinner className="h-5 w-5 text-white" />

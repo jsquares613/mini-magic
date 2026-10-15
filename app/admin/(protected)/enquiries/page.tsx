@@ -2,35 +2,45 @@ import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { timeAgo } from '@/lib/format'
 import { ENQUIRY_CHANNEL, ENQUIRY_STATUS, ENQUIRY_STATUS_ORDER, ENQUIRY_TYPE } from '@/lib/admin/enquiryLabels'
-import { Avatar, Badge, Card, EmptyState, Page, PageHeader, TabLinks, ui } from '@/components/admin/ui'
-import { ChevronRightIcon, InboxIcon, XIcon } from '@/components/admin/icons'
+import { enquiryStatusCounts } from '@/lib/admin/counts'
+import { Avatar, Badge, Card, EmptyState, Page, PageHeader, TabLinks, buttonClass, ui } from '@/components/admin/ui'
+import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, XIcon } from '@/components/admin/icons'
 import type { Enums } from '@/lib/supabase/database.types'
 
 type Status = Enums<'enquiry_status'>
 type EnquiryType = Enums<'enquiry_type'>
 
-export default async function EnquiriesPage({ searchParams }: { searchParams: { status?: string; type?: string } }) {
+const PAGE_SIZE = 50
+
+export default async function EnquiriesPage({ searchParams }: { searchParams: { status?: string; type?: string; page?: string } }) {
   const status = ENQUIRY_STATUS_ORDER.includes(searchParams.status as Status) ? (searchParams.status as Status) : null
   const type = searchParams.type && searchParams.type in ENQUIRY_TYPE ? (searchParams.type as EnquiryType) : null
+  const page = Math.max(1, Number(searchParams.page) || 1)
+  const from = (page - 1) * PAGE_SIZE
 
   const supabase = createServerSupabase()
-  let query = supabase.from('enquiries').select('*').order('created_at', { ascending: false })
+  // One page of the columns the table shows (the list grows forever — never load it all).
+  let query = supabase
+    .from('enquiries')
+    .select('id, name, phone, enquiry_type, subject, channel, status, created_at', { count: 'exact' })
   if (status) query = query.eq('status', status)
   if (type) query = query.eq('enquiry_type', type)
 
-  let countQuery = supabase.from('enquiries').select('status')
-  if (type) countQuery = countQuery.eq('enquiry_type', type)
+  const [{ data: enquiries, count: matching, error }, counts] = await Promise.all([
+    query.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1),
+    enquiryStatusCounts(supabase, type),
+  ])
+  if (error) throw new Error(`Could not load enquiries: ${error.message}`)
 
-  const [{ data: enquiries }, { data: statusRows }] = await Promise.all([query, countQuery])
+  const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
+  const shown = matching ?? 0
+  const pageCount = Math.max(1, Math.ceil(shown / PAGE_SIZE))
 
-  const counts = Object.fromEntries(ENQUIRY_STATUS_ORDER.map((s) => [s, 0])) as Record<Status, number>
-  for (const r of statusRows ?? []) counts[r.status] += 1
-  const total = statusRows?.length ?? 0
-
-  const href = (s: Status | null) => {
+  const href = (s: Status | null, p = 1) => {
     const params = new URLSearchParams()
     if (s) params.set('status', s)
     if (type) params.set('type', type)
+    if (p > 1) params.set('page', String(p))
     const qs = params.toString()
     return qs ? `/admin/enquiries?${qs}` : '/admin/enquiries'
   }
@@ -41,7 +51,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: { 
         title="Enquiries"
         description="Leads from the website, WhatsApp and phone. Open one to follow up, add notes and record the outcome."
         meta={type ? (
-          <Link href={status ? `/admin/enquiries?status=${status}` : '/admin/enquiries'} className="inline-flex">
+          <Link prefetch={false} href={status ? `/admin/enquiries?status=${status}` : '/admin/enquiries'} className="inline-flex">
             <Badge tone="blue" icon={XIcon}>
               {ENQUIRY_TYPE[type]} only
             </Badge>
@@ -81,7 +91,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: { 
                       <div className="flex items-center gap-3">
                         <Avatar name={e.name} size="sm" />
                         <div className="min-w-0">
-                          <Link href={`/admin/enquiries/${e.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
+                          <Link prefetch={false} href={`/admin/enquiries/${e.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
                             {e.name}
                           </Link>
                           <p className="text-xs text-slate-500">{e.phone}</p>
@@ -103,6 +113,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: { 
                     </td>
                     <td className={`${ui.td} text-right`}>
                       <Link
+                        prefetch={false}
                         href={`/admin/enquiries/${e.id}`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                         aria-label={`Open enquiry from ${e.name}`}
@@ -123,6 +134,45 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: { 
           />
         )}
       </Card>
+
+      {shown > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+          <span>
+            Showing <span className="font-medium text-slate-700">{(from + 1).toLocaleString('en-IN')}</span>–
+            <span className="font-medium text-slate-700">{Math.min(from + PAGE_SIZE, shown).toLocaleString('en-IN')}</span> of{' '}
+            <span className="font-medium text-slate-700">{shown.toLocaleString('en-IN')}</span>
+          </span>
+          {pageCount > 1 && (
+            <div className="flex items-center gap-2">
+              {page > 1 ? (
+                <Link prefetch={false} href={href(status, page - 1)} className={buttonClass('secondary', 'sm', 'h-9')}>
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  Prev
+                </Link>
+              ) : (
+                <span className={buttonClass('secondary', 'sm', 'h-9 cursor-not-allowed opacity-50')} aria-disabled="true">
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  Prev
+                </span>
+              )}
+              <span className="px-1 tabular-nums">
+                Page {page} of {pageCount.toLocaleString('en-IN')}
+              </span>
+              {page < pageCount ? (
+                <Link prefetch={false} href={href(status, page + 1)} className={buttonClass('secondary', 'sm', 'h-9')}>
+                  Next
+                  <ChevronRightIcon className="h-4 w-4" />
+                </Link>
+              ) : (
+                <span className={buttonClass('secondary', 'sm', 'h-9 cursor-not-allowed opacity-50')} aria-disabled="true">
+                  Next
+                  <ChevronRightIcon className="h-4 w-4" />
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </Page>
   )
 }

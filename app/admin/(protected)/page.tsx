@@ -4,6 +4,7 @@ import { getCurrentProfile } from '@/lib/supabase/auth'
 import { timeAgo } from '@/lib/format'
 import { productFilterConditions, productListHref, toLogicTree, type ProductListFilters } from '@/lib/admin/productFilters'
 import { ENQUIRY_STATUS, ENQUIRY_STATUS_ORDER, ENQUIRY_TYPE } from '@/lib/admin/enquiryLabels'
+import { enquiryStatusCounts } from '@/lib/admin/counts'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
 import { Avatar, Badge, Card, EmptyState, Page, ProgressBar, StatCard, buttonClass, ui, type Tone } from '@/components/admin/ui'
@@ -53,7 +54,7 @@ export default async function DashboardPage() {
     margWithPhoto,
     margCategorised,
     margInStock,
-    { data: statuses },
+    statusCounts,
     { data: recent },
     { data: lastRun },
     { data: lastSuccess },
@@ -68,7 +69,7 @@ export default async function DashboardPage() {
     countProducts({ source: 'marg' }, ['image_count.gt.0']),
     countProducts({ source: 'marg' }, ['category_id.not.is.null']),
     countProducts({ source: 'marg' }, ['marg_stock.gt.0']),
-    supabase.from('enquiries').select('status'),
+    enquiryStatusCounts(supabase),
     supabase
       .from('enquiries')
       .select('id, name, enquiry_type, status, subject, created_at')
@@ -84,9 +85,7 @@ export default async function DashboardPage() {
       .maybeSingle(),
   ])
 
-  const statusCounts = Object.fromEntries(ENQUIRY_STATUS_ORDER.map((s) => [s, 0])) as Record<Enums<'enquiry_status'>, number>
-  for (const e of statuses ?? []) statusCounts[e.status] += 1
-  const totalEnquiries = statuses?.length ?? 0
+  const totalEnquiries = Object.values(statusCounts).reduce((sum, n) => sum + n, 0)
   const newLeads = statusCounts.new
 
   // Greeting in shop time (IST), whatever the server's clock zone.
@@ -215,7 +214,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-slate-500">
                   {ENQUIRY_STATUS_ORDER.map((s) => (
-                    <Link key={s} href={`/admin/enquiries?status=${s}`} className="inline-flex items-center gap-1.5 hover:text-slate-800">
+                    <Link key={s} prefetch={false} href={`/admin/enquiries?status=${s}`} className="inline-flex items-center gap-1.5 hover:text-slate-800">
                       <span className={`h-2 w-2 rounded-full ${PIPELINE_COLOUR[s]}`} />
                       {ENQUIRY_STATUS[s].label}
                       <span className="font-semibold tabular-nums text-slate-700">{statusCounts[s]}</span>
@@ -230,7 +229,7 @@ export default async function DashboardPage() {
             <ul className="divide-y divide-slate-100">
               {recent.map((e) => (
                 <li key={e.id}>
-                  <Link href={`/admin/enquiries/${e.id}`} className={ui.row}>
+                  <Link prefetch={false} href={`/admin/enquiries/${e.id}`} className={ui.row}>
                     <Avatar name={e.name} size="sm" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-900">{e.name}</p>

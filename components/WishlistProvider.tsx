@@ -14,11 +14,19 @@ const WishlistContext = createContext<WishlistContextValue | null>(null)
  * Sitewide wishlist state — fetched once here instead of per-card, so every
  * heart icon (product cards + the header badge) shares one source of truth.
  * Identity is the `device_id` cookie set by app/api/wishlist/route.ts.
+ * `enabled={false}` skips the fetch on routes without hearts (the admin panel).
  */
-export default function WishlistProvider({ children }: { children: React.ReactNode }) {
+export default function WishlistProvider({
+  children,
+  enabled = true,
+}: {
+  children: React.ReactNode
+  enabled?: boolean
+}) {
   const [ids, setIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    if (!enabled) return
     let cancelled = false
     fetch('/api/wishlist')
       .then((res) => res.json())
@@ -29,7 +37,7 @@ export default function WishlistProvider({ children }: { children: React.ReactNo
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [enabled])
 
   const isSaved = useCallback((productId: string) => ids.has(productId), [ids])
 

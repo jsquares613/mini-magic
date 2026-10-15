@@ -30,13 +30,13 @@ import {
 
 export default async function EditCategoryPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase()
-  const { data: category } = await supabase.from('categories').select('*').eq('id', params.id).maybeSingle()
-  if (!category) notFound()
-
-  const [{ data: promotions }, { data: subcategories }] = await Promise.all([
-    supabase.from('category_promotions').select('*').eq('category_id', category.id).order('display_order', { ascending: true }),
-    supabase.from('subcategories').select('*').eq('category_id', category.id).order('display_order', { ascending: true }),
+  // All keyed off the id in the URL — one parallel batch.
+  const [{ data: category }, { data: promotions }, { data: subcategories }] = await Promise.all([
+    supabase.from('categories').select('*').eq('id', params.id).maybeSingle(),
+    supabase.from('category_promotions').select('*').eq('category_id', params.id).order('display_order', { ascending: true }),
+    supabase.from('subcategories').select('*').eq('category_id', params.id).order('display_order', { ascending: true }),
   ])
+  if (!category) notFound()
 
   const update = updateCategory.bind(null, category.id)
   const addPromo = createPromotion.bind(null, category.id)

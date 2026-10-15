@@ -1,16 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import type { Tables } from '@/lib/supabase/database.types'
-import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
 import { addProductImage, bulkUpdateProducts } from '@/app/admin/(protected)/products/actions'
 import { isActionError, unwrapAction, type ActionResult } from '@/lib/admin/actionResult'
 import ActionForm, { usePending } from './ActionForm'
 import SubmitButton from './SubmitButton'
-import ImageCropModal from './ImageCropModal'
 import Select from './Select'
 import { Card, Dot, Field, FormActions, Switch, buttonClass, ui } from './ui'
 import {
@@ -26,6 +26,9 @@ import {
   UploadIcon,
   XIcon,
 } from './icons'
+
+// The cropper (react-easy-crop) loads only when a crop dialog opens.
+const ImageCropModal = dynamic(() => import('./ImageCropModal'), { ssr: false })
 
 type Product = Tables<'products'>
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>
@@ -161,7 +164,7 @@ export default function ProductForm({
     if (!id) throw new Error('Product creation returned no ID — please try again.')
 
     if (stagedImages.length > 0) {
-      const supabase = createBrowserSupabase()
+      const supabase = await getBrowserSupabase()
       let failures = 0
       for (const { blob, name } of stagedImages) {
         try {

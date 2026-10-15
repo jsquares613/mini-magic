@@ -3,7 +3,8 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { isVideo } from '@/lib/media'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
-import Select from '@/components/admin/Select'
+import AdminImage from '@/components/admin/AdminImage'
+import ProductPicker from '@/components/admin/ProductPicker'
 import { Badge, Card, EmptyState, Page, PageHeader, buttonClass, iconButtonClass, ui } from '@/components/admin/ui'
 import {
   CalendarIcon,
@@ -28,24 +29,25 @@ function MediaThumb({ url }: { url: string | null }) {
   if (isVideo(url)) return <span className={box}><VideoIcon className="h-5 w-5" /></span>
   return (
     <span className={box}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt="" className="h-full w-full object-cover" />
+      <AdminImage src={url} width={80} className="h-full w-full object-cover" />
     </span>
   )
 }
 
 export default async function HomepageAdminPage() {
   const supabase = createServerSupabase()
-  const [{ data: heroSlides }, { data: banners }, { data: featured }, { data: products }] = await Promise.all([
+  const [{ data: heroSlides }, { data: banners }, { data: featured }] = await Promise.all([
     supabase.from('homepage_hero_slides').select('*').order('display_order', { ascending: true }),
     supabase.from('promotional_banners').select('*').order('display_order', { ascending: true }),
     supabase.from('homepage_featured_products').select('id, product_id, sort_order').order('sort_order', { ascending: true }),
-    supabase.from('products').select('id, name').eq('is_published', true).order('name', { ascending: true }),
   ])
 
-  const productName = new Map((products ?? []).map((p) => [p.id, p.name]))
-  const featuredIds = new Set((featured ?? []).map((f) => f.product_id))
-  const availableToFeature = (products ?? []).filter((p) => !featuredIds.has(p.id))
+  // Names for the featured products only — the picker searches the catalogue on demand.
+  const featuredIds = (featured ?? []).map((f) => f.product_id)
+  const { data: featuredProducts } = featuredIds.length
+    ? await supabase.from('products').select('id, name, is_published').in('id', featuredIds)
+    : { data: [] as { id: string; name: string; is_published: boolean }[] }
+  const productById = new Map((featuredProducts ?? []).map((p) => [p.id, p]))
 
   return (
     <Page className="space-y-6">
@@ -86,7 +88,7 @@ export default async function HomepageAdminPage() {
                   </div>
                   {s.subtitle && <p className="truncate text-xs text-slate-500">{s.subtitle}</p>}
                 </div>
-                <Link href={`/admin/homepage/hero/${s.id}`} className={iconButtonClass()} title="Edit">
+                <Link prefetch={false} href={`/admin/homepage/hero/${s.id}`} className={iconButtonClass()} title="Edit">
                   <PencilIcon className="h-4 w-4" />
                   <span className="sr-only">Edit slide</span>
                 </Link>
@@ -114,14 +116,13 @@ export default async function HomepageAdminPage() {
           bodyClassName="p-0"
           footer={
             <ActionForm action={addFeaturedProduct} successMessage="Featured product added" className="flex gap-2 py-1">
-              <Select
+              <ProductPicker
                 name="product_id"
                 required
                 aria-label="Product to feature"
-                placeholder="Choose a published product…"
+                placeholder="Search published products…"
                 className="min-w-0 flex-1"
-                searchable
-                options={availableToFeature.map((p) => ({ value: p.id, label: p.name }))}
+                excludeIds={featuredIds}
               />
               <SubmitButton pendingText="Adding…">
                 <PlusIcon className="h-4 w-4" />
@@ -138,8 +139,9 @@ export default async function HomepageAdminPage() {
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
-                    {productName.get(f.product_id) ?? 'Unpublished product'}
+                    {productById.get(f.product_id)?.name ?? 'Deleted product'}
                   </span>
+                  {productById.get(f.product_id)?.is_published === false && <Badge tone="gray">Not published</Badge>}
                   <ActionForm action={removeFeaturedProduct.bind(null, f.id)} successMessage="Featured product removed">
                     <SubmitButton pendingText="" variant="icon-danger">
                       <TrashIcon className="h-4 w-4" />
@@ -192,7 +194,7 @@ export default async function HomepageAdminPage() {
                       <span className="sr-only">{b.active ? 'Hide' : 'Show'} banner</span>
                     </SubmitButton>
                   </ActionForm>
-                  <Link href={`/admin/homepage/banners/${b.id}`} className={iconButtonClass()} title="Edit">
+                  <Link prefetch={false} href={`/admin/homepage/banners/${b.id}`} className={iconButtonClass()} title="Edit">
                     <PencilIcon className="h-4 w-4" />
                     <span className="sr-only">Edit banner</span>
                   </Link>

@@ -1,11 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
-import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
+import AdminImage from './AdminImage'
 import Spinner from './Spinner'
-import ImageCropModal from './ImageCropModal'
 import { TrashIcon, UploadIcon } from './icons'
+
+// The cropper (react-easy-crop) loads only when a crop dialog opens.
+const ImageCropModal = dynamic(() => import('./ImageCropModal'), { ssr: false })
 
 /**
  * Generic image uploader for use inside a <form>. Uploads to a Storage bucket
@@ -80,7 +84,7 @@ export default function ImageUploadField({
   async function uploadToBucket(path: string, body: Blob) {
     setBusy(true)
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = await getBrowserSupabase()
       const { error: upErr } = await supabase.storage.from(bucket).upload(path, body)
       if (upErr) throw upErr
       const {
@@ -119,8 +123,7 @@ export default function ImageUploadField({
       <input type="hidden" name={name} value={url ?? ''} readOnly />
       {url ? (
         <div className="group relative h-32 w-48 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt={label} className="h-full w-full object-cover" />
+          <AdminImage src={url} alt={label} width={192} className="h-full w-full object-cover" />
           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-slate-900/50 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
             <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
               <UploadIcon className="h-3.5 w-3.5" />

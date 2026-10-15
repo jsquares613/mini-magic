@@ -6,35 +6,39 @@ import ImageManager from '@/components/admin/ImageManager'
 import DeleteProductButton from '@/components/admin/DeleteProductButton'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
-import Select from '@/components/admin/Select'
+import ProductPicker from '@/components/admin/ProductPicker'
 import { Badge, Card, Page, PageHeader, buttonClass, ui } from '@/components/admin/ui'
 import { AlertTriangleIcon, ExternalLinkIcon, PackageIcon, PlusIcon, RefreshIcon, TrashIcon } from '@/components/admin/icons'
 import { addRelatedProduct, removeRelatedProduct, updateProduct } from '../actions'
 
 export default async function EditProductPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase()
+  const id = params.id
 
-  const { data: product } = await supabase.from('products').select('*').eq('id', params.id).maybeSingle()
+  // Everything keys off the id in the URL, so it runs as one parallel batch.
+  const [
+    { data: product },
+    { data: categories },
+    { data: ageGroups },
+    { data: subcategories },
+    { data: pivots },
+    { data: images },
+    { data: relatedPivots },
+  ] = await Promise.all([
+    supabase.from('products').select('*').eq('id', id).maybeSingle(),
+    supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
+    supabase.from('age_groups').select('id, label').order('sort_order', { ascending: true }),
+    supabase.from('subcategories').select('id, name, emoji, category_id').order('display_order', { ascending: true }),
+    supabase.from('product_age_groups').select('age_group_id').eq('product_id', id),
+    supabase.from('product_images').select('*').eq('product_id', id).order('sort_order', { ascending: true }),
+    // No embed: product_related has two FKs to products (product_id AND
+    // related_product_id), which makes PostgREST embeds ambiguous. Fetch
+    // the pivot rows, then look up names separately and join in JS.
+    supabase.from('product_related').select('id, related_product_id').eq('product_id', id).order('sort_order', { ascending: true }),
+  ])
   if (!product) notFound()
 
-  const [{ data: categories }, { data: ageGroups }, { data: subcategories }, { data: pivots }, { data: images }, { data: relatedPivots }, { data: otherProducts }] =
-    await Promise.all([
-      supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
-      supabase.from('age_groups').select('id, label').order('sort_order', { ascending: true }),
-      supabase.from('subcategories').select('id, name, emoji, category_id').order('display_order', { ascending: true }),
-      supabase.from('product_age_groups').select('age_group_id').eq('product_id', product.id),
-      supabase.from('product_images').select('*').eq('product_id', product.id).order('sort_order', { ascending: true }),
-      // No embed: product_related has two FKs to products (product_id AND
-      // related_product_id), which makes PostgREST embeds ambiguous. Fetch
-      // the pivot rows, then look up names separately and join in JS.
-      supabase
-        .from('product_related')
-        .select('id, related_product_id')
-        .eq('product_id', product.id)
-        .order('sort_order', { ascending: true }),
-      supabase.from('products').select('id, name').eq('is_published', true).neq('id', product.id).order('name', { ascending: true }),
-    ])
-
+  // Names of the curated related products (none or a handful).
   const relatedIds = (relatedPivots ?? []).map((r) => r.related_product_id)
   const { data: relatedProductRows } = relatedIds.length
     ? await supabase.from('products').select('id, name').in('id', relatedIds)
@@ -47,8 +51,6 @@ export default async function EditProductPage({ params }: { params: { id: string
   }))
 
   const selectedAgeIds = (pivots ?? []).map((p) => p.age_group_id)
-  const relatedIdSet = new Set(relatedIds)
-  const addableProducts = (otherProducts ?? []).filter((p) => !relatedIdSet.has(p.id))
   const update = updateProduct.bind(null, product.id)
   const addRelated = addRelatedProduct.bind(null, product.id)
 
@@ -163,27 +165,24 @@ export default async function EditProductPage({ params }: { params: { id: string
           <p className="px-6 py-5 text-sm text-slate-500">No related products picked yet.</p>
         )}
 
-        {addableProducts.length > 0 && (
-          <ActionForm
-            action={addRelated}
-            successMessage="Related product added"
-            className="flex flex-wrap gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-4"
-          >
-            <Select
-              name="related_product_id"
-              required
-              aria-label="Product to relate"
-              placeholder="Choose a product to relate…"
-              className="min-w-0 flex-1"
-              searchable
-              options={addableProducts.map((p) => ({ value: p.id, label: p.name }))}
-            />
-            <SubmitButton pendingText="Adding…">
-              <PlusIcon className="h-4 w-4" />
-              Add
-            </SubmitButton>
-          </ActionForm>
-        )}
+        <ActionForm
+          action={addRelated}
+          successMessage="Related product added"
+          className="flex flex-wrap gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-4"
+        >
+          <ProductPicker
+            name="related_product_id"
+            required
+            aria-label="Product to relate"
+            placeholder="Search for a product to relate…"
+            className="min-w-0 flex-1"
+            excludeIds={[product.id, ...relatedIds]}
+          />
+          <SubmitButton pendingText="Adding…">
+            <PlusIcon className="h-4 w-4" />
+            Add
+          </SubmitButton>
+        </ActionForm>
       </Card>
     </Page>
   )

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { CheckIcon, ChevronDownIcon, SearchIcon } from './icons'
+import Spinner from './Spinner'
 
 export interface SelectOption {
   value: string
@@ -63,6 +64,10 @@ export default function Select({
   disabled = false,
   className = 'w-full',
   'aria-label': ariaLabel,
+  onQueryChange,
+  filterLocally = true,
+  loading = false,
+  emptyText = 'No matches',
 }: {
   options: SelectOption[]
   /** Form field name — submits the value through a hidden input. */
@@ -79,6 +84,14 @@ export default function Select({
   /** Layout classes for the control (width, flex) — defaults to full width. */
   className?: string
   'aria-label'?: string
+  /** Server-side search: called with the search text (and '' when the menu opens). */
+  onQueryChange?: (query: string) => void
+  /** Set false when `options` are already filtered (server-side search). */
+  filterLocally?: boolean
+  /** Shows a spinner in the search box (e.g. while a server search runs). */
+  loading?: boolean
+  /** Shown when there are no options to list. */
+  emptyText?: string
 }) {
   const uid = useId()
   const listboxId = `${uid}-listbox`
@@ -101,7 +114,8 @@ export default function Select({
   const current = options.some((o) => o.value === raw) ? raw : ''
   const selected = options.find((o) => o.value === current)
   const isSearchable = searchable === 'auto' ? options.length > 8 : searchable
-  const filtered = filterOptions(options, query)
+  const filtered = filterLocally ? filterOptions(options, query) : options
+  const optionsKey = filtered.map((o) => o.value).join('|')
 
   const place = useCallback(() => {
     const el = triggerRef.current
@@ -121,6 +135,7 @@ export default function Select({
   function openMenu() {
     if (disabled) return
     setQuery('')
+    onQueryChange?.('')
     const idx = options.findIndex((o) => o.value === current && !o.disabled)
     setActive(idx >= 0 ? idx : firstEnabled(options))
     setOpen(true)
@@ -169,6 +184,12 @@ export default function Select({
   useEffect(() => {
     if (menuReady && active >= 0) document.getElementById(optionId(active))?.scrollIntoView({ block: 'nearest' })
   }, [menuReady, active, optionId])
+
+  // Server-side search: new results arrive while open — point at the first one.
+  useEffect(() => {
+    if (open && !filterLocally) setActive(firstEnabled(filtered))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optionsKey, open, filterLocally])
 
   function onTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
     if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
@@ -295,14 +316,16 @@ export default function Select({
                     value={query}
                     onChange={(e) => {
                       setQuery(e.target.value)
-                      setActive(firstEnabled(filterOptions(options, e.target.value)))
+                      onQueryChange?.(e.target.value)
+                      if (filterLocally) setActive(firstEnabled(filterOptions(options, e.target.value)))
                     }}
                     placeholder="Search…"
                     aria-label="Search options"
                     aria-controls={listboxId}
                     aria-activedescendant={active >= 0 ? optionId(active) : undefined}
-                    className="h-9 w-full rounded-lg border-0 bg-slate-50 pl-8 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="h-9 w-full rounded-lg border-0 bg-slate-50 pl-8 pr-8 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
+                  {loading && <Spinner className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />}
                 </div>
               </div>
             )}
@@ -316,7 +339,7 @@ export default function Select({
               className="admin-scroll min-h-0 flex-1 overflow-y-auto p-1.5 focus:outline-none"
             >
               {filtered.length === 0 ? (
-                <p className="px-3 py-6 text-center text-sm text-slate-500">No matches</p>
+                <p className="px-3 py-6 text-center text-sm text-slate-500">{emptyText}</p>
               ) : (
                 filtered.map((o, i) => {
                   const isSelected = o.value === current

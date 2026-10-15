@@ -4,6 +4,7 @@ import { isVideo } from '@/lib/media'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
 import MediaUploadField from '@/components/admin/MediaUploadField'
+import AdminImage from '@/components/admin/AdminImage'
 import { Card, EmptyState, Field, FormActions, Page, PageHeader, buttonClass, iconButtonClass, ui } from '@/components/admin/ui'
 import {
   ExternalLinkIcon,
@@ -113,8 +114,7 @@ export default async function PlayAreaAdminPage() {
                     <VideoIcon className="h-8 w-8" />
                   </span>
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={img.image_url} alt={img.alt_text ?? ''} className="aspect-video w-full object-cover" />
+                  <AdminImage src={img.image_url} alt={img.alt_text ?? ''} width={300} className="aspect-video w-full object-cover" />
                 )}
                 <figcaption className="truncate border-t border-slate-100 bg-white px-3 py-2 text-xs font-medium text-slate-700">
                   {img.alt_text || 'No caption'}
@@ -160,7 +160,7 @@ export default async function PlayAreaAdminPage() {
                   <p className="truncate font-medium text-slate-900">{f.title}</p>
                   {f.description && <p className="truncate text-xs text-slate-500">{f.description}</p>}
                 </div>
-                <Link href={`/admin/play-area/features/${f.id}`} className={iconButtonClass()} title="Edit">
+                <Link prefetch={false} href={`/admin/play-area/features/${f.id}`} className={iconButtonClass()} title="Edit">
                   <PencilIcon className="h-4 w-4" />
                   <span className="sr-only">Edit {f.title}</span>
                 </Link>

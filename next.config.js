@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Don't advertise the framework in every response (`X-Powered-By: Next.js`).
+  poweredByHeader: false,
   // Emit a self-contained server bundle; required by the multi-stage Dockerfile.
   output: 'standalone',
   images: {

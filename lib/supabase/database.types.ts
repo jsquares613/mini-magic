@@ -763,6 +763,11 @@ export interface Database {
       is_admin: { Args: Record<string, never>; Returns: boolean }
       marg_apply_items: { Args: { items: Json }; Returns: Json }
       marg_supplier_counts: { Args: Record<string, never>; Returns: { supplier: string; product_count: number }[] }
+      category_product_counts: { Args: Record<string, never>; Returns: { category_id: string; total: number; published: number }[] }
+      enquiry_status_counts: {
+        Args: { p_type?: Database['public']['Enums']['enquiry_type'] | null }
+        Returns: { status: Database['public']['Enums']['enquiry_status']; total: number }[]
+      }
     }
     Enums: {
       price_display: 'show' | 'hide' | 'enquire'

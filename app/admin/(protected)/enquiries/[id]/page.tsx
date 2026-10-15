@@ -23,16 +23,17 @@ const formatWhen = (iso: string) => new Date(iso).toLocaleString('en-IN', { date
 
 export default async function EnquiryDetailPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase()
-  const { data: enquiry } = await supabase.from('enquiries').select('*').eq('id', params.id).maybeSingle()
+  // Enquiry, notes and staff only need the URL id — fetch them together.
+  const [{ data: enquiry }, { data: notes }, { data: staff }] = await Promise.all([
+    supabase.from('enquiries').select('*').eq('id', params.id).maybeSingle(),
+    supabase.from('enquiry_notes').select('*').eq('enquiry_id', params.id).order('created_at', { ascending: true }),
+    supabase.from('profiles').select('id, email, role'),
+  ])
   if (!enquiry) notFound()
 
-  const [{ data: notes }, { data: staff }, productRes] = await Promise.all([
-    supabase.from('enquiry_notes').select('*').eq('enquiry_id', enquiry.id).order('created_at', { ascending: true }),
-    supabase.from('profiles').select('id, email, role'),
-    enquiry.product_id
-      ? supabase.from('products').select('name, slug').eq('id', enquiry.product_id).maybeSingle()
-      : Promise.resolve({ data: null }),
-  ])
+  const productRes = enquiry.product_id
+    ? await supabase.from('products').select('name, slug').eq('id', enquiry.product_id).maybeSingle()
+    : { data: null }
 
   // WhatsApp needs the country code; bare 10-digit numbers are Indian.
   const digits = enquiry.phone.replace(/\D/g, '')

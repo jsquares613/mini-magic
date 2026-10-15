@@ -170,6 +170,43 @@ export const ChevronLeftIcon: Icon = (p) => (
   </Svg>
 )
 
+export const ChevronUpIcon: Icon = (p) => (
+  <Svg {...p}>
+    <path d="m18 15-6-6-6 6" />
+  </Svg>
+)
+
+export const GripIcon: Icon = (p) => (
+  <Svg {...p}>
+    <circle cx="9" cy="5" r="1" />
+    <circle cx="9" cy="12" r="1" />
+    <circle cx="9" cy="19" r="1" />
+    <circle cx="15" cy="5" r="1" />
+    <circle cx="15" cy="12" r="1" />
+    <circle cx="15" cy="19" r="1" />
+  </Svg>
+)
+
+export const LayoutGridIcon: Icon = (p) => (
+  <Svg {...p}>
+    <rect width="7" height="7" x="3" y="3" rx="1" />
+    <rect width="7" height="7" x="14" y="3" rx="1" />
+    <rect width="7" height="7" x="14" y="14" rx="1" />
+    <rect width="7" height="7" x="3" y="14" rx="1" />
+  </Svg>
+)
+
+export const ListIcon: Icon = (p) => (
+  <Svg {...p}>
+    <line x1="8" x2="21" y1="6" y2="6" />
+    <line x1="8" x2="21" y1="12" y2="12" />
+    <line x1="8" x2="21" y1="18" y2="18" />
+    <line x1="3" x2="3.01" y1="6" y2="6" />
+    <line x1="3" x2="3.01" y1="12" y2="12" />
+    <line x1="3" x2="3.01" y1="18" y2="18" />
+  </Svg>
+)
+
 export const ChevronDownIcon: Icon = (p) => (
   <Svg {...p}>
     <path d="m6 9 6 6 6-6" />

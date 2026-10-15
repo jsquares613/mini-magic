@@ -4,6 +4,7 @@ import { isVideo } from '@/lib/media'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
 import MediaUploadField from '@/components/admin/MediaUploadField'
+import AdminImage from '@/components/admin/AdminImage'
 import { Avatar, Badge, Card, EmptyState, Field, FormActions, Page, PageHeader, buttonClass, iconButtonClass, ui } from '@/components/admin/ui'
 import {
   BarChartIcon,
@@ -192,8 +193,7 @@ export default async function AboutAdminPage() {
             {team.map((m) => (
               <li key={m.id} className={ui.row}>
                 {m.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.image} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200" />
+                  <AdminImage src={m.image} width={40} className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200" />
                 ) : (
                   <Avatar name={m.name} />
                 )}
@@ -213,7 +213,7 @@ export default async function AboutAdminPage() {
                     <span className="sr-only">{m.active ? 'Hide' : 'Show'} {m.name}</span>
                   </SubmitButton>
                 </ActionForm>
-                <Link href={`/admin/about/team/${m.id}`} className={iconButtonClass()} title="Edit">
+                <Link prefetch={false} href={`/admin/about/team/${m.id}`} className={iconButtonClass()} title="Edit">
                   <PencilIcon className="h-4 w-4" />
                   <span className="sr-only">Edit {m.name}</span>
                 </Link>
@@ -259,8 +259,7 @@ export default async function AboutAdminPage() {
                     <VideoIcon className="h-8 w-8" />
                   </span>
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.image} alt={item.label} className="aspect-square w-full object-cover" />
+                  <AdminImage src={item.image} alt={item.label} width={220} className="aspect-square w-full object-cover" />
                 )}
                 <figcaption className="truncate border-t border-slate-100 bg-white px-3 py-2 text-xs font-medium text-slate-700">
                   {item.label || 'No label'}

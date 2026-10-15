@@ -20,6 +20,7 @@ import {
   SparklesIcon,
   StarIcon,
 } from './icons'
+import AdminImage from './AdminImage'
 import Select from './Select'
 import Spinner from './Spinner'
 import { Badge, EmptyState, buttonClass, iconButtonClass, ui, type Tone } from './ui'
@@ -195,13 +196,7 @@ export default function ProductTable({
                     <td className={`py-3 pr-4 ${canWrite ? 'pl-2' : 'pl-5'}`}>
                       <div className="flex items-center gap-3">
                         {p.thumb ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={p.thumb}
-                            alt=""
-                            loading="lazy"
-                            className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 bg-slate-50 object-cover"
-                          />
+                          <AdminImage src={p.thumb} width={44} className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 bg-slate-50 object-cover" />
                         ) : (
                           <span
                             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-300"
@@ -212,7 +207,7 @@ export default function ProductTable({
                         )}
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <Link href={`/admin/products/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
+                            <Link prefetch={false} href={`/admin/products/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
                               {p.name}
                             </Link>
                             {p.popular && (
@@ -294,6 +289,7 @@ export default function ProductTable({
                           </a>
                         )}
                         <Link
+                          prefetch={false}
                           href={`/admin/products/${p.id}`}
                           title="Edit"
                           className={iconButtonClass('default', 'hover:bg-blue-50 hover:text-blue-700')}

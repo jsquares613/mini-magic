@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { canWrite, getCurrentProfile } from '@/lib/supabase/auth'
-import { toSupabaseTransformUrl } from '@/lib/supabase/imageTransform'
 import { formatPrice, timeAgo } from '@/lib/format'
 import { stockStatusOf } from '@/lib/stock'
 import {
@@ -49,7 +48,13 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const from = (page - 1) * PAGE_SIZE
 
   const supabase = createServerSupabase()
-  let query = supabase.from('products').select('*', { count: 'exact' })
+  // Only the columns the table shows — descriptions/SEO text stay on the server.
+  let query = supabase
+    .from('products')
+    .select(
+      'id, name, slug, marg_code, marg_name, marg_company, category_id, price, sale_price, price_display, marg_stock, available, stock_status_override, popular, new_arrival, is_published, marg_deleted_at, marg_missing_since',
+      { count: 'exact' },
+    )
   const tree = toLogicTree(productFilterConditions(filters))
   if (tree) query = query.or(tree)
 
@@ -63,7 +68,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   }
 
   const [
-    { data: products, count },
+    { data: products, count, error },
     viewCountList,
     issueCountList,
     { data: categories },
@@ -91,6 +96,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         .maybeSingle(),
       getCurrentProfile(),
     ])
+  if (error) throw new Error(`Could not load products: ${error.message}`)
   const viewCounts = Object.fromEntries(viewCountList) as Record<ProductView, number>
   const issueCounts = Object.fromEntries(issueCountList) as Record<ProductIssue, number>
 
@@ -120,7 +126,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
       margCode: p.marg_code,
       margName: p.marg_name && p.marg_name !== p.name ? p.marg_name : null,
       supplier: p.marg_company,
-      thumb: thumb ? toSupabaseTransformUrl(thumb, { width: 96 }) : null,
+      thumb: thumb ?? null,
       category: p.category_id ? catName.get(p.category_id) ?? null : null,
       priceText: showPrice
         ? formatPrice(onSale ? (p.sale_price as number) : (p.price as number))
