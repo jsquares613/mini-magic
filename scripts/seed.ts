@@ -144,6 +144,8 @@ async function main() {
         features: p.features,
         popular: p.isPopular,
         new_arrival: p.isNew,
+        // New Arrivals are date-based now: only the sample "new" products start as new stock.
+        new_since: p.isNew ? new Date().toISOString() : null,
         display_order: p.displayOrder,
         seo_title: p.seo?.metaTitle ?? null,
         seo_description: p.seo?.metaDescription ?? null,

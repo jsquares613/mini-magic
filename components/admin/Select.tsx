@@ -68,6 +68,8 @@ export default function Select({
   filterLocally = true,
   loading = false,
   emptyText = 'No matches',
+  variant = 'default',
+  inlineLabel,
 }: {
   options: SelectOption[]
   /** Form field name — submits the value through a hidden input. */
@@ -92,6 +94,10 @@ export default function Select({
   loading?: boolean
   /** Shown when there are no options to list. */
   emptyText?: string
+  /** 'ghost': no border or shadow, for a select that sits inside another control (e.g. a search bar). */
+  variant?: 'default' | 'ghost'
+  /** Muted label shown before the value on the button, e.g. "In". */
+  inlineLabel?: string
 }) {
   const uid = useId()
   const listboxId = `${uid}-listbox`
@@ -269,16 +275,25 @@ export default function Select({
         disabled={disabled}
         onClick={() => (open ? closeMenu(false) : openMenu())}
         onKeyDown={onTriggerKeyDown}
-        className={`flex h-10 w-full min-w-0 items-center gap-2 rounded-lg border bg-white px-3 text-left text-sm shadow-sm transition focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
-          invalid
-            ? 'border-rose-400 ring-4 ring-rose-500/10'
-            : open
-              ? 'border-blue-500 ring-4 ring-blue-500/10'
-              : 'border-slate-300 hover:border-slate-400 focus-visible:border-blue-500 focus-visible:ring-4 focus-visible:ring-blue-500/10'
-        }`}
+        className={
+          variant === 'ghost'
+            ? `flex h-9 w-full min-w-0 items-center gap-1.5 rounded-lg px-2.5 text-left text-sm transition focus-visible:outline-none disabled:cursor-not-allowed disabled:text-slate-400 ${
+                open ? 'bg-slate-100' : 'hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/30'
+              }`
+            : `flex h-10 w-full min-w-0 items-center gap-2 rounded-lg border bg-white px-3 text-left text-sm shadow-sm transition focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
+                invalid
+                  ? 'border-rose-400 ring-4 ring-rose-500/10'
+                  : open
+                    ? 'border-blue-500 ring-4 ring-blue-500/10'
+                    : 'border-slate-300 hover:border-slate-400 focus-visible:border-blue-500 focus-visible:ring-4 focus-visible:ring-blue-500/10'
+              }`
+        }
       >
+        {inlineLabel && <span className="shrink-0 text-slate-500">{inlineLabel}</span>}
         {selected?.icon && <span className="flex shrink-0 items-center">{selected.icon}</span>}
-        <span className={`min-w-0 flex-1 truncate ${selected ? 'text-slate-900' : 'text-slate-400'}`}>{selected ? selected.label : placeholder}</span>
+        <span className={`min-w-0 flex-1 truncate ${selected ? `text-slate-900 ${inlineLabel ? 'font-medium' : ''}` : 'text-slate-400'}`}>
+          {selected ? selected.label : placeholder}
+        </span>
         <ChevronDownIcon className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
 

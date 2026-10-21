@@ -1,5 +1,7 @@
 import { repositories } from '@/lib/supabase'
 import { getCategoryIdToSlugMap, getSubcategoryIdToSlugMap } from '@/lib/categories'
+import { getNewArrivalDays } from '@/lib/settings'
+import { NEW_ARRIVALS_RAIL_SIZE, isNewArrival } from '@/lib/newArrivals'
 import { stockStatusOf } from '@/lib/stock'
 import type { Product, ProductWithPricing } from '@/types'
 import type { ProductRow } from '@/lib/supabase/repositories/products'
@@ -18,7 +20,14 @@ import type { ProductRow } from '@/lib/supabase/repositories/products'
  * products costs one categories round trip, not fifty.
  */
 
-function toProduct(row: ProductRow, categorySlug: string, images: string[] = [], subcategorySlug?: string): Product {
+function toProduct(
+  row: ProductRow,
+  categorySlug: string,
+  /** The `new_arrival_days` setting — decides `isNew`. */
+  newArrivalDays: number,
+  images: string[] = [],
+  subcategorySlug?: string,
+): Product {
   return {
     id: row.id,
     slug: row.slug,
@@ -36,7 +45,7 @@ function toProduct(row: ProductRow, categorySlug: string, images: string[] = [],
     stockStatus: stockStatusOf(row),
     isFeatured: false,
     isPopular: row.popular,
-    isNew: row.new_arrival,
+    isNew: isNewArrival(row.arrived_at, newArrivalDays),
     promoTag: row.promo_tag ?? null,
     tags: row.tags,
     features: row.features,
@@ -47,16 +56,18 @@ function toProduct(row: ProductRow, categorySlug: string, images: string[] = [],
 }
 
 async function toProducts(rows: ProductRow[]): Promise<Product[]> {
-  const [idToSlug, subIdToSlug, imagesByProduct] = await Promise.all([
+  const [idToSlug, subIdToSlug, imagesByProduct, newArrivalDays] = await Promise.all([
     getCategoryIdToSlugMap(),
     getSubcategoryIdToSlugMap(),
     repositories.products.getImagesByProductIds(rows.map((r) => r.id)),
+    getNewArrivalDays(),
   ])
   return rows.map((row) =>
     toProduct(
       row,
       // Storefront reads only see published rows, which always have a category.
       row.category_id ? idToSlug.get(row.category_id) ?? row.category_id : '',
+      newArrivalDays,
       (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url),
       row.subcategory_id ? subIdToSlug.get(row.subcategory_id) : undefined,
     ),
@@ -78,12 +89,13 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
-  const detail = await repositories.products.getProductBySlug(slug)
+  const [detail, newArrivalDays] = await Promise.all([repositories.products.getProductBySlug(slug), getNewArrivalDays()])
   if (!detail) return undefined
   return {
     ...toProduct(
       detail,
       detail.category?.slug ?? detail.category_id ?? '',
+      newArrivalDays,
       detail.images.map((i) => i.image_url),
     ),
     ageGroup: detail.ageGroups.map((a) => a.label).join(', '),
@@ -92,14 +104,16 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
 
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const rows = await repositories.products.getProductsByCategory(categorySlug)
-  const [subIdToSlug, imagesByProduct] = await Promise.all([
+  const [subIdToSlug, imagesByProduct, newArrivalDays] = await Promise.all([
     getSubcategoryIdToSlugMap(),
     repositories.products.getImagesByProductIds(rows.map((r) => r.id)),
+    getNewArrivalDays(),
   ])
   return rows.map((row) =>
     toProduct(
       row,
       categorySlug,
+      newArrivalDays,
       (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url),
       row.subcategory_id ? subIdToSlug.get(row.subcategory_id) : undefined,
     ),
@@ -114,8 +128,24 @@ export async function getPopularProducts(limit?: number): Promise<Product[]> {
   return toProducts(await repositories.products.getPopularProducts(limit))
 }
 
+/** The newest arrivals, newest first — the homepage rail. */
 export async function getNewProducts(limit?: number): Promise<Product[]> {
   return toProducts(await repositories.products.getNewProducts(limit))
+}
+
+/** The most the New Arrivals page lists. */
+const NEW_ARRIVALS_PAGE_MAX = 96
+
+/**
+ * The New Arrivals page: every product still within its "new" period, newest
+ * first — or, when fewer than a rail's worth are, the latest arrivals anyway, so
+ * the page never looks bare between deliveries.
+ */
+export async function getNewArrivals(): Promise<Product[]> {
+  const [rows, days] = await Promise.all([repositories.products.getNewProducts(NEW_ARRIVALS_PAGE_MAX), getNewArrivalDays()])
+  const now = Date.now()
+  const current = rows.filter((r) => isNewArrival(r.arrived_at, days, now))
+  return toProducts(current.length >= NEW_ARRIVALS_RAIL_SIZE ? current : rows.slice(0, NEW_ARRIVALS_RAIL_SIZE))
 }
 
 /** Products that have an active sale price, deepest discount first. */

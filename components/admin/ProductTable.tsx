@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { bulkUpdateProducts, type BulkOperation } from '@/app/admin/(protected)/products/actions'
 import { isActionError } from '@/lib/admin/actionResult'
-import type { ProductListFilters } from '@/lib/admin/productFilters'
+import { matchRanges, type ProductListFilters } from '@/lib/admin/productFilters'
 import type { Tables } from '@/lib/supabase/database.types'
 import {
   AlertTriangleIcon,
@@ -18,8 +18,10 @@ import {
   ShapesIcon,
   SparklesIcon,
   StarIcon,
+  XCircleIcon,
 } from './icons'
 import AdminImage from './AdminImage'
+import Highlight from './Highlight'
 import IntentLink from './IntentLink'
 import Select from './Select'
 import Spinner from './Spinner'
@@ -42,7 +44,8 @@ export interface ProductTableRow {
   priceMuted: boolean
   stock: { label: string; tone: Tone; title?: string }
   popular: boolean
-  newArrival: boolean
+  /** "New" (a live new arrival) or "New stock" (not published yet); null otherwise. */
+  newArrival: { label: string; title: string } | null
   published: boolean
   /** Draft that meets every publishing requirement. */
   ready: boolean
@@ -93,6 +96,14 @@ export default function ProductTable({
     setSelected(new Set())
     setAllMatching(false)
   }, [rows])
+
+  /** `text` with the current search marked, if the search looks in `field`. */
+  const hl = (text: string, field: 'name' | 'marg' | 'code') => (
+    <Highlight
+      text={text}
+      ranges={filters.by === '' || filters.by === field ? matchRanges(text, filters.q, filters.match, field === 'code') : []}
+    />
+  )
 
   const allOnPage = rows.length > 0 && rows.every((r) => selected.has(r.id))
   const someOnPage = rows.some((r) => selected.has(r.id))
@@ -208,7 +219,8 @@ export default function ProductTable({
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <IntentLink href={`/admin/products/${p.id}`} className="font-medium text-slate-900 hover:text-blue-700 hover:underline">
-                              {p.name}
+                              {/* A Marg name equal to the website name isn't shown separately, so its match marks the name. */}
+                              {hl(p.name, filters.by === 'marg' && !p.margName ? 'marg' : 'name')}
                             </IntentLink>
                             {p.popular && (
                               <Badge tone="amber" icon={StarIcon}>
@@ -216,19 +228,19 @@ export default function ProductTable({
                               </Badge>
                             )}
                             {p.newArrival && (
-                              <Badge tone="blue" icon={SparklesIcon}>
-                                New
+                              <Badge tone="blue" icon={SparklesIcon} title={p.newArrival.title}>
+                                {p.newArrival.label}
                               </Badge>
                             )}
                           </div>
                           {(p.margCode || p.supplier) && (
                             <p className="mt-0.5 truncate text-xs text-slate-400">
-                              {p.margCode && <span className="font-mono">#{p.margCode}</span>}
+                              {p.margCode && <span className="font-mono">#{hl(p.margCode, 'code')}</span>}
                               {p.margCode && p.supplier && ' · '}
                               {p.supplier}
                             </p>
                           )}
-                          {p.margName && <p className="truncate text-xs text-slate-400">Marg name: {p.margName}</p>}
+                          {p.margName && <p className="truncate text-xs text-slate-400">Marg name: {hl(p.margName, 'marg')}</p>}
                         </div>
                       </div>
                     </td>
@@ -355,6 +367,18 @@ export default function ProductTable({
                   description: 'Hide them from the website',
                   icon: <EyeOffIcon className="h-4 w-4 text-slate-500" />,
                 },
+                {
+                  value: 'mark-new',
+                  label: 'Mark as new arrival',
+                  description: 'Show them first in New Arrivals',
+                  icon: <SparklesIcon className="h-4 w-4 text-blue-600" />,
+                },
+                {
+                  value: 'unmark-new',
+                  label: 'Remove from New Arrivals',
+                  description: 'Stop showing them as new',
+                  icon: <XCircleIcon className="h-4 w-4 text-slate-500" />,
+                },
               ]}
             />
 
@@ -387,6 +411,9 @@ export default function ProductTable({
             )}
             {op === 'publish' && (
               <span className="text-xs text-slate-500">Only products with a category and at least one photo are published.</span>
+            )}
+            {op === 'mark-new' && (
+              <span className="text-xs text-slate-500">Drafts join New Arrivals when they’re published.</span>
             )}
 
             <div className="ml-auto flex gap-2">

@@ -115,7 +115,13 @@ export interface Database {
           tags: string[]
           features: string[]
           popular: boolean
+          /** Legacy hand-ticked flag — no longer read; New Arrivals use the dates below. */
           new_arrival: boolean
+          /** Became new stock (new Marg code, added by hand, or marked by staff); null = not new. */
+          new_since: string | null
+          first_published_at: string | null
+          /** Generated: later of new_since and first_published_at; null until both are set. */
+          arrived_at: string | null
           promo_tag: string | null
           display_order: number
           seo_title: string | null
@@ -155,6 +161,10 @@ export interface Database {
           features?: string[]
           popular?: boolean
           new_arrival?: boolean
+          new_since?: string | null
+          first_published_at?: string | null
+          /** Generated column — the database computes it. */
+          arrived_at?: never
           promo_tag?: string | null
           display_order?: number
           seo_title?: string | null

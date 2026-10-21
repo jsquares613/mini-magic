@@ -7,10 +7,16 @@ import {
   PRODUCT_ISSUES,
   PRODUCT_SOURCES,
   PRODUCT_VIEWS,
+  SEARCH_FIELDS,
+  SEARCH_MATCHES,
+  describeSearch,
   productListHref,
+  searchPlaceholder,
   type ProductIssue,
   type ProductListFilters,
   type ProductView,
+  type SearchField,
+  type SearchMatch,
 } from '@/lib/admin/productFilters'
 import {
   AlertTriangleIcon,
@@ -23,6 +29,7 @@ import {
   RefreshIcon,
   SearchIcon,
   ShapesIcon,
+  SparklesIcon,
   TruckIcon,
   XCircleIcon,
   XIcon,
@@ -30,9 +37,10 @@ import {
 } from './icons'
 import Select from './Select'
 import Spinner from './Spinner'
-import { buttonClass, ui } from './ui'
+import { buttonClass } from './ui'
 
 type ListParams = Partial<ProductListFilters & { page: number }>
+type SearchOptions = Pick<ProductListFilters, 'by' | 'match'>
 
 const SOURCE_ICON: Record<ProductListFilters['source'], React.ReactNode> = {
   '': <LayersIcon className="h-4 w-4 text-slate-400" />,
@@ -43,6 +51,7 @@ const SOURCE_ICON: Record<ProductListFilters['source'], React.ReactNode> = {
 /** "Needs attention" chips: icon + colours used while the count is non-zero. */
 const ISSUE_STYLE: Record<ProductIssue, { icon: Icon; iconClass: string; countClass: string }> = {
   ready: { icon: CheckCircleIcon, iconClass: 'text-teal-600', countClass: 'bg-teal-50 text-teal-700' },
+  'new-stock': { icon: SparklesIcon, iconClass: 'text-blue-600', countClass: 'bg-blue-50 text-blue-700' },
   'missing-photo': { icon: ImageIcon, iconClass: 'text-amber-600', countClass: 'bg-amber-50 text-amber-700' },
   'no-category': { icon: ShapesIcon, iconClass: 'text-amber-600', countClass: 'bg-amber-50 text-amber-700' },
   'out-of-stock': { icon: XCircleIcon, iconClass: 'text-rose-600', countClass: 'bg-rose-50 text-rose-700' },
@@ -81,16 +90,82 @@ export default function ProductListShell({
   const [pending, startTransition] = useTransition()
 
   const [q, setQ] = useState(filters.q)
-  // The last search we navigated to — so a slow response doesn't overwrite
-  // what the user has typed since, while back/forward still updates the box.
+  // The last search we navigated to. Lets back/forward update the box without an
+  // older, slower result overwriting what the user has typed since.
   const lastPushedQ = useRef(filters.q)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Current values for the URL-sync effect below (it only re-runs when the URL changes).
+  const typed = useRef(q)
+  typed.current = q
+  const busy = useRef(pending)
+  busy.current = pending
+  // Search options (field + match type). A ref too, so a debounced search that fires
+  // right after a change uses the new options rather than those from when the timer started.
+  const [options, setOptions] = useState<SearchOptions>({ by: filters.by, match: filters.match })
+  const optionsRef = useRef(options)
+  optionsRef.current = options
 
-  const hrefFor = (params: ListParams) => productListHref({ ...filters, page, ...params })
+  const hrefFor = (params: ListParams) => productListHref({ ...filters, ...optionsRef.current, page, ...params })
 
-  function navigate(params: ListParams, scroll = false) {
-    if (params.q !== undefined) lastPushedQ.current = params.q
-    startTransition(() => router.push(hrefFor(params), { scroll }))
+  function cancelSearchTimer() {
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = null
   }
+
+  /** `replace` keeps history clean while a search is refined, so Back leaves the search. */
+  function navigate(params: ListParams, scroll = false, replace = false) {
+    if (params.q !== undefined) {
+      lastPushedQ.current = params.q
+      cancelSearchTimer()
+    }
+    const href = hrefFor(params)
+    startTransition(() => (replace ? router.replace(href, { scroll }) : router.push(href, { scroll })))
+  }
+
+  /** Run the search now (debounce, Enter, clear). Starting a search adds a history entry; refining it doesn't. */
+  function search(value: string) {
+    const next = value.trim()
+    if (next === lastPushedQ.current) return cancelSearchTimer()
+    navigate({ q: next, page: 1 }, false, lastPushedQ.current !== '')
+  }
+
+  /** New field or match type: re-run whatever is in the box; an empty box just remembers it. */
+  function changeOptions(patch: Partial<SearchOptions>) {
+    const next = { ...optionsRef.current, ...patch }
+    setOptions(next)
+    optionsRef.current = next
+    const text = q.trim()
+    if (text || lastPushedQ.current) navigate({ q: text, page: 1 }, false, lastPushedQ.current !== '')
+  }
+
+  // Back/forward to a search made with other options.
+  useEffect(() => setOptions({ by: filters.by, match: filters.match }), [filters.by, filters.match])
+
+  function clearSearch() {
+    setQ('')
+    search('')
+    inputRef.current?.focus()
+  }
+
+  // "/" anywhere on the page (outside a text field) jumps to the search box.
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [focused, setFocused] = useState(false)
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return
+      const t = e.target instanceof HTMLElement ? e.target : null
+      if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return
+      e.preventDefault()
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const phrase = describeSearch(filters.by, filters.match)
+  const otherFilters = Boolean(filters.view !== 'all' || filters.issue || filters.supplier || filters.source)
+  const suggestion = 'rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-800 transition hover:border-blue-300 hover:bg-blue-100'
 
   /** Plain clicks navigate in-page (with pending state); modified clicks keep normal link behaviour. */
   function onLinkClick(e: React.MouseEvent<HTMLAnchorElement>, params: ListParams, scroll = false) {
@@ -99,19 +174,20 @@ export default function ProductListShell({
     navigate(params, scroll)
   }
 
+  // The URL's search changed without us (back/forward, a link): show it in the box —
+  // unless the user is mid-search, in which case this is an older result landing.
   useEffect(() => {
-    if (filters.q !== lastPushedQ.current) {
-      lastPushedQ.current = filters.q
-      setQ(filters.q)
-    }
+    if (filters.q === lastPushedQ.current) return
+    if (busy.current || typed.current.trim() !== lastPushedQ.current) return
+    lastPushedQ.current = filters.q
+    setQ(filters.q)
   }, [filters.q])
 
   // Search as you type (debounced).
   useEffect(() => {
-    const next = q.trim()
-    if (next === lastPushedQ.current) return
-    const timer = setTimeout(() => navigate({ q: next, page: 1 }), 400)
-    return () => clearTimeout(timer)
+    if (q.trim() === lastPushedQ.current) return
+    searchTimer.current = setTimeout(() => search(q), 350)
+    return cancelSearchTimer
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q])
 
@@ -145,38 +221,7 @@ export default function ProductListShell({
           })}
         </nav>
 
-        <div className="flex w-full flex-wrap items-center gap-2 lg:ml-auto lg:w-auto lg:flex-nowrap">
-          <div className="relative w-full sm:w-64">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') navigate({ q: q.trim(), page: 1 })
-              }}
-              placeholder="Search name or Marg code"
-              aria-label="Search products"
-              enterKeyHint="search"
-              className={`${ui.control} w-full pl-9 pr-9`}
-            />
-            {pending ? (
-              <Spinner className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            ) : (
-              q && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQ('')
-                    navigate({ q: '', page: 1 })
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                  aria-label="Clear search"
-                >
-                  <XIcon className="h-4 w-4" />
-                </button>
-              )
-            )}
-          </div>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap lg:ml-auto">
           <Select
             aria-label="Supplier"
             className="w-full sm:w-56"
@@ -196,6 +241,114 @@ export default function ProductListShell({
             options={PRODUCT_SOURCES.map((s) => ({ value: s.key, label: s.label, icon: SOURCE_ICON[s.key] }))}
           />
         </div>
+      </div>
+
+      {/* Search bar: the text, plus where it looks and how it must match */}
+      <div
+        role="search"
+        className={`${filters.q ? 'mb-2' : 'mb-4'} flex flex-col rounded-xl border border-slate-300 bg-white shadow-sm transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 hover:border-slate-400 focus-within:hover:border-blue-500 sm:flex-row sm:items-center`}
+      >
+        <div className="relative flex min-w-0 flex-1 items-center">
+          <SearchIcon className="pointer-events-none absolute left-3.5 h-[18px] w-[18px] text-slate-400" />
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') search(q)
+              if (e.key === 'Escape' && q) {
+                setQ('')
+                search('')
+              }
+            }}
+            placeholder={searchPlaceholder(options.by, options.match)}
+            aria-label="Search products"
+            enterKeyHint="search"
+            autoComplete="off"
+            spellCheck={false}
+            className="h-11 w-full min-w-0 rounded-xl bg-transparent pl-10 pr-11 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+          />
+          <span className="absolute right-2.5 flex items-center">
+            {pending ? (
+              <Spinner className="h-4 w-4 text-slate-400" />
+            ) : q ? (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                aria-label="Clear search"
+                title="Clear (Esc)"
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            ) : (
+              !focused && (
+                <kbd
+                  className="hidden h-5 items-center rounded border border-slate-200 bg-slate-50 px-1.5 font-sans text-[11px] font-medium text-slate-400 sm:inline-flex"
+                  title="Press / to search"
+                >
+                  /
+                </kbd>
+              )
+            )}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 border-t border-slate-200 p-1 sm:border-l sm:border-t-0">
+          <Select
+            variant="ghost"
+            inlineLabel="In"
+            aria-label="Search in"
+            className="min-w-0 flex-1 sm:w-44 sm:flex-none"
+            value={options.by}
+            onChange={(v) => changeOptions({ by: v as SearchField })}
+            searchable={false}
+            options={SEARCH_FIELDS.map((f) => ({ value: f.key, label: f.label }))}
+          />
+          <span className="h-5 w-px shrink-0 bg-slate-200" aria-hidden="true" />
+          <Select
+            variant="ghost"
+            inlineLabel="Match"
+            aria-label="Match"
+            className="min-w-0 flex-1 sm:w-44 sm:flex-none"
+            value={options.match}
+            onChange={(v) => changeOptions({ match: v as SearchMatch })}
+            searchable={false}
+            options={SEARCH_MATCHES.map((m) => ({ value: m.key, label: m.label, description: m.description }))}
+          />
+        </div>
+      </div>
+
+      {/* What the search found — and quick ways out when it found nothing */}
+      <div className={`text-sm text-slate-500 ${filters.q ? 'mb-4' : ''}`} aria-live="polite">
+        {filters.q && (
+          <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 transition-opacity ${pending ? 'opacity-60' : ''}`}>
+            <span>
+              <span className="font-semibold tabular-nums text-slate-900">{fmt(total)}</span> {total === 1 ? 'product' : 'products'}{' '}
+              {phrase[0]} “<span className="font-medium text-slate-900">{filters.q}</span>”{phrase[1] && ` ${phrase[1]}`}
+              {otherFilters && ' · with the filters above'}
+            </span>
+            {total === 0 && filters.match !== '' && (
+              <button type="button" className={suggestion} onClick={() => changeOptions({ match: '' })}>
+                Try “Contains”
+              </button>
+            )}
+            {total === 0 && filters.by !== '' && (
+              <button type="button" className={suggestion} onClick={() => changeOptions({ by: '' })}>
+                Search all fields
+              </button>
+            )}
+            {total === 0 && otherFilters && (
+              <button type="button" className={suggestion} onClick={() => navigate({ view: 'all', issue: '', supplier: '', source: '', page: 1 })}>
+                Search all products
+              </button>
+            )}
+            <button type="button" onClick={clearSearch} className="font-medium text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline">
+              Clear search
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Needs attention — combines with the view above */}
@@ -240,7 +393,9 @@ export default function ProductListShell({
             type="button"
             onClick={() => {
               setQ('')
-              navigate({ view: 'all', issue: '', q: '', supplier: '', source: '', page: 1 })
+              setOptions({ by: '', match: '' })
+              optionsRef.current = { by: '', match: '' }
+              navigate({ view: 'all', issue: '', q: '', by: '', match: '', supplier: '', source: '', page: 1 })
             }}
             className={buttonClass('ghost', 'sm', 'ml-auto')}
           >

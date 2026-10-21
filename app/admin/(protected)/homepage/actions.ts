@@ -6,6 +6,7 @@ import { createAdminSupabase } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, bool, dateTime } from '@/lib/admin/form'
+import { NEW_ARRIVAL_MAX_DAYS } from '@/lib/newArrivals'
 
 function revalidateHome() {
   revalidatePath('/admin/homepage')
@@ -81,6 +82,19 @@ export async function removeFeaturedProduct(id: string): Promise<{ error: string
   const { error } = await supabase.from('homepage_featured_products').delete().eq('id', id)
   if (error) return { error: error.message }
   revalidateHome()
+}
+
+/* ------------------------------ New Arrivals ---------------------------- */
+/** How many days a product counts as new (see lib/newArrivals.ts). */
+export async function updateNewArrivalDays(formData: FormData): Promise<{ error: string } | void> {
+  await requireStaff('editor')
+  const days = int(formData, 'days')
+  if (days < 1 || days > NEW_ARRIVAL_MAX_DAYS) return { error: `Enter a number of days from 1 to ${NEW_ARRIVAL_MAX_DAYS}.` }
+  const supabase = createAdminSupabase()
+  const { error } = await supabase.from('site_settings').upsert({ key: 'new_arrival_days', value: days }, { onConflict: 'key' })
+  if (error) return { error: error.message }
+  // Which products count as new changes everywhere they're listed.
+  revalidatePath('/', 'layout')
 }
 
 /* --------------------------- Promotional banners ------------------------ */

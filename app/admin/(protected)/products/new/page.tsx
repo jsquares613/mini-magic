@@ -1,4 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase/server'
+import { newArrivalSwitch, NEW_ARRIVAL_DEFAULT_DAYS } from '@/lib/newArrivals'
 import ProductForm from '@/components/admin/ProductForm'
 import { Page, PageHeader } from '@/components/admin/ui'
 import { createProduct } from '../actions'
@@ -23,6 +24,8 @@ export default async function NewProductPage() {
         categories={categories ?? []}
         ageGroups={ageGroups ?? []}
         subcategories={subcategories ?? []}
+        // A product that doesn't exist yet has no dates, so the day count doesn't matter here.
+        newArrival={newArrivalSwitch(undefined, NEW_ARRIVAL_DEFAULT_DAYS)}
       />
     </Page>
   )

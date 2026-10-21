@@ -6,6 +6,8 @@ import { createAdminSupabase, createServerSupabase } from '@/lib/supabase/server
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
+import { getNewArrivalDays } from '@/lib/settings'
+import { newSinceFromSwitch } from '@/lib/newArrivals'
 import { isActionError, type ActionResult } from '@/lib/admin/actionResult'
 import type { Tables, TablesInsert } from '@/lib/supabase/database.types'
 import {
@@ -64,7 +66,7 @@ function parseProduct(fd: FormData): TablesInsert<'products'> {
     tags: commaList(fd, 'tags'),
     features: lineList(fd, 'features'),
     popular: bool(fd, 'popular'),
-    new_arrival: bool(fd, 'new_arrival'),
+    // The "New arrival" switch is applied separately (newSinceFromSwitch) — it depends on the saved dates.
     promo_tag: str(fd, 'promo_tag'),
     display_order: num(fd, 'display_order') ?? 0,
     seo_title: str(fd, 'seo_title'),
@@ -111,6 +113,7 @@ async function syncAgeGroups(productId: string, ageGroupIds: string[]): Promise<
 function revalidateStorefront(slug?: string) {
   revalidatePath('/admin/products')
   revalidatePath('/')
+  revalidatePath('/new-arrivals')
   revalidatePath('/products')
   revalidatePath('/offers')
   revalidatePath('/categories')
@@ -127,6 +130,8 @@ export async function createProduct(formData: FormData): Promise<ActionResult<st
   const supabase = createAdminSupabase()
   const payload = { ...parseProduct(formData), is_published: false }
   if (saleAbovePrice(payload)) return SALE_ABOVE_PRICE
+  // New products are new stock by default (the column defaults to now()); the switch can opt out.
+  if (!bool(formData, 'new_arrival')) payload.new_since = null
 
   const { data, error } = await supabase.from('products').insert(payload).select('id').single()
   if (error) return { error: error.message }
@@ -147,11 +152,14 @@ export async function updateProduct(id: string, formData: FormData): Promise<{ e
 
   const { data: current, error: readError } = await supabase
     .from('products')
-    .select('marg_code, marg_name, marg_mrp, overridden_fields, is_published, image_count, marg_deleted_at')
+    .select('marg_code, marg_name, marg_mrp, overridden_fields, is_published, image_count, marg_deleted_at, new_since, arrived_at')
     .eq('id', id)
     .maybeSingle()
   if (readError) return { error: readError.message }
   if (!current) return { error: 'Product not found.' }
+
+  const newSince = newSinceFromSwitch(current, bool(formData, 'new_arrival'), await getNewArrivalDays())
+  if (newSince !== undefined) payload.new_since = newSince
 
   // Checked when publishing, so older published products without photos can still be edited.
   if (payload.is_published && !current.is_published) {
@@ -178,7 +186,7 @@ export async function updateProduct(id: string, formData: FormData): Promise<{ e
 }
 
 /* ----------------------------- Bulk actions ----------------------------- */
-export type BulkOperation = 'set-category' | 'publish' | 'unpublish'
+export type BulkOperation = 'set-category' | 'publish' | 'unpublish' | 'mark-new' | 'unmark-new'
 
 export interface BulkProductUpdate {
   op: BulkOperation
@@ -276,6 +284,21 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
           .or(where(`or(category_id.is.null,category_id.neq.${categoryId})`))
     if (error) return { error: error.message }
     result = { changed: count ?? 0, skipped: 0, message: `Moved ${nProducts(count ?? 0)} to ${category.name}.` }
+  } else if (input.op === 'mark-new') {
+    // A fresh "new" period from today; drafts start theirs when published (lib/newArrivals.ts).
+    const { count, error } = await supabase
+      .from('products')
+      .update({ new_since: new Date().toISOString() }, { count: 'exact' })
+      .or(where('marg_deleted_at.is.null'))
+    if (error) return { error: error.message }
+    result = { changed: count ?? 0, skipped: 0, message: `Marked ${nProducts(count ?? 0)} as new arrivals.` }
+  } else if (input.op === 'unmark-new') {
+    const { count, error } = await supabase
+      .from('products')
+      .update({ new_since: null }, { count: 'exact' })
+      .or(where('new_since.not.is.null'))
+    if (error) return { error: error.message }
+    result = { changed: count ?? 0, skipped: 0, message: `Removed ${nProducts(count ?? 0)} from New Arrivals.` }
   } else {
     return { error: 'Unknown bulk action.' }
   }

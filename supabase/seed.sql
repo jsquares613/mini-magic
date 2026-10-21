@@ -102,6 +102,11 @@ insert into products (name, slug, short_description, description, category_id, p
    false, true, 6)
 on conflict (slug) do nothing;
 
+-- New Arrivals are date-based (migration 20261021100000): only the sample "new"
+-- products start as new stock; new_since otherwise defaults to now() for every row.
+update products set new_since = case when new_arrival then now() else null end
+where marg_code is null;
+
 -- Product ↔ age groups
 insert into product_age_groups (product_id, age_group_id)
 select p.id, a.id from products p, age_groups a

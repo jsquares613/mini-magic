@@ -1,12 +1,16 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { isVideo } from '@/lib/media'
+import { getNewArrivalDays } from '@/lib/settings'
+import { NEW_ARRIVALS_RAIL_SIZE, NEW_ARRIVAL_MAX_DAYS, newArrivalState } from '@/lib/newArrivals'
+import { productFilterConditions, productListHref, toLogicTree } from '@/lib/admin/productFilters'
 import ActionForm from '@/components/admin/ActionForm'
 import SubmitButton from '@/components/admin/SubmitButton'
 import AdminImage from '@/components/admin/AdminImage'
 import ProductPicker from '@/components/admin/ProductPicker'
 import { Badge, Card, EmptyState, Page, PageHeader, buttonClass, iconButtonClass, ui } from '@/components/admin/ui'
 import {
+  ArrowRightIcon,
   CalendarIcon,
   ExternalLinkIcon,
   EyeIcon,
@@ -15,11 +19,19 @@ import {
   MegaphoneIcon,
   PencilIcon,
   PlusIcon,
+  SparklesIcon,
   StarIcon,
   TrashIcon,
   VideoIcon,
 } from '@/components/admin/icons'
-import { deleteHeroSlide, addFeaturedProduct, removeFeaturedProduct, deleteBanner, toggleBanner } from './actions'
+import {
+  deleteHeroSlide,
+  addFeaturedProduct,
+  removeFeaturedProduct,
+  deleteBanner,
+  toggleBanner,
+  updateNewArrivalDays,
+} from './actions'
 
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })
 
@@ -36,10 +48,22 @@ function MediaThumb({ url }: { url: string | null }) {
 
 export default async function HomepageAdminPage() {
   const supabase = createServerSupabase()
-  const [{ data: heroSlides }, { data: banners }, { data: featured }] = await Promise.all([
+  const newStockTree = toLogicTree(productFilterConditions({ issue: 'new-stock' })) ?? ''
+  const [{ data: heroSlides }, { data: banners }, { data: featured }, { data: arrivals }, { count: newStock }, newArrivalDays] = await Promise.all([
     supabase.from('homepage_hero_slides').select('*').order('display_order', { ascending: true }),
     supabase.from('promotional_banners').select('*').order('display_order', { ascending: true }),
     supabase.from('homepage_featured_products').select('id, product_id, sort_order').order('sort_order', { ascending: true }),
+    // Exactly what the homepage rail shows (lib/supabase/repositories/products.ts → getNewProducts).
+    supabase
+      .from('products')
+      .select('id, name, new_since, arrived_at')
+      .eq('is_published', true)
+      .not('arrived_at', 'is', null)
+      .order('arrived_at', { ascending: false })
+      .order('display_order', { ascending: true })
+      .limit(NEW_ARRIVALS_RAIL_SIZE),
+    supabase.from('products').select('id', { count: 'exact', head: true }).or(newStockTree),
+    getNewArrivalDays(),
   ])
 
   // Names for the featured products only — the picker searches the catalogue on demand.
@@ -53,7 +77,7 @@ export default async function HomepageAdminPage() {
     <Page className="space-y-6">
       <PageHeader
         title="Homepage"
-        description="The hero carousel, hand-picked products and promotional banners on the home page."
+        description="The hero carousel, hand-picked products, promotional banners and New Arrivals on the home page."
         actions={
           <a href="/" target="_blank" rel="noreferrer" className={buttonClass('secondary')}>
             <ExternalLinkIcon className="h-4 w-4" />
@@ -212,6 +236,87 @@ export default async function HomepageAdminPage() {
           )}
         </Card>
       </div>
+
+      {/* New Arrivals — automatic; this shows what the rail holds and sets how long "new" lasts */}
+      <Card
+        title="New Arrivals"
+        description={`Automatic: new stock appears once it’s published, newest first, and each new product pushes the oldest out. The homepage shows the ${NEW_ARRIVALS_RAIL_SIZE} newest.`}
+        icon={SparklesIcon}
+        tone="teal"
+        bodyClassName="p-0"
+        actions={
+          <a href="/new-arrivals" target="_blank" rel="noreferrer" className={buttonClass('secondary', 'sm')}>
+            <ExternalLinkIcon className="h-3.5 w-3.5" />
+            View page
+          </a>
+        }
+        footer={
+          <ActionForm action={updateNewArrivalDays} successMessage="New Arrivals setting saved" className="flex flex-wrap items-center gap-2 py-1 text-sm text-slate-600">
+            <label htmlFor="new_arrival_days">Count products as new for</label>
+            <input
+              id="new_arrival_days"
+              name="days"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={NEW_ARRIVAL_MAX_DAYS}
+              required
+              defaultValue={newArrivalDays}
+              className={`${ui.control} h-9 w-20 text-center`}
+            />
+            <span>days</span>
+            <SubmitButton pendingText="Saving…" variant="secondary">
+              Save
+            </SubmitButton>
+          </ActionForm>
+        }
+      >
+        {(newStock ?? 0) > 0 && (
+          <Link
+            href={productListHref({ issue: 'new-stock' })}
+            className="flex items-center gap-2 border-b border-slate-100 bg-blue-50/60 px-6 py-3 text-sm text-blue-900 transition hover:bg-blue-50"
+          >
+            <SparklesIcon className="h-4 w-4 shrink-0 text-blue-600" />
+            <span className="min-w-0 flex-1">
+              <span className="font-semibold tabular-nums">{(newStock ?? 0).toLocaleString('en-IN')}</span> new{' '}
+              {newStock === 1 ? 'product is' : 'products are'} waiting to be published — they join New Arrivals once they are.
+            </span>
+            <ArrowRightIcon className="h-4 w-4 shrink-0" />
+          </Link>
+        )}
+        {arrivals && arrivals.length > 0 ? (
+          <ul className="divide-y divide-slate-100">
+            {arrivals.map((p, i) => {
+              const s = newArrivalState(p, newArrivalDays)
+              return (
+                <li key={p.id} className={ui.row}>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">
+                    {i + 1}
+                  </span>
+                  <Link
+                    prefetch={false}
+                    href={`/admin/products/${p.id}`}
+                    className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 hover:text-blue-700 hover:underline"
+                  >
+                    {p.name}
+                  </Link>
+                  {s.state === 'new' ? (
+                    <Badge tone="teal">New until {shortDate(s.until.toISOString())}</Badge>
+                  ) : (
+                    <Badge tone="gray">Older than {newArrivalDays} days</Badge>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
+          <EmptyState
+            icon={SparklesIcon}
+            title="No new arrivals yet"
+            description="Publish new stock from Marg, or mark products as new from the Products list."
+          />
+        )}
+      </Card>
     </Page>
   )
 }

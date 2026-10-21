@@ -104,6 +104,7 @@ export default function ProductForm({
   subcategories = [],
   selectedAgeIds = [],
   imageCount = 0,
+  newArrival,
 }: {
   action: (formData: FormData) => unknown | Promise<unknown>
   product?: Product
@@ -113,6 +114,8 @@ export default function ProductForm({
   selectedAgeIds?: string[]
   /** Photos the product already has (edit page). */
   imageCount?: number
+  /** The "New arrival" switch, worked out on the server (newArrivalSwitch in lib/newArrivals.ts). */
+  newArrival: { on: boolean; hint: string }
 }) {
   const router = useRouter()
   const [selectedCategoryId, setSelectedCategoryId] = useState(product?.category_id ?? '')
@@ -451,12 +454,7 @@ export default function ProductForm({
           <Card title="Highlights" icon={StarIcon} tone="amber">
             <div className="space-y-4">
               <Switch name="popular" defaultChecked={product?.popular ?? false} label="Popular" description="Shown in the popular toys rail." />
-              <Switch
-                name="new_arrival"
-                defaultChecked={product?.new_arrival ?? false}
-                label="New arrival"
-                description="Shown in the new arrivals rail."
-              />
+              <Switch name="new_arrival" defaultChecked={newArrival.on} label="New arrival" description={newArrival.hint} />
             </div>
           </Card>
 

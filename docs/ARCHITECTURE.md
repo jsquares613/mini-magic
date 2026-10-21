@@ -625,7 +625,7 @@ age-group checkbox group, confirm-delete, toast notifications, optimistic update
 | Homepage Hero (`Hero`) | homepage_hero_slides | `lib/hero.ts` |
 | Categories rail (`Categories`) | categories (featured) | `data/categories.ts` |
 | Most Popular (`PopularToys`) | products (popular) | `data/products.ts` |
-| New Arrivals (`NewArrivals`) | products (new_arrival) | `data/products.ts` |
+| New Arrivals (`NewArrivals`, `/new-arrivals`) | products (`arrived_at`, newest first — automatic, see `lib/newArrivals.ts`) | `data/products.ts` |
 | Featured Products (homepage) | homepage_featured_products (curated) | products.featured (removed) |
 | Promotions (`Promotions`) | promotional_banners / category_promotions | derived in code |
 | Special Offers (`OffersGrid`, `/offers`) | products (sale_price not null) | `lib/products.ts` |

@@ -50,6 +50,7 @@ export default async function DashboardPage() {
     drafts,
     ready,
     missingPhoto,
+    newStock,
     margTotal,
     margPublished,
     margWithPhoto,
@@ -65,6 +66,7 @@ export default async function DashboardPage() {
     countProducts({ view: 'draft' }),
     countProducts({ issue: 'ready' }),
     countProducts({ issue: 'missing-photo' }),
+    countProducts({ issue: 'new-stock' }),
     countProducts({ source: 'marg' }),
     countProducts({ view: 'published', source: 'marg' }),
     countProducts({ source: 'marg' }, ['image_count.gt.0']),
@@ -98,10 +100,13 @@ export default async function DashboardPage() {
   const name = handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : 'there'
 
   const todo = [
+    newStock > 0 && `${plural(newStock, 'new arrival')} waiting to be published`,
     ready > 0 && `${plural(ready, 'product')} ready to publish`,
     newLeads > 0 && `${plural(newLeads, 'new lead')} to follow up`,
-  ].filter(Boolean)
-  const summary = todo.length ? `You have ${todo.join(' and ')}.` : 'Everything is up to date.'
+  ].filter((t): t is string => Boolean(t))
+  const summary = todo.length
+    ? `You have ${todo.length > 1 ? `${todo.slice(0, -1).join(', ')} and ${todo[todo.length - 1]}` : todo[0]}.`
+    : 'Everything is up to date.'
 
   const syncStatus: { label: string; tone: Tone } = !lastRun
     ? { label: 'Never synced', tone: 'gray' }

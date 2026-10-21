@@ -3,6 +3,8 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { canWrite, getCurrentProfile } from '@/lib/supabase/auth'
 import { formatPrice, timeAgo } from '@/lib/format'
 import { stockStatusOf } from '@/lib/stock'
+import { getNewArrivalDays } from '@/lib/settings'
+import { newArrivalState, shortDate, type NewArrivalState } from '@/lib/newArrivals'
 import {
   PRODUCT_ISSUES,
   PRODUCT_VIEWS,
@@ -40,6 +42,13 @@ function stockBadge(status: StockStatus, qty: number | null, overridden: boolean
     : { label, tone }
 }
 
+/** "New" pill next to the name: live new arrivals, and new stock still to be published. */
+function newArrivalBadge(s: NewArrivalState): ProductTableRow['newArrival'] {
+  if (s.state === 'new') return { label: 'New', title: `New arrival until ${shortDate(s.until)}` }
+  if (s.state === 'waiting') return { label: 'New stock', title: 'Joins New Arrivals when published' }
+  return null
+}
+
 type SearchParams = { [key: string]: string | string[] | undefined }
 
 export default async function AdminProductsPage({ searchParams }: { searchParams: SearchParams }) {
@@ -52,7 +61,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   let query = supabase
     .from('products')
     .select(
-      'id, name, slug, marg_code, marg_name, marg_company, category_id, price, sale_price, price_display, marg_stock, available, stock_status_override, popular, new_arrival, is_published, marg_deleted_at, marg_missing_since',
+      'id, name, slug, marg_code, marg_name, marg_company, category_id, price, sale_price, price_display, marg_stock, available, stock_status_override, popular, new_since, arrived_at, is_published, marg_deleted_at, marg_missing_since',
       { count: 'exact' },
     )
   const tree = toLogicTree(productFilterConditions(filters))
@@ -76,6 +85,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     { data: suppliers },
     { data: lastSync },
     profile,
+    newArrivalDays,
   ] = await Promise.all([
       query
         .order('is_published', { ascending: false })
@@ -95,6 +105,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         .limit(1)
         .maybeSingle(),
       getCurrentProfile(),
+      getNewArrivalDays(),
     ])
   if (error) throw new Error(`Could not load products: ${error.message}`)
   const viewCounts = Object.fromEntries(viewCountList) as Record<ProductView, number>
@@ -137,7 +148,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
       priceMuted: !showPrice,
       stock: stockBadge(stockStatusOf(p), p.marg_code ? Number(p.marg_stock ?? 0) : null, p.stock_status_override != null),
       popular: p.popular,
-      newArrival: p.new_arrival,
+      newArrival: newArrivalBadge(newArrivalState(p, newArrivalDays)),
       published: p.is_published,
       ready: !p.is_published && needs.length === 0 && !p.marg_deleted_at,
       needs,

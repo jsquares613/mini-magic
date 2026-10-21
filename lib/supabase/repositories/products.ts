@@ -107,9 +107,16 @@ export async function getPopularProducts(limit?: number): Promise<ProductRow[]> 
   return ok(await q)
 }
 
+/** Published new arrivals, newest first (see lib/newArrivals.ts). */
 export async function getNewProducts(limit?: number): Promise<ProductRow[]> {
   const sb = getSupabaseClient()
-  let q = sb.from('products').select('*').eq('new_arrival', true).order('display_order', { ascending: true })
+  let q = sb
+    .from('products')
+    .select('*')
+    .eq('is_published', true)
+    .not('arrived_at', 'is', null)
+    .order('arrived_at', { ascending: false })
+    .order('display_order', { ascending: true })
   if (limit) q = q.limit(limit)
   return ok(await q)
 }

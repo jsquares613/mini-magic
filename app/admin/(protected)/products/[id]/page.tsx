@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { formatPrice, timeAgo } from '@/lib/format'
+import { getNewArrivalDays } from '@/lib/settings'
+import { newArrivalSwitch } from '@/lib/newArrivals'
 import ProductForm from '@/components/admin/ProductForm'
 import ImageManager from '@/components/admin/ImageManager'
 import DeleteProductButton from '@/components/admin/DeleteProductButton'
@@ -24,6 +26,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     { data: pivots },
     { data: images },
     { data: relatedPivots },
+    newArrivalDays,
   ] = await Promise.all([
     supabase.from('products').select('*').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
@@ -35,6 +38,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     // related_product_id), which makes PostgREST embeds ambiguous. Fetch
     // the pivot rows, then look up names separately and join in JS.
     supabase.from('product_related').select('id, related_product_id').eq('product_id', id).order('sort_order', { ascending: true }),
+    getNewArrivalDays(),
   ])
   if (!product) notFound()
 
@@ -135,6 +139,7 @@ export default async function EditProductPage({ params }: { params: { id: string
         subcategories={subcategories ?? []}
         selectedAgeIds={selectedAgeIds}
         imageCount={images?.length ?? 0}
+        newArrival={newArrivalSwitch(product, newArrivalDays)}
       />
 
       {/* Related products — curated "You may also like" picks. Optional: the

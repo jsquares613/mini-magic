@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { repositories } from '@/lib/supabase'
+import { clampNewArrivalDays } from '@/lib/newArrivals'
 
 /**
  * Site settings data-access layer — backed by Supabase (Phase 3). Replaces the
@@ -31,3 +32,8 @@ export const getFooterText = cache(async (): Promise<string | null> => {
   const value = await repositories.settings.getSetting<string>('footer_text')
   return value ?? null
 })
+
+/** How many days a product counts as a new arrival (Admin → Homepage → New Arrivals). */
+export const getNewArrivalDays = cache(async (): Promise<number> =>
+  clampNewArrivalDays(await repositories.settings.getSetting<number>('new_arrival_days')),
+)
