@@ -628,7 +628,7 @@ age-group checkbox group, confirm-delete, toast notifications, optimistic update
 | New Arrivals (`NewArrivals`, `/new-arrivals`) | products (`arrived_at`, newest first — automatic, see `lib/newArrivals.ts`) | `data/products.ts` |
 | Featured Products (homepage) | homepage_featured_products (curated) | products.featured (removed) |
 | Promotions (`Promotions`) | promotional_banners / category_promotions | derived in code |
-| Special Offers (`OffersGrid`, `/offers`) | products (sale_price not null) | `lib/products.ts` |
+| Special Offers (`OffersRail` — infinite horizontal rail via `/api/rails/offers`; `/offers`) | products (sale_price not null) | `lib/products.ts` |
 | Section order/visibility | homepage_sections | hardcoded in `app/page.tsx` |
 | Category page + `[slug]` + **age filter** | categories, products, age_groups, product_age_groups | `data/*` |
 | Product card (`ProductCard`) | products, product_images | `data/products.ts` |

@@ -240,7 +240,7 @@ export default async function HomepageAdminPage() {
       {/* New Arrivals — automatic; this shows what the rail holds and sets how long "new" lasts */}
       <Card
         title="New Arrivals"
-        description={`Automatic: new stock appears once it’s published, newest first, and each new product pushes the oldest out. The homepage shows the ${NEW_ARRIVALS_RAIL_SIZE} newest.`}
+        description={`Automatic: new stock appears once it’s published, newest first, and the homepage row scrolls through all of them (loading more as customers swipe). The ${NEW_ARRIVALS_RAIL_SIZE} newest are listed here.`}
         icon={SparklesIcon}
         tone="teal"
         bodyClassName="p-0"

@@ -121,6 +121,58 @@ export async function getNewProducts(limit?: number): Promise<ProductRow[]> {
   return ok(await q)
 }
 
+/**
+ * One page of published new arrivals that arrived at or after `since`, newest
+ * first (id breaks ties so pages never overlap), plus how many there are.
+ */
+export async function getNewProductsPage(since: string, offset: number, limit: number): Promise<{ rows: ProductRow[]; total: number }> {
+  const sb = getSupabaseClient()
+  const { data, count, error } = await sb
+    .from('products')
+    .select('*', { count: 'exact' })
+    .eq('is_published', true)
+    .gte('arrived_at', since)
+    .order('arrived_at', { ascending: false })
+    .order('display_order', { ascending: true })
+    .order('id', { ascending: true })
+    .range(offset, offset + limit - 1)
+  if (error) throw new Error(`[supabase] ${error.message}`)
+  return { rows: data ?? [], total: count ?? 0 }
+}
+
+/**
+ * One page of products on offer, deepest discount first, plus how many there
+ * are. The discount is computed in JS, so this ranks a light id/price list and
+ * then loads full rows for just the requested page.
+ */
+export async function getOffersPage(offset: number, limit: number): Promise<{ rows: ProductRow[]; total: number }> {
+  const sb = getSupabaseClient()
+  const prices = ok(await sb.from('products').select('id, price, sale_price').eq('is_published', true).not('sale_price', 'is', null))
+  const discount = (p: { price: number | null; sale_price: number | null }) =>
+    p.price && p.sale_price ? (p.price - p.sale_price) / p.price : 0
+  const ranked = prices.sort((a, b) => discount(b) - discount(a) || a.id.localeCompare(b.id))
+  const ids = ranked.slice(offset, offset + limit).map((p) => p.id)
+  if (ids.length === 0) return { rows: [], total: ranked.length }
+  const rows = ok(await sb.from('products').select('*').in('id', ids))
+  const byId = new Map(rows.map((r) => [r.id, r]))
+  return { rows: ids.map((id) => byId.get(id)).filter((r): r is ProductRow => r !== undefined), total: ranked.length }
+}
+
+/**
+ * One page of published products in a shuffled order fixed by `seed` (see
+ * migration 20261022100000), plus how many there are.
+ */
+export async function getShuffledProductsPage(seed: string, offset: number, limit: number): Promise<{ rows: ProductRow[]; total: number }> {
+  const sb = getSupabaseClient()
+  const page = ok(await sb.rpc('shuffled_product_ids', { p_seed: seed, p_offset: offset, p_limit: limit }))
+  const total = Number(page[0]?.total ?? 0)
+  const ids = page.map((p) => p.id)
+  if (ids.length === 0) return { rows: [], total }
+  const rows = ok(await sb.from('products').select('*').in('id', ids))
+  const byId = new Map(rows.map((r) => [r.id, r]))
+  return { rows: ids.map((id) => byId.get(id)).filter((r): r is ProductRow => r !== undefined), total }
+}
+
 /** Products with an active sale price. Sorted by deepest discount (computed in JS). */
 export async function getProductsOnOffer(limit?: number): Promise<ProductRow[]> {
   const sb = getSupabaseClient()

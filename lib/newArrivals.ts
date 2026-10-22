@@ -12,7 +12,7 @@
 
 export const NEW_ARRIVAL_DEFAULT_DAYS = 30
 export const NEW_ARRIVAL_MAX_DAYS = 365
-/** Products in the homepage rail — and the fewest the New Arrivals page shows. */
+/** The fewest New Arrivals shown: between deliveries the rail and page fall back to this many latest arrivals. */
 export const NEW_ARRIVALS_RAIL_SIZE = 12
 
 const DAY_MS = 24 * 60 * 60 * 1000

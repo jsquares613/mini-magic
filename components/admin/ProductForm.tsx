@@ -453,7 +453,7 @@ export default function ProductForm({
 
           <Card title="Highlights" icon={StarIcon} tone="amber">
             <div className="space-y-4">
-              <Switch name="popular" defaultChecked={product?.popular ?? false} label="Popular" description="Shown in the popular toys rail." />
+              <Switch name="popular" defaultChecked={product?.popular ?? false} label="Popular" description="Marks a best-seller in this admin. The homepage no longer has a Most Popular section." />
               <Switch name="new_arrival" defaultChecked={newArrival.on} label="New arrival" description={newArrival.hint} />
             </div>
           </Card>

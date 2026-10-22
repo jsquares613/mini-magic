@@ -8,17 +8,39 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * server-rendered and passed in as `children`, each in a `role="listitem"` wrapper
  * that sets its width.
  */
-export default function ProductRail({ label, children }: { label: string; children: React.ReactNode }) {
+export default function ProductRail({
+  label,
+  children,
+  onNearEnd,
+  busy = false,
+}: {
+  label: string
+  children: React.ReactNode
+  /** Called while the end of the row is within about one screen (infinite loading). */
+  onNearEnd?: () => void
+  /** More cards are loading. */
+  busy?: boolean
+}) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(false)
+  const nearEndRef = useRef(onNearEnd)
+  nearEndRef.current = onNearEnd
 
   const update = useCallback(() => {
     const el = trackRef.current
     if (!el) return
+    const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth
     setCanPrev(el.scrollLeft > 4)
-    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+    setCanNext(remaining > 4)
+    if (remaining <= el.clientWidth) nearEndRef.current?.()
   }, [])
+
+  // After every render too: new cards change the scroll width, and a row that
+  // doesn't fill the screen yet needs its next page without any scrolling.
+  useEffect(() => {
+    update()
+  })
 
   useEffect(() => {
     const el = trackRef.current
@@ -46,6 +68,7 @@ export default function ProductRail({ label, children }: { label: string; childr
         ref={trackRef}
         role="list"
         aria-label={label}
+        aria-busy={busy || undefined}
         className="scrollbar-hide -mx-2 -my-3 flex snap-x snap-mandatory gap-1 overflow-x-auto scroll-px-2 px-2 py-3 min-[390px]:-mx-4 min-[390px]:gap-2 min-[390px]:scroll-px-4 min-[390px]:px-4 md:mx-0 md:gap-6 md:scroll-px-0 md:px-0"
       >
         {children}

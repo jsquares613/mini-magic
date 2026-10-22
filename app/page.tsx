@@ -2,12 +2,11 @@ import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import { getHomeHeroSlides } from '@/lib/homepage'
 import Categories from '@/components/Categories'
-import PopularToys from '@/components/PopularToys'
 import Promotions from '@/components/Promotions'
-import OffersGrid from '@/components/OffersGrid'
+import OffersRail from '@/components/OffersRail'
+import AllProducts from '@/components/AllProducts'
 import NewArrivals from '@/components/NewArrivals'
 import FeaturedProducts from '@/components/FeaturedProducts'
-import SectionHeader from '@/components/SectionHeader'
 import Footer from '@/components/Footer'
 import FadeInSection from '@/components/FadeInSection'
 
@@ -33,25 +32,16 @@ export default async function Home() {
         <Hero slides={heroSlides} />
       </div>
       <FadeInSection>
-        <PopularToys />
+        <NewArrivals />
       </FadeInSection>
       <FadeInSection>
         <Promotions />
       </FadeInSection>
       <FadeInSection>
-        <section className="px-2 py-2 min-[390px]:px-4 md:px-8 md:py-4">
-          <div className="mx-auto max-w-7xl">
-            <SectionHeader
-              title="Special Offers"
-              accent="from-red-400 to-rose-500"
-              viewAllHref="/offers"
-            />
-            <OffersGrid limit={4} />
-          </div>
-        </section>
+        <OffersRail />
       </FadeInSection>
       <FadeInSection>
-        <NewArrivals />
+        <AllProducts />
       </FadeInSection>
       <FadeInSection>
         <FeaturedProducts />

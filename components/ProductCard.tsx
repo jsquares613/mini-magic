@@ -2,7 +2,7 @@ import Link from 'next/link'
 import SafeImage from '@/components/SafeImage'
 import WishlistButton from '@/components/WishlistButton'
 import type { Product } from '@/types'
-import { withPricing } from '@/lib/products'
+import { withPricing } from '@/lib/pricing'
 import { formatPrice } from '@/lib/format'
 
 /**
@@ -11,7 +11,8 @@ import { formatPrice } from '@/lib/format'
  * divergent inline card markups that previously existed.
  *
  * No `'use client'` — it is a presentational Server Component (just a Link),
- * so it renders inside both server and client trees with zero JS cost.
+ * so it renders inside both server and client trees with zero JS cost. Keep
+ * its imports browser-safe: InfiniteProductRail renders it client-side too.
  */
 export default function ProductCard({ product, index = 99 }: { product: Product; index?: number }) {
   const { effectivePrice, isOnSale, discountPercent } = withPricing(product)

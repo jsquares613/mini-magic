@@ -3,6 +3,8 @@ import { getCategoryIdToSlugMap, getSubcategoryIdToSlugMap } from '@/lib/categor
 import { getNewArrivalDays } from '@/lib/settings'
 import { NEW_ARRIVALS_RAIL_SIZE, isNewArrival } from '@/lib/newArrivals'
 import { stockStatusOf } from '@/lib/stock'
+import { withPricing } from '@/lib/pricing'
+import { RAIL_PAGE_SIZE, type RailPage } from '@/lib/rails'
 import type { Product, ProductWithPricing } from '@/types'
 import type { ProductRow } from '@/lib/supabase/repositories/products'
 
@@ -74,15 +76,7 @@ async function toProducts(rows: ProductRow[]): Promise<Product[]> {
   )
 }
 
-/** Resolve the effective price + sale metadata for a product. */
-export function withPricing(product: Product): ProductWithPricing {
-  const isOnSale = product.salePrice != null && product.salePrice < product.price
-  const effectivePrice = isOnSale ? (product.salePrice as number) : product.price
-  const discountPercent = isOnSale
-    ? Math.round(((product.price - (product.salePrice as number)) / product.price) * 100)
-    : 0
-  return { ...product, effectivePrice, isOnSale, discountPercent }
-}
+export { withPricing }
 
 export async function getAllProducts(): Promise<Product[]> {
   return toProducts(await repositories.products.getAllProducts())
@@ -146,6 +140,44 @@ export async function getNewArrivals(): Promise<Product[]> {
   const now = Date.now()
   const current = rows.filter((r) => isNewArrival(r.arrived_at, days, now))
   return toProducts(current.length >= NEW_ARRIVALS_RAIL_SIZE ? current : rows.slice(0, NEW_ARRIVALS_RAIL_SIZE))
+}
+
+/**
+ * Just what a ProductCard shows — rails send their products to the browser, so
+ * long text (description, features, SEO) stays behind.
+ */
+function toCardProduct(p: Product): Product {
+  return { ...p, description: '', shortDescription: '', features: [], tags: [], relatedProducts: [], seo: undefined }
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/**
+ * A page of the homepage New Arrivals rail: everything still within its "new"
+ * period, newest first. Between deliveries (fewer than a page's worth are new)
+ * it shows the latest arrivals instead, so the rail never empties.
+ */
+export async function getNewArrivalsPage(offset: number, limit = RAIL_PAGE_SIZE): Promise<RailPage> {
+  const days = await getNewArrivalDays()
+  const since = new Date(Date.now() - days * DAY_MS).toISOString()
+  const { rows, total } = await repositories.products.getNewProductsPage(since, offset, limit)
+  if (total < NEW_ARRIVALS_RAIL_SIZE) {
+    const latest = offset === 0 ? await repositories.products.getNewProducts(NEW_ARRIVALS_RAIL_SIZE) : []
+    return { products: (await toProducts(latest)).map(toCardProduct), hasMore: false }
+  }
+  return { products: (await toProducts(rows)).map(toCardProduct), hasMore: offset + rows.length < total }
+}
+
+/** A page of the homepage "All Products" rail: every published product, shuffled by `seed` (see lib/rails.ts). */
+export async function getShuffledPage(seed: string, offset: number, limit = RAIL_PAGE_SIZE): Promise<RailPage> {
+  const { rows, total } = await repositories.products.getShuffledProductsPage(seed, offset, limit)
+  return { products: (await toProducts(rows)).map(toCardProduct), hasMore: offset + rows.length < total }
+}
+
+/** A page of the homepage Special Offers rail: every product on offer, deepest discount first. */
+export async function getOffersPage(offset: number, limit = RAIL_PAGE_SIZE): Promise<RailPage> {
+  const { rows, total } = await repositories.products.getOffersPage(offset, limit)
+  return { products: (await toProducts(rows)).map(toCardProduct), hasMore: offset + rows.length < total }
 }
 
 /** Products that have an active sale price, deepest discount first. */
