@@ -8,14 +8,22 @@ import { siteConfig } from '@/config/site'
 
 export default async function SettingsPage() {
   const supabase = createServerSupabase()
-  const [{ data: contact }, { data: footerSetting }, { data: marqueeSetting }, { data: announcementsSetting }] = await Promise.all([
+  const [
+    { data: contact },
+    { data: footerSetting },
+    { data: marqueeSetting },
+    { data: announcementsSetting },
+    { data: announcementEnabledSetting },
+  ] = await Promise.all([
     supabase.from('contact_information').select('*').eq('id', 1).maybeSingle(),
     supabase.from('site_settings').select('value').eq('key', 'footer_text').maybeSingle(),
     supabase.from('site_settings').select('value').eq('key', 'marquee_enabled').maybeSingle(),
     supabase.from('site_settings').select('value').eq('key', 'announcements').maybeSingle(),
+    supabase.from('site_settings').select('value').eq('key', 'announcement_enabled').maybeSingle(),
   ])
   const footerText = (footerSetting?.value as string) ?? ''
   const marqueeEnabled = marqueeSetting ? (marqueeSetting.value as boolean) : true
+  const announcementEnabled = announcementEnabledSetting ? (announcementEnabledSetting.value as boolean) : true
   const announcements: string[] = (announcementsSetting?.value as string[]) ?? [...siteConfig.announcements]
 
   return (
@@ -38,6 +46,12 @@ export default async function SettingsPage() {
               }
             >
               <div className="space-y-5">
+                <Switch
+                  name="announcement_enabled"
+                  defaultChecked={announcementEnabled}
+                  label="Show announcement bar"
+                  description="Turn off to hide the strip on every page. Your messages are kept for later."
+                />
                 <Field label="Messages" hint="One message per line.">
                   <textarea
                     name="messages"
@@ -55,8 +69,8 @@ export default async function SettingsPage() {
           {/* Footer text */}
           <ActionForm action={updateFooterText} successMessage="Footer text saved successfully">
             <Card
-              title="Footer tagline"
-              description="Shown under the brand name in the footer."
+              title="Tagline"
+              description="Shown under the logo in the footer and in the mobile header."
               icon={TypeIcon}
               tone="gray"
               footer={

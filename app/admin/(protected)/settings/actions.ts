@@ -28,14 +28,15 @@ export async function updateContactInfo(formData: FormData) {
 export async function updateBannerSettings(formData: FormData) {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
-  const messages = lineList(formData, 'messages')
-  const scrolling = bool(formData, 'marquee_enabled')
-  const [r1, r2] = await Promise.all([
-    supabase.from('site_settings').upsert({ key: 'announcements', value: messages }, { onConflict: 'key' }),
-    supabase.from('site_settings').upsert({ key: 'marquee_enabled', value: scrolling }, { onConflict: 'key' }),
-  ])
-  if (r1.error) return { error: r1.error.message }
-  if (r2.error) return { error: r2.error.message }
+  const { error } = await supabase.from('site_settings').upsert(
+    [
+      { key: 'announcement_enabled', value: bool(formData, 'announcement_enabled') },
+      { key: 'announcements', value: lineList(formData, 'messages') },
+      { key: 'marquee_enabled', value: bool(formData, 'marquee_enabled') },
+    ],
+    { onConflict: 'key' },
+  )
+  if (error) return { error: error.message }
   revalidateSettings()
 }
 

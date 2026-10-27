@@ -1,5 +1,9 @@
 import Link from 'next/link'
+import { Montserrat } from 'next/font/google'
 import { siteConfig } from '@/config/site'
+
+/** Geometric face for the big footer wordmark (matches the brand artwork). Only the weight used is loaded. */
+const wordmark = Montserrat({ subsets: ['latin'], weight: '600', display: 'swap' })
 import { getContactInfo, getFooterQuickLinks, getFooterText } from '@/lib/settings'
 
 /**
@@ -20,14 +24,14 @@ export default async function Footer() {
     <footer className="hidden text-white md:block">
       {/* Upper section — columns + watermark */}
       <div className="relative min-h-[520px] overflow-hidden bg-blue-900 px-4 pb-0 pt-14 md:px-8 md:pt-16">
-        {/* Background watermark — natural aspect ratio, anchored to bottom edge */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/text.png"
-          alt=""
+        {/* Background watermark — live text (always spelled right, sharp at any size), anchored to the
+            bottom edge. The line height leaves room for the "g" descender, which the overflow would clip. */}
+        <p
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-0 left-1/2 w-[85%] -translate-x-1/2 select-none"
-        />
+          className={`${wordmark.className} pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 select-none whitespace-nowrap bg-gradient-to-b from-[#FFBA00] from-40% to-[#A87400] bg-clip-text text-[clamp(6rem,16vw,17rem)] font-semibold leading-[1.15] tracking-tight text-transparent`}
+        >
+          {siteConfig.name.toLowerCase()}
+        </p>
 
         <div className="relative z-10 mx-auto max-w-7xl">
           <div className="mb-12 grid grid-cols-3 gap-10 lg:gap-16">

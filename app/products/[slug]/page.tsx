@@ -147,7 +147,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
               {/* Price */}
               <div className="mb-4 flex items-center gap-3">
-                <span className={`text-3xl font-bold ${isOnSale ? 'text-blue-600' : 'text-blue-900'}`}>
+                <span className="text-3xl font-bold text-blue-900">
                   {formatPrice(effectivePrice)}
                 </span>
                 {isOnSale && (

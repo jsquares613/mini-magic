@@ -65,7 +65,7 @@ export default function ProductCard({ product, index = 99 }: { product: Product;
           <h3 className="line-clamp-1 text-[11px] font-semibold text-gray-900 md:mb-1 md:text-base">{product.name}</h3>
           <div className="flex items-center justify-between gap-1 md:gap-2">
             <div className="flex min-w-0 items-baseline gap-1 md:gap-2">
-              <span className={`text-xs font-bold md:text-base ${isOnSale ? 'text-blue-600' : 'text-blue-900'}`}>
+              <span className="text-xs font-bold text-blue-900 md:text-base">
                 {formatPrice(effectivePrice)}
               </span>
               {isOnSale && (

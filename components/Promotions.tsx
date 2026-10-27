@@ -72,7 +72,7 @@ export default async function Promotions() {
                 <div className="relative">
                   <h3
                     className={`mb-1 text-lg font-bold md:text-2xl ${
-                      isToys ? 'text-blue-600' : banner.image ? 'text-white' : style.text
+                      isToys ? 'text-blue-900' : banner.image ? 'text-white' : style.text
                     }`}
                   >
                     {banner.title}
@@ -81,7 +81,7 @@ export default async function Promotions() {
                     <div className="mb-2 md:mb-3">
                       <span
                         className={`text-base font-bold md:text-xl ${
-                          isToys ? 'text-blue-600' : banner.image ? 'text-white' : style.text
+                          isToys ? 'text-blue-900' : banner.image ? 'text-white' : style.text
                         }`}
                       >
                         {banner.badge_text}
@@ -91,7 +91,7 @@ export default async function Promotions() {
                   {banner.subtitle && (
                     <p
                       className={`mb-2 text-xs md:mb-3 md:text-sm ${
-                        isToys ? 'text-blue-600' : banner.image ? 'text-white/80' : style.sub
+                        isToys ? 'text-blue-900/70' : banner.image ? 'text-white/80' : style.sub
                       }`}
                     >
                       {banner.subtitle}
@@ -101,7 +101,7 @@ export default async function Promotions() {
                     href={banner.link ?? '/categories'}
                     className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition md:text-sm ${
                       isToys
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        ? 'bg-blue-900 text-white hover:bg-blue-800'
                         : banner.image
                           ? 'bg-white text-gray-900 hover:bg-gray-100'
                           : style.cta

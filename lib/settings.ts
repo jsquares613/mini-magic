@@ -23,6 +23,12 @@ export const getAnnouncements = cache(async (): Promise<string[]> => {
   return value ?? []
 })
 
+/** Whether the announcement bar at the top of every page is shown (Admin → Settings). */
+export const getAnnouncementEnabled = cache(async (): Promise<boolean> => {
+  const value = await repositories.settings.getSetting<boolean>('announcement_enabled')
+  return value ?? true
+})
+
 export const getMarqueeEnabled = cache(async (): Promise<boolean> => {
   const value = await repositories.settings.getSetting<boolean>('marquee_enabled')
   return value ?? true
