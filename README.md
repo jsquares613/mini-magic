@@ -4,7 +4,7 @@ A modern, responsive home page for the Minimagic toy store built with **Next.js 
 
 ## 🎨 Features
 
-- **Hero Section**: Eye-catching welcome section with "Find Joy in Every Toy" headline
+- **Hero Section**: Eye-catching welcome section with "Spend Less, Shop More" headline
 - **Categories**: Browse toys, bags, umbrellas, stationery, and household items
 - **Popular Toys**: Showcase of best-selling products
 - **Promotions**: Special offers and discounts

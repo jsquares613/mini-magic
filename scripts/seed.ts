@@ -343,7 +343,7 @@ async function main() {
     ])).error)
 
     die('seo_pages', (await sb.from('seo_pages').insert([
-      { page_key: 'home', meta_title: `${siteConfig.name} - Find Joy in Every Toy`, meta_description: siteConfig.description },
+      { page_key: 'home', meta_title: `${siteConfig.name} - Spend Less, Shop More`, meta_description: siteConfig.description },
       { page_key: 'offers', meta_title: 'Special Offers - Minimagic', meta_description: 'Deals and discounts on toys and essentials.' },
       { page_key: 'play-area', meta_title: 'Play Area - Minimagic', meta_description: 'A safe, supervised indoor playground for kids.' },
       { page_key: 'about', meta_title: 'About Us - Minimagic', meta_description: 'Our story, mission and team.' },

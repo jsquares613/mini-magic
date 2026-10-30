@@ -6,13 +6,13 @@ import SiteShell from '@/components/SiteShell'
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} - Find Joy in Every Toy`,
+    default: `${siteConfig.name} - Spend Less, Shop More`,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
   keywords: ['toys', 'kids toys', 'stationery', 'play area', 'minimagic'],
   openGraph: {
-    title: `${siteConfig.name} - Find Joy in Every Toy`,
+    title: `${siteConfig.name} - Spend Less, Shop More`,
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${siteConfig.name} - Find Joy in Every Toy`,
+    title: `${siteConfig.name} - Spend Less, Shop More`,
     description: siteConfig.description,
   },
 }
