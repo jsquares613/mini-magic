@@ -42,12 +42,12 @@ export default function BannerForm({
                 label="Banner media"
                 defaultUrl={banner?.image ?? null}
                 aspectRatio={2}
-                hint="640 × 220 px — image or MP4 video"
+                hint="640 × 220 px - image or MP4 video"
               />
             </div>
           </Card>
 
-          <Card title="Schedule" description="Optional — leave blank to show it whenever it's switched on." icon={CalendarIcon} tone="blue">
+          <Card title="Schedule" description="Optional - leave blank to show it whenever it's switched on." icon={CalendarIcon} tone="blue">
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Starts">
                 <input name="starts_at" type="datetime-local" defaultValue={toDateTimeInputValue(banner?.starts_at ?? null)} className={ui.input} />

@@ -84,7 +84,7 @@ export function describeSearch(by: SearchField, match: SearchMatch): [before: st
 }
 
 /**
- * Where the search matched inside `text`, as sorted, merged [start, end) ranges —
+ * Where the search matched inside `text`, as sorted, merged [start, end) ranges -
  * the client-side mirror of the database conditions, for highlighting.
  */
 export function matchRanges(text: string, q: string, match: SearchMatch, isCode = false): [number, number][] {
@@ -167,14 +167,14 @@ const SEARCH_COLUMNS: Record<SearchField, string[]> = {
 
 export function parseProductListFilters(input: Record<string, unknown>): ProductListFilters {
   const s = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
-  // Older links used a single `status` param for both axes — still honoured.
+  // Older links used a single `status` param for both axes - still honoured.
   const legacy = s(input.status)
   return {
     view: PRODUCT_VIEWS.find((t) => t.key === (s(input.view) || legacy))?.key ?? 'all',
     issue: PRODUCT_ISSUES.find((t) => t.key === (s(input.issue) || legacy))?.key ?? '',
     source: PRODUCT_SOURCES.find((t) => t.key === input.source)?.key ?? '',
     supplier: s(input.supplier).slice(0, 100),
-    // `%` and `*` are LIKE wildcards — keep the search plain text.
+    // `%` and `*` are LIKE wildcards - keep the search plain text.
     q: s(input.q).replace(/[%*]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100),
     by: SEARCH_FIELDS.find((f) => f.key === input.by)?.key ?? '',
     match: SEARCH_MATCHES.find((m) => m.key === input.match)?.key ?? '',
@@ -201,7 +201,7 @@ export function productFilterConditions(f: Partial<ProductListFilters>, extra: s
     const text = escapeLike(f.by === 'code' ? f.q.replace(/ /g, '') : f.q)
     if (f.match === 'start') conditions.push(inAnyColumn(`${text}%`))
     else if (f.match === 'exact') conditions.push(inAnyColumn(text))
-    // Contains: every word must appear, in any order — "pink teddy" finds "TEDDY BEAR PINK 30CM".
+    // Contains: every word must appear, in any order - "pink teddy" finds "TEDDY BEAR PINK 30CM".
     else for (const word of searchWords(f.q)) conditions.push(inAnyColumn(`%${escapeLike(word)}%`))
   }
   return conditions

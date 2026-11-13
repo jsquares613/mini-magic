@@ -7,7 +7,7 @@ import { useState } from 'react'
  * Functional search box. Submitting navigates to `/search?q=...`, where the
  * results page runs the centralised `searchSite()` query.
  *
- * Note: this intentionally does NOT read `useSearchParams()` — it lives inside
+ * Note: this intentionally does NOT read `useSearchParams()` - it lives inside
  * the global Header on every (statically-rendered) page, and reading search
  * params there would force a Suspense boundary site-wide. The /search page
  * passes the current query in via `defaultValue` instead.

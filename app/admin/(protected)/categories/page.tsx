@@ -80,7 +80,7 @@ export default async function AdminCategoriesPage() {
             <ShapesIcon className="h-4 w-4" />
           </span>
           <p className="min-w-0 flex-1 text-sm text-amber-900">
-            <span className="font-semibold">{(uncategorised ?? 0).toLocaleString('en-IN')} products</span> don&apos;t have a category yet — they
+            <span className="font-semibold">{(uncategorised ?? 0).toLocaleString('en-IN')} products</span> don&apos;t have a category yet - they
             can&apos;t be published until they do.
           </p>
           <Link href={productListHref({ issue: 'no-category' })} className={buttonClass('secondary', 'sm')}>

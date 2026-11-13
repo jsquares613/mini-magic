@@ -2,9 +2,9 @@
  * New Arrivals rules, shared by the storefront and the admin.
  *
  * A product is new stock from when it's created (a new Marg item code, or added
- * by hand) or marked as new by staff — `new_since`, stamped by the database. It
- * arrives for customers when that's true *and* it's published — `arrived_at`,
- * the later of the two dates — so the days it waits for photos don't count. The
+ * by hand) or marked as new by staff - `new_since`, stamped by the database. It
+ * arrives for customers when that's true *and* it's published - `arrived_at`,
+ * the later of the two dates - so the days it waits for photos don't count. The
  * storefront lists arrivals newest first, so each new product pushes the oldest
  * out of the homepage rail, and a product counts as "new" for `days` after it
  * arrives (the `new_arrival_days` site setting).
@@ -35,7 +35,7 @@ export function isNewArrival(arrivedAt: string | null, days: number, now = Date.
 export type NewArrivalState =
   /** Arrived, and still within its "new" period. */
   | { state: 'new'; until: Date }
-  /** New stock that hasn't been published yet — it arrives when it is. */
+  /** New stock that hasn't been published yet - it arrives when it is. */
   | { state: 'waiting' }
   /** Was a new arrival; the period is over. */
   | { state: 'expired'; until: Date }

@@ -12,7 +12,7 @@ export interface SelectOption {
   description?: string
   /** Right-aligned muted text, e.g. a count. */
   meta?: string
-  /** Leading visual (dot, icon, emoji) — shown in the menu and on the button. */
+  /** Leading visual (dot, icon, emoji) - shown in the menu and on the button. */
   icon?: ReactNode
   disabled?: boolean
 }
@@ -43,7 +43,7 @@ function firstEnabled(options: SelectOption[]): number {
 }
 
 /**
- * Custom dropdown for the admin — a styled replacement for `<select>`.
+ * Custom dropdown for the admin - a styled replacement for `<select>`.
  *
  * Works in forms like a native select: with `name` the value is submitted via
  * a hidden input, and `required` blocks submission until something is picked.
@@ -72,7 +72,7 @@ export default function Select({
   inlineLabel,
 }: {
   options: SelectOption[]
-  /** Form field name — submits the value through a hidden input. */
+  /** Form field name - submits the value through a hidden input. */
   name?: string
   /** Controlled value (pair with `onChange`). */
   value?: string
@@ -83,7 +83,7 @@ export default function Select({
   searchable?: boolean | 'auto'
   required?: boolean
   disabled?: boolean
-  /** Layout classes for the control (width, flex) — defaults to full width. */
+  /** Layout classes for the control (width, flex) - defaults to full width. */
   className?: string
   'aria-label'?: string
   /** Server-side search: called with the search text (and '' when the menu opens). */
@@ -181,7 +181,7 @@ export default function Select({
     }
   }, [open, place])
 
-  // The menu mounts only once it has a position — focus and scroll after that render.
+  // The menu mounts only once it has a position - focus and scroll after that render.
   const menuReady = open && position !== null
   useEffect(() => {
     if (menuReady) (searchRef.current ?? listRef.current)?.focus({ preventScroll: true })
@@ -191,7 +191,7 @@ export default function Select({
     if (menuReady && active >= 0) document.getElementById(optionId(active))?.scrollIntoView({ block: 'nearest' })
   }, [menuReady, active, optionId])
 
-  // Server-side search: new results arrive while open — point at the first one.
+  // Server-side search: new results arrive while open - point at the first one.
   useEffect(() => {
     if (open && !filterLocally) setActive(firstEnabled(filtered))
     // eslint-disable-next-line react-hooks/exhaustive-deps

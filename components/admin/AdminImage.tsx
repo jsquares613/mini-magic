@@ -2,8 +2,8 @@ import { toSupabaseTransformUrl } from '@/lib/supabase/imageTransform'
 
 /**
  * Admin thumbnail/preview image. Asks the Supabase image CDN for a resized
- * copy (1× and 2× for sharp screens) instead of the full-size original —
- * same approach as the storefront's SafeImage — lazy-loaded and decoded off
+ * copy (1× and 2× for sharp screens) instead of the full-size original -
+ * same approach as the storefront's SafeImage - lazy-loaded and decoded off
  * the main thread. SVG, blob: and non-Supabase URLs pass through unchanged.
  *
  * `width` is the rendered CSS width in pixels.

@@ -4,7 +4,7 @@ import InfiniteProductGrid from '@/components/InfiniteProductGrid'
 import SectionHeader from '@/components/SectionHeader'
 
 /**
- * Homepage "All Products" — the whole catalogue in a grid that grows as you
+ * Homepage "All Products" - the whole catalogue in a grid that grows as you
  * scroll down, shuffled into a new order every day (lib/rails.ts).
  * A homepage extra: if it can't load, the section is skipped rather than
  * taking the page down.

@@ -3,7 +3,7 @@ import type { Tables, TablesInsert } from '../database.types'
 import { ok } from './_util'
 
 /**
- * Enquiries repository — the lead-management core.
+ * Enquiries repository - the lead-management core.
  *
  * - `createEnquiry` runs on the **anon** client (public INSERT allowed by RLS);
  *   it does not read the row back (anon can't SELECT enquiries).

@@ -30,7 +30,7 @@ import {
 
 export default async function EditCategoryPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase()
-  // All keyed off the id in the URL — one parallel batch.
+  // All keyed off the id in the URL - one parallel batch.
   const [{ data: category }, { data: promotions }, { data: subcategories }] = await Promise.all([
     supabase.from('categories').select('*').eq('id', params.id).maybeSingle(),
     supabase.from('category_promotions').select('*').eq('category_id', params.id).order('display_order', { ascending: true }),
@@ -152,7 +152,7 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
         {/* Promotions */}
         <Card
           title="Promotions"
-          description="Banners on the category page — they don't change product prices."
+          description="Banners on the category page - they don't change product prices."
           icon={MegaphoneIcon}
           tone="red"
           bodyClassName="p-0"

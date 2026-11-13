@@ -3,7 +3,7 @@
  *
  * These types are the contract between the data layer (`/data`, `/lib`) and the
  * UI (`/components`, `/app`). When a real backend is introduced, only the data
- * source needs to change — as long as it returns these shapes, the entire UI
+ * source needs to change - as long as it returns these shapes, the entire UI
  * keeps working untouched. Keep this file framework-agnostic (no React imports).
  */
 
@@ -16,6 +16,18 @@ export interface Seo {
   keywords?: string[]
   ogImage?: string
   canonical?: string
+}
+
+export interface ProductColorOption {
+  id: string
+  name: string
+  /** Swatch colour ("#ef4444"); null = name-only pill. */
+  hex: string | null
+}
+
+export interface GalleryImage {
+  url: string
+  colorId: string | null
 }
 
 /**
@@ -38,7 +50,7 @@ export interface Product {
   category: string
   /** Optional subcategory slug. */
   subcategory?: string
-  /** Real image URLs. May be empty — UI falls back to {@link Product.emoji}. */
+  /** Real image URLs. May be empty - UI falls back to {@link Product.emoji}. */
   images: string[]
   /** Placeholder visual used when `images` is empty. */
   emoji?: string
@@ -47,6 +59,13 @@ export interface Product {
   ageGroup: string
   material: string
   color: string
+  /** Colours the product comes in (admin → Colours). Empty/absent = no colour picker. */
+  colors?: ProductColorOption[]
+  /**
+   * Detail page only: every photo with the colour it shows (null = all
+   * colours), in display order. `images` stays the plain URL list.
+   */
+  gallery?: GalleryImage[]
   stockStatus: StockStatus
   isFeatured: boolean
   isPopular: boolean

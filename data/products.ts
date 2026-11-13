@@ -1,7 +1,7 @@
 import type { Product } from '@/types'
 
 /**
- * The canonical product catalogue — the ONLY place products are defined.
+ * The canonical product catalogue - the ONLY place products are defined.
  *
  * Replaces the four divergent copies that previously lived in lib/products.ts,
  * app/categories/page.tsx, PopularToys.tsx and NewArrivals.tsx. Every consumer
@@ -20,7 +20,7 @@ export const products: Product[] = [
     name: 'Classic Teddy Bear',
     shortDescription: 'A timeless, huggable companion in soft golden plush.',
     description:
-      'Meet the Classic Teddy Bear — the cuddly best friend every childhood deserves. Made from ultra-soft, hypoallergenic plush with secure embroidered eyes (no choking hazards), this bear is built for bedtime hugs, tea parties and everything in between.',
+      'Meet the Classic Teddy Bear - the cuddly best friend every childhood deserves. Made from ultra-soft, hypoallergenic plush with secure embroidered eyes (no choking hazards), this bear is built for bedtime hugs, tea parties and everything in between.',
     price: 170,
     salePrice: 102,
     category: 'toys',
@@ -38,7 +38,7 @@ export const products: Product[] = [
     tags: ['teddy', 'plush', 'bestseller', 'gift'],
     features: [
       'Ultra-soft, skin-friendly plush fabric',
-      'Embroidered eyes — completely safe for infants',
+      'Embroidered eyes - completely safe for infants',
       'Machine washable for easy cleaning',
       'Perfect cuddle size for little arms',
     ],
@@ -106,7 +106,7 @@ export const products: Product[] = [
     isNew: true,
     tags: ['truck', 'vehicle', 'friction', 'boys'],
     features: [
-      'Friction-powered — no batteries required',
+      'Friction-powered - no batteries required',
       'Oversized grip tyres for any surface',
       'Tough, impact-resistant build',
       'Encourages active, imaginative play',
@@ -138,7 +138,7 @@ export const products: Product[] = [
     isNew: false,
     tags: ['dinosaur', 'plush', 'gift'],
     features: [
-      'Soft fabric spikes — safe and squishy',
+      'Soft fabric spikes - safe and squishy',
       'Encourages imaginative storytelling',
       'Durable double-stitched seams',
       'Just the right size to carry everywhere',
@@ -342,7 +342,7 @@ export const products: Product[] = [
     name: 'Stationery Pack',
     shortDescription: 'An all-in-one kit of pens, pencils and sticky notes.',
     description:
-      'Everything a desk needs in one bundle! The Stationery Pack includes pens, pencils, an eraser, sharpener, ruler and colourful sticky notes — perfect for back-to-school or the home office.',
+      'Everything a desk needs in one bundle! The Stationery Pack includes pens, pencils, an eraser, sharpener, ruler and colourful sticky notes - perfect for back-to-school or the home office.',
     price: 249,
     salePrice: 124,
     category: 'stationery',
@@ -528,7 +528,7 @@ export const products: Product[] = [
     name: 'Party Tableware Set',
     shortDescription: 'A colourful disposable set for instant celebrations.',
     description:
-      'Throw a fuss-free party with this cheerful Party Tableware Set. Includes plates, cups and napkins in bright matching colours — easy to set up and even easier to clean up.',
+      'Throw a fuss-free party with this cheerful Party Tableware Set. Includes plates, cups and napkins in bright matching colours - easy to set up and even easier to clean up.',
     price: 199,
     salePrice: 149,
     category: 'disposable-products',

@@ -2,7 +2,7 @@ import { createDecipheriv } from 'crypto'
 import { inflateRawSync } from 'zlib'
 
 /**
- * Marg ERP "eOnline" master API client — SERVER ONLY (holds the decryption key).
+ * Marg ERP "eOnline" master API client - SERVER ONLY (holds the decryption key).
  *
  * Read-only: only `MargMST2017` (product master sync) is called. Marg's order
  * posting APIs are intentionally not implemented.
@@ -16,7 +16,7 @@ import { inflateRawSync } from 'zlib'
  */
 
 const DEFAULT_BASE_URL = 'https://corporate.margerp.com/api/eOnlineData'
-/** Safety cap on pagination — Marg returns ~6k products in a handful of pages. */
+/** Safety cap on pagination - Marg returns ~6k products in a handful of pages. */
 const MAX_PAGES = 50
 
 export interface MargConfig {
@@ -38,7 +38,7 @@ export interface MargItem {
 
 export interface MargFetchResult {
   items: MargItem[]
-  /** Marg's own "DateTime" for this response — pass back as `since` next time. */
+  /** Marg's own "DateTime" for this response - pass back as `since` next time. */
   margDatetime: string | null
 }
 
@@ -51,7 +51,7 @@ export function missingMargEnv(): string[] {
 
 export function getMargConfig(): MargConfig {
   const missing = missingMargEnv()
-  if (missing.length) throw new Error(`Marg sync is not configured — set ${missing.join(', ')} in the environment.`)
+  if (missing.length) throw new Error(`Marg sync is not configured - set ${missing.join(', ')} in the environment.`)
   return {
     baseUrl: process.env.MARG_API_URL || DEFAULT_BASE_URL,
     companyCode: process.env.MARG_COMPANY_CODE!,
@@ -95,7 +95,7 @@ function num(v: unknown): number | null {
 
 const PRODUCT_LISTS = ['pro_n', 'pro_u', 'pro_s', 'pro_r'] as const
 
-/** The object holding the product lists — either the payload itself or one level down (e.g. `Details`). */
+/** The object holding the product lists - either the payload itself or one level down (e.g. `Details`). */
 function findBlock(payload: unknown): Obj | null {
   if (!isObj(payload)) return null
   const hasLists = (o: Obj) => PRODUCT_LISTS.some((k) => get(o, k) !== undefined)
@@ -191,12 +191,12 @@ async function fetchPage(cfg: MargConfig, since: string, index: number): Promise
     try {
       return decryptMargPayload(body, cfg.decryptionKey)
     } catch {
-      throw new Error('Could not decrypt the Marg response — check MARG_DECRYPTION_KEY.')
+      throw new Error('Could not decrypt the Marg response - check MARG_DECRYPTION_KEY.')
     }
   }
   if (isObj(body)) {
     // Either plain JSON (e.g. a Failure status) or an envelope around the
-    // cipher text — decrypt the first long string field if there is one.
+    // cipher text - decrypt the first long string field if there is one.
     const cipher = Object.values(body).find((v): v is string => typeof v === 'string' && v.length > 64)
     if (cipher && !findBlock(body)) return decryptMargPayload(cipher, cfg.decryptionKey)
     return body

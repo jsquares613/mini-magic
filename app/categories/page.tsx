@@ -6,7 +6,7 @@ import SafeImage from '@/components/SafeImage'
 import { getAllCategories } from '@/lib/categories'
 import { getHomeHeroSlides } from '@/lib/homepage'
 
-// ISR — see app/page.tsx for why this is needed (no dynamic function on this
+// ISR - see app/page.tsx for why this is needed (no dynamic function on this
 // page means Next.js would otherwise cache the rendered HTML indefinitely).
 export const revalidate = 60
 

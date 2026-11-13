@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Browse the full Minimagic collection of toys, bags, stationery and everyday essentials.',
 }
 
-// ISR — see app/page.tsx for why this is needed (no dynamic function on this
+// ISR - see app/page.tsx for why this is needed (no dynamic function on this
 // page means Next.js would otherwise cache the rendered HTML indefinitely).
 export const revalidate = 60
 

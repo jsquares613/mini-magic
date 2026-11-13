@@ -6,7 +6,7 @@ import Sidebar from '@/components/admin/Sidebar'
 import NavigationProgress from '@/components/admin/NavigationProgress'
 
 export const metadata: Metadata = {
-  title: 'Admin — Minimagic',
+  title: 'Admin - Minimagic',
   robots: { index: false, follow: false },
 }
 

@@ -4,7 +4,7 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 import { repositories } from '@/lib/supabase'
 
 /**
- * Enquiry submission endpoint — the real persistence path for every "Send
+ * Enquiry submission endpoint - the real persistence path for every "Send
  * Enquiry" CTA on the storefront (product pages, play-area, contact).
  *
  * Maps the client's `EnquiryPayload` (source: 'product' | 'play-area' |

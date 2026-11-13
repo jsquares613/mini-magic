@@ -2,7 +2,7 @@
  * Single source of truth for site-wide configuration: brand identity, contact
  * details, navigation and footer structure.
  *
- * Everything here is data — components read from it instead of hardcoding
+ * Everything here is data - components read from it instead of hardcoding
  * strings. To rebrand, change phone numbers, or restructure the nav, edit this
  * one file (or, later, fetch the same shape from a CMS/admin API).
  */
@@ -27,7 +27,7 @@ export const siteConfig = {
   wordmark: 'minimagic',
   tagline: 'Making Everyday Moments More Magical',
   description:
-    'Discover toys, games & everyday essentials for every age with Minimagic — safe, joyful and affordably priced.',
+    'Discover toys, games & everyday essentials for every age with Minimagic - safe, joyful and affordably priced.',
   /** Used as metadataBase for absolute OG URLs. */
   url: 'https://minimagic.example.com',
   logo: '/images/logo.svg',
@@ -59,7 +59,7 @@ export const siteConfig = {
     { label: 'Contact', href: '/contact' },
   ] satisfies NavLink[],
 
-  /** Footer legal links (single /policies page with anchors — no dead links). */
+  /** Footer legal links (single /policies page with anchors - no dead links). */
   legalLinks: [
     { label: 'Cookie Policy', href: '/policies#cookies' },
     { label: 'Privacy Policy', href: '/policies#privacy' },

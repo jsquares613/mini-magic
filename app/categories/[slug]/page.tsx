@@ -14,7 +14,7 @@ type PageProps = { params: { slug: string } }
  * ISR, not SSG: admin-managed categories must appear without a full site
  * rebuild. No `generateStaticParams` (would require Supabase at *build*
  * time just to enumerate slugs); pages render on first request and are
- * cached for `revalidate` seconds — refreshed immediately on edit via the
+ * cached for `revalidate` seconds - refreshed immediately on edit via the
  * admin's `revalidatePath` calls (see app/admin/(protected)/categories/actions.ts).
  */
 export const revalidate = 60

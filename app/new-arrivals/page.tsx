@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'The latest toys, gifts and goodies to land at Minimagic, newest first.',
 }
 
-// ISR — see app/page.tsx. Publishing or syncing products also revalidates it.
+// ISR - see app/page.tsx. Publishing or syncing products also revalidates it.
 export const revalidate = 60
 
 export default async function NewArrivalsPage() {
@@ -31,7 +31,7 @@ export default async function NewArrivalsPage() {
           <p className="mb-4 max-w-xl text-sm text-gray-600 md:text-base">
             Fresh in store: the latest toys and goodies to land at Minimagic, newest first.
           </p>
-          <ProductGrid products={products} emptyMessage="New products are on their way — check back soon!" />
+          <ProductGrid products={products} emptyMessage="New products are on their way - check back soon!" />
         </div>
       </main>
       <Footer />

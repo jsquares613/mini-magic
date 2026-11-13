@@ -1,6 +1,8 @@
 import { repositories } from '@/lib/supabase'
 import { getCategoryIdToSlugMap, getSubcategoryIdToSlugMap } from '@/lib/categories'
-import { getNewArrivalDays } from '@/lib/settings'
+import { getHiddenProductFields, getNewArrivalDays } from '@/lib/settings'
+import { parseColors } from '@/lib/productColors'
+import type { ProductFieldKey } from '@/lib/productFields'
 import { NEW_ARRIVALS_RAIL_SIZE, isNewArrival } from '@/lib/newArrivals'
 import { stockStatusOf } from '@/lib/stock'
 import { withPricing } from '@/lib/pricing'
@@ -9,7 +11,7 @@ import type { Product, ProductWithPricing } from '@/types'
 import type { ProductRow } from '@/lib/supabase/repositories/products'
 
 /**
- * Product data-access layer — now backed by Supabase (Phase 3 integration).
+ * Product data-access layer - now backed by Supabase (Phase 3 integration).
  *
  * This is the seam described in docs/ARCHITECTURE.md: callers (pages,
  * components) only ever import from `lib/products.ts`, never `data/products.ts`
@@ -17,7 +19,7 @@ import type { ProductRow } from '@/lib/supabase/repositories/products'
  * go over the network; every caller has been updated to `await` them.
  *
  * `Product.category` is a SLUG (matching the legacy in-memory shape every
- * caller already expects for links/lookups) — `category_id` → slug is resolved
+ * caller already expects for links/lookups) - `category_id` → slug is resolved
  * via the request-scoped cached map in `lib/categories.ts`, so a list of 50
  * products costs one categories round trip, not fifty.
  */
@@ -25,7 +27,7 @@ import type { ProductRow } from '@/lib/supabase/repositories/products'
 function toProduct(
   row: ProductRow,
   categorySlug: string,
-  /** The `new_arrival_days` setting — decides `isNew`. */
+  /** The `new_arrival_days` setting - decides `isNew`. */
   newArrivalDays: number,
   images: string[] = [],
   subcategorySlug?: string,
@@ -44,6 +46,7 @@ function toProduct(
     ageGroup: '',
     material: row.material ?? '',
     color: row.color ?? '',
+    colors: parseColors(row.colors),
     stockStatus: stockStatusOf(row),
     isFeatured: false,
     isPopular: row.popular,
@@ -57,14 +60,39 @@ function toProduct(
   }
 }
 
+/**
+ * Blanks the fields an admin has switched off for the whole catalogue
+ * (lib/productFields.ts), so no page has to check the setting itself.
+ */
+function withoutHiddenFields(p: Product, hidden: Set<ProductFieldKey>): Product {
+  if (hidden.size === 0) return p
+  const out = { ...p }
+  if (hidden.has('short_description')) out.shortDescription = ''
+  if (hidden.has('description')) out.description = ''
+  if (hidden.has('features')) out.features = []
+  if (hidden.has('sale_price')) out.salePrice = null
+  if (hidden.has('material')) out.material = ''
+  if (hidden.has('colors')) {
+    out.color = ''
+    out.colors = []
+    if (out.gallery) out.gallery = out.gallery.map((g) => ({ ...g, colorId: null }))
+  }
+  if (hidden.has('tags')) out.tags = []
+  if (hidden.has('age_groups')) out.ageGroup = ''
+  if (hidden.has('seo')) out.seo = undefined
+  if (hidden.has('promo_tag')) out.promoTag = null
+  return out
+}
+
 async function toProducts(rows: ProductRow[]): Promise<Product[]> {
-  const [idToSlug, subIdToSlug, imagesByProduct, newArrivalDays] = await Promise.all([
+  const [idToSlug, subIdToSlug, imagesByProduct, newArrivalDays, hidden] = await Promise.all([
     getCategoryIdToSlugMap(),
     getSubcategoryIdToSlugMap(),
     repositories.products.getImagesByProductIds(rows.map((r) => r.id)),
     getNewArrivalDays(),
+    getHiddenProductFields(),
   ])
-  return rows.map((row) =>
+  return rows.map((row) => withoutHiddenFields(
     toProduct(
       row,
       // Storefront reads only see published rows, which always have a category.
@@ -73,7 +101,8 @@ async function toProducts(rows: ProductRow[]): Promise<Product[]> {
       (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url),
       row.subcategory_id ? subIdToSlug.get(row.subcategory_id) : undefined,
     ),
-  )
+    hidden,
+  ))
 }
 
 export { withPricing }
@@ -83,27 +112,43 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
-  const [detail, newArrivalDays] = await Promise.all([repositories.products.getProductBySlug(slug), getNewArrivalDays()])
+  const [detail, newArrivalDays, hidden] = await Promise.all([
+    repositories.products.getProductBySlug(slug),
+    getNewArrivalDays(),
+    getHiddenProductFields(),
+  ])
   if (!detail) return undefined
-  return {
-    ...toProduct(
-      detail,
-      detail.category?.slug ?? detail.category_id ?? '',
-      newArrivalDays,
-      detail.images.map((i) => i.image_url),
-    ),
-    ageGroup: detail.ageGroups.map((a) => a.label).join(', '),
-  }
+  // Main photo first, then the rest in the admin's order.
+  const images = [...detail.images].sort((a, b) => Number(b.is_primary) - Number(a.is_primary))
+  const colorIds = new Set(parseColors(detail.colors).map((c) => c.id))
+  return withoutHiddenFields(
+    {
+      ...toProduct(
+        detail,
+        detail.category?.slug ?? detail.category_id ?? '',
+        newArrivalDays,
+        images.map((i) => i.image_url),
+      ),
+      ageGroup: detail.ageGroups.map((a) => a.label).join(', '),
+      gallery: images.map((i) => ({
+        url: i.image_url,
+        // A tag for a colour that's since been removed counts as a general photo.
+        colorId: i.color_id && colorIds.has(i.color_id) ? i.color_id : null,
+      })),
+    },
+    hidden,
+  )
 }
 
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const rows = await repositories.products.getProductsByCategory(categorySlug)
-  const [subIdToSlug, imagesByProduct, newArrivalDays] = await Promise.all([
+  const [subIdToSlug, imagesByProduct, newArrivalDays, hidden] = await Promise.all([
     getSubcategoryIdToSlugMap(),
     repositories.products.getImagesByProductIds(rows.map((r) => r.id)),
     getNewArrivalDays(),
+    getHiddenProductFields(),
   ])
-  return rows.map((row) =>
+  return rows.map((row) => withoutHiddenFields(
     toProduct(
       row,
       categorySlug,
@@ -111,7 +156,8 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
       (imagesByProduct.get(row.id) ?? []).map((i) => i.image_url),
       row.subcategory_id ? subIdToSlug.get(row.subcategory_id) : undefined,
     ),
-  )
+    hidden,
+  ))
 }
 
 export async function getFeaturedProducts(limit?: number): Promise<Product[]> {
@@ -122,7 +168,7 @@ export async function getPopularProducts(limit?: number): Promise<Product[]> {
   return toProducts(await repositories.products.getPopularProducts(limit))
 }
 
-/** The newest arrivals, newest first — the homepage rail. */
+/** The newest arrivals, newest first - the homepage rail. */
 export async function getNewProducts(limit?: number): Promise<Product[]> {
   return toProducts(await repositories.products.getNewProducts(limit))
 }
@@ -132,7 +178,7 @@ const NEW_ARRIVALS_PAGE_MAX = 96
 
 /**
  * The New Arrivals page: every product still within its "new" period, newest
- * first — or, when fewer than a rail's worth are, the latest arrivals anyway, so
+ * first - or, when fewer than a rail's worth are, the latest arrivals anyway, so
  * the page never looks bare between deliveries.
  */
 export async function getNewArrivals(): Promise<Product[]> {
@@ -143,7 +189,7 @@ export async function getNewArrivals(): Promise<Product[]> {
 }
 
 /**
- * Just what a ProductCard shows — rails send their products to the browser, so
+ * Just what a ProductCard shows - rails send their products to the browser, so
  * long text (description, features, SEO) stays behind.
  */
 function toCardProduct(p: Product): Product {
@@ -176,12 +222,15 @@ export async function getShuffledPage(seed: string, offset: number, limit = RAIL
 
 /** A page of the homepage Special Offers rail: every product on offer, deepest discount first. */
 export async function getOffersPage(offset: number, limit = RAIL_PAGE_SIZE): Promise<RailPage> {
+  // Sale prices switched off in the admin → nothing is on offer.
+  if ((await getHiddenProductFields()).has('sale_price')) return { products: [], hasMore: false }
   const { rows, total } = await repositories.products.getOffersPage(offset, limit)
   return { products: (await toProducts(rows)).map(toCardProduct), hasMore: offset + rows.length < total }
 }
 
 /** Products that have an active sale price, deepest discount first. */
 export async function getProductsOnOffer(limit?: number): Promise<ProductWithPricing[]> {
+  if ((await getHiddenProductFields()).has('sale_price')) return []
   const products = await toProducts(await repositories.products.getProductsOnOffer(limit))
   return products.map(withPricing)
 }
@@ -195,7 +244,7 @@ export async function getRelatedProducts(slug: string, limit = 4): Promise<Produ
   return toProducts(await repositories.products.getRelatedProducts(slug, limit))
 }
 
-/** Every product slug — used by `generateStaticParams` for SSG. */
+/** Every product slug - used by `generateStaticParams` for SSG. */
 export async function getAllProductSlugs(): Promise<string[]> {
   return repositories.products.getAllProductSlugs()
 }

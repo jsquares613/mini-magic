@@ -6,7 +6,7 @@ import Select, { type SelectOption } from './Select'
 
 /**
  * Form field for choosing one published product. Searches on the server as
- * you type (20 results at a time) instead of loading the whole catalogue —
+ * you type (20 results at a time) instead of loading the whole catalogue -
  * nothing is fetched until the menu is first opened.
  */
 export default function ProductPicker({
@@ -34,7 +34,7 @@ export default function ProductPicker({
   const excludeKey = excludeIds.join(',')
 
   // Once the chosen product has been added it appears in excludeIds (after
-  // the page refreshes) — clear the field for the next pick.
+  // the page refreshes) - clear the field for the next pick.
   useEffect(() => {
     if (value && excludeIds.includes(value)) {
       setValue('')

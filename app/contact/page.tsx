@@ -7,7 +7,7 @@ import { getContactInfo } from '@/lib/settings'
 
 export const metadata: Metadata = {
   title: 'Contact Us - Minimagic',
-  description: 'Get in touch with the Minimagic team — questions, enquiries, play-area bookings and more.',
+  description: 'Get in touch with the Minimagic team - questions, enquiries, play-area bookings and more.',
 }
 
 export default async function ContactPage() {

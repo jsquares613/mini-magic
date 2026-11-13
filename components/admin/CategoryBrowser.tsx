@@ -80,7 +80,7 @@ export default function CategoryBrowser({ categories, canWrite }: { categories: 
       const saved = window.localStorage.getItem(LAYOUT_KEY)
       if (saved === 'grid' || saved === 'list') setLayout(saved)
     } catch {
-      /* storage unavailable — keep the default */
+      /* storage unavailable - keep the default */
     }
   }, [])
 
@@ -144,7 +144,7 @@ export default function CategoryBrowser({ categories, canWrite }: { categories: 
 
   /* Drag & drop (list view): the grip is draggable, rows are drop targets.
      Rows stay put while dragging (a line marks the drop spot) and the new
-     order is applied on drop — moving DOM nodes mid-drag can cancel it. */
+     order is applied on drop - moving DOM nodes mid-drag can cancel it. */
   function onDragStart(e: React.DragEvent, id: string) {
     setDragId(id)
     e.dataTransfer.effectAllowed = 'move'
@@ -452,7 +452,7 @@ export default function CategoryBrowser({ categories, canWrite }: { categories: 
                       <span className="font-semibold tabular-nums text-slate-900">{fmt(c.products)}</span>
                       <span className="block text-xs text-slate-500">{c.products > 0 ? `${fmt(c.live)} live` : 'Empty'}</span>
                     </td>
-                    <td className={`${ui.td} text-right tabular-nums text-slate-600`}>{c.subcategories > 0 ? fmt(c.subcategories) : '—'}</td>
+                    <td className={`${ui.td} text-right tabular-nums text-slate-600`}>{c.subcategories > 0 ? fmt(c.subcategories) : '-'}</td>
                     <td className={ui.td}>
                       <div className="flex flex-wrap gap-1.5">
                         <Badge tone={c.image ? 'green' : 'gray'} dot>

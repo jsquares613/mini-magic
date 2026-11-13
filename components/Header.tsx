@@ -16,7 +16,7 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Announcement bar — admin can hide it, and toggle its scrolling */}
+      {/* Announcement bar - admin can hide it, and toggle its scrolling */}
       {announcementEnabled && (
         <div className="overflow-hidden bg-primary px-4 py-1.5 text-sm">
           {marqueeEnabled ? (

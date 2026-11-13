@@ -4,7 +4,7 @@ import type { ProductRow } from './products'
 import { ok } from './_util'
 
 /**
- * Wishlist repository — anonymous, device-scoped (no customer auth exists on
+ * Wishlist repository - anonymous, device-scoped (no customer auth exists on
  * the storefront). Every function is scoped by `deviceId`, an opaque
  * client-generated uuid persisted in a cookie (see app/api/wishlist/route.ts).
  */
@@ -17,7 +17,7 @@ export async function getWishlistProductIds(deviceId: string): Promise<string[]>
   return rows.map((r) => r.product_id)
 }
 
-/** Wishlisted products, most recently added first — for the /wishlist page. */
+/** Wishlisted products, most recently added first - for the /wishlist page. */
 export async function getWishlistProductRows(deviceId: string): Promise<ProductRow[]> {
   const sb = getSupabaseClient()
   const items = ok(

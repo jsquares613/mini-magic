@@ -3,7 +3,7 @@ import type { Tables } from '../database.types'
 import { ok } from './_util'
 
 /**
- * Products repository — all product reads go through here. Mirrors the read API
+ * Products repository - all product reads go through here. Mirrors the read API
  * of the current in-memory `lib/products.ts` so Phase 3 integration is a swap,
  * not a rewrite. Uses separate queries + JS composition (rather than PostgREST
  * embeds) so it stays fully typed against the hand-authored Database types.
@@ -36,7 +36,7 @@ export async function getAllProductSlugs(): Promise<string[]> {
 
 /**
  * All images for a set of products in ONE query (not N), grouped by
- * product_id, each list ordered primary-first then by sort_order — exactly
+ * product_id, each list ordered primary-first then by sort_order - exactly
  * what every list-view (cards, rails, related products) needs to render an
  * image without a per-product round trip.
  */

@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode, SVGProps } from 'react'
 
 /**
- * Admin icon set — 24×24 stroke icons in the Lucide style (shapes from
+ * Admin icon set - 24×24 stroke icons in the Lucide style (shapes from
  * lucide.dev, ISC licence), inlined so the admin needs no icon dependency.
  * Size and colour come from `className` (`h-4 w-4 text-slate-400` etc.).
  * No hooks, so usable from Server and Client Components alike.
@@ -484,5 +484,15 @@ export const ArrowRightIcon: Icon = (p) => (
   <Svg {...p}>
     <path d="M5 12h14" />
     <path d="m12 5 7 7-7 7" />
+  </Svg>
+)
+
+export const PaletteIcon: Icon = (p) => (
+  <Svg {...p}>
+    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 11.994 2z" />
   </Svg>
 )

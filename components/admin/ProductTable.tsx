@@ -62,8 +62,8 @@ const checkbox = ui.checkbox
 
 /**
  * Products table with row selection and bulk actions (set category, publish,
- * unpublish). Bulk actions apply to the ticked rows, or — after "Select all
- * N matching" — to every product matching the current filters, which the
+ * unpublish). Bulk actions apply to the ticked rows, or - after "Select all
+ * N matching" - to every product matching the current filters, which the
  * server re-evaluates from `filters`.
  */
 export default function ProductTable({
@@ -245,7 +245,7 @@ export default function ProductTable({
                       </div>
                     </td>
 
-                    <td className="px-4 py-3 text-slate-600">{p.category ?? <span className="text-slate-300">—</span>}</td>
+                    <td className="px-4 py-3 text-slate-600">{p.category ?? <span className="text-slate-300">-</span>}</td>
 
                     <td className="whitespace-nowrap px-4 py-3">
                       <span

@@ -3,9 +3,9 @@ import ProductCard from '@/components/ProductCard'
 import SectionHeader from '@/components/SectionHeader'
 
 /**
- * "Featured Products" rail — manually curated by Admin → Homepage → Featured
+ * "Featured Products" rail - manually curated by Admin → Homepage → Featured
  * Products (homepage_featured_products), in admin-defined order. This is the
- * sole "featured" mechanism (products has no featured column — see ARCHITECTURE.md v2).
+ * sole "featured" mechanism (products has no featured column - see ARCHITECTURE.md v2).
  */
 export default async function FeaturedProducts({ limit = 4 }: { limit?: number }) {
   const products = await getFeaturedProducts(limit)

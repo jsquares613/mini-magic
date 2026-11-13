@@ -66,7 +66,7 @@ export default async function HomepageAdminPage() {
     getNewArrivalDays(),
   ])
 
-  // Names for the featured products only — the picker searches the catalogue on demand.
+  // Names for the featured products only - the picker searches the catalogue on demand.
   const featuredIds = (featured ?? []).map((f) => f.product_id)
   const { data: featuredProducts } = featuredIds.length
     ? await supabase.from('products').select('id, name, is_published').in('id', featuredIds)
@@ -183,7 +183,7 @@ export default async function HomepageAdminPage() {
         {/* Promotional banners */}
         <Card
           title="Promotional banners"
-          description="Offer blocks such as “40% off — Explore”."
+          description="Offer blocks such as “40% off - Explore”."
           icon={MegaphoneIcon}
           tone="red"
           bodyClassName="p-0"
@@ -237,7 +237,7 @@ export default async function HomepageAdminPage() {
         </Card>
       </div>
 
-      {/* New Arrivals — automatic; this shows what the rail holds and sets how long "new" lasts */}
+      {/* New Arrivals - automatic; this shows what the rail holds and sets how long "new" lasts */}
       <Card
         title="New Arrivals"
         description={`Automatic: new stock appears once it’s published, newest first, and the homepage row scrolls through all of them (loading more as customers swipe). The ${NEW_ARRIVALS_RAIL_SIZE} newest are listed here.`}
@@ -279,7 +279,7 @@ export default async function HomepageAdminPage() {
             <SparklesIcon className="h-4 w-4 shrink-0 text-blue-600" />
             <span className="min-w-0 flex-1">
               <span className="font-semibold tabular-nums">{(newStock ?? 0).toLocaleString('en-IN')}</span> new{' '}
-              {newStock === 1 ? 'product is' : 'products are'} waiting to be published — they join New Arrivals once they are.
+              {newStock === 1 ? 'product is' : 'products are'} waiting to be published - they join New Arrivals once they are.
             </span>
             <ArrowRightIcon className="h-4 w-4 shrink-0" />
           </Link>

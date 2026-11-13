@@ -16,7 +16,7 @@ import {
 
 const FALLBACK_TITLE = 'Play Area - Minimagic | Indoor Playground for Kids'
 const FALLBACK_DESCRIPTION =
-  'Visit the Minimagic Play Area — a safe, supervised indoor playground with ball pits, slides, climbing zones and arts & crafts for kids of every age.'
+  'Visit the Minimagic Play Area - a safe, supervised indoor playground with ball pits, slides, climbing zones and arts & crafts for kids of every age.'
 
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getPlaySeo()
@@ -42,7 +42,7 @@ export default async function PlayAreaPage() {
       <Header />
 
       <main className="min-h-screen bg-[#FFFFEC]">
-        {/* Reusable hero — identical sizing/behaviour to the homepage */}
+        {/* Reusable hero - identical sizing/behaviour to the homepage */}
         <Hero slides={heroSlides} />
 
         {/* CTA */}

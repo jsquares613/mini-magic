@@ -12,7 +12,7 @@ const ITEM = 'w-[38%] shrink-0 snap-start sm:w-[30%] md:w-[calc((100%-4.5rem)/4)
 /**
  * A homepage product rail with no fixed length: it starts with the server-rendered
  * first page and fetches the next one whenever the end of the row comes within
- * a screen — swiping, scrolling or using the arrows.
+ * a screen - swiping, scrolling or using the arrows.
  */
 export default function InfiniteProductRail({
   rail,

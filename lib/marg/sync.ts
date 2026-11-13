@@ -22,7 +22,7 @@ export const MARG_EXCLUDED_COMPANIES = ['PLAY AREA']
 const BATCH_SIZE = 500
 /** A run still "running" after this long died mid-way (e.g. server restart). */
 const STALE_RUN_MS = 30 * 60 * 1000
-/** Re-ask a few minutes before the last sync — applying a change twice is harmless, missing one isn't. */
+/** Re-ask a few minutes before the last sync - applying a change twice is harmless, missing one isn't. */
 const OVERLAP_MS = 5 * 60 * 1000
 /** Marg reports and accepts times in IST. */
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
@@ -40,7 +40,7 @@ export interface MargSyncSummary {
 
 export interface MargSyncFailure {
   error: string
-  /** Another sync was already running — nothing was attempted. */
+  /** Another sync was already running - nothing was attempted. */
   busy?: boolean
 }
 
@@ -114,7 +114,7 @@ export async function runMargSync(opts: {
     .single()
   if (runError) {
     // marg_sync_runs_one_running
-    if (runError.code === '23505') return { error: 'A Marg sync is already running — try again shortly.', busy: true }
+    if (runError.code === '23505') return { error: 'A Marg sync is already running - try again shortly.', busy: true }
     return { error: runError.message }
   }
 

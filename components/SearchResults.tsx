@@ -10,7 +10,7 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
 }
 
 /**
- * Renders search results for a given query. An `async` Server Component —
+ * Renders search results for a given query. An `async` Server Component -
  * `query` comes from the `/search` page's `searchParams` prop, and
  * `searchSite()` (Supabase-backed) runs server-side per request.
  */

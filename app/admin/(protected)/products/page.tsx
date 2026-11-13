@@ -38,7 +38,7 @@ function stockBadge(status: StockStatus, qty: number | null, overridden: boolean
   }
   const { label, tone } = badge[status]
   return overridden
-    ? { label: `${label} · manual`, tone, title: `Set manually${qty != null ? ` — Marg stock: ${pieces}` : ''}` }
+    ? { label: `${label} · manual`, tone, title: `Set manually${qty != null ? ` - Marg stock: ${pieces}` : ''}` }
     : { label, tone }
 }
 
@@ -57,7 +57,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const from = (page - 1) * PAGE_SIZE
 
   const supabase = createServerSupabase()
-  // Only the columns the table shows — descriptions/SEO text stay on the server.
+  // Only the columns the table shows - descriptions/SEO text stay on the server.
   let query = supabase
     .from('products')
     .select(
@@ -111,7 +111,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const viewCounts = Object.fromEntries(viewCountList) as Record<ProductView, number>
   const issueCounts = Object.fromEntries(issueCountList) as Record<ProductIssue, number>
 
-  // Primary image (else first) per product on this page — one query.
+  // Primary image (else first) per product on this page - one query.
   const ids = (products ?? []).map((p) => p.id)
   const { data: images } = ids.length
     ? await supabase
@@ -142,7 +142,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
       priceText: showPrice
         ? formatPrice(onSale ? (p.sale_price as number) : (p.price as number))
         : p.price_display === 'show'
-          ? '—'
+          ? '-'
           : PRICE_HIDDEN_LABEL[p.price_display],
       originalPriceText: onSale ? formatPrice(p.price as number) : null,
       priceMuted: !showPrice,

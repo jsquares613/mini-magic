@@ -3,7 +3,7 @@ import type { PlayZone } from '@/types'
 import type { HeroSlide } from '@/components/Hero'
 
 /**
- * Play Area content data-access layer — backed by Supabase (Phase 3).
+ * Play Area content data-access layer - backed by Supabase (Phase 3).
  *
  * Known content-fidelity gap: `play_area_gallery` stores only `image_url` +
  * `alt_text` (no separate name/description columns), so `PlayZone.description`
@@ -32,7 +32,7 @@ export async function getPlayZones(): Promise<PlayZone[]> {
   return rows.map((row) => ({
     id: row.id,
     name: row.alt_text ?? 'Play Zone',
-    description: '', // not stored — see content-fidelity note above
+    description: '', // not stored - see content-fidelity note above
     image: row.image_url ?? null,
   }))
 }

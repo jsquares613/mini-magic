@@ -4,7 +4,7 @@ import type { Category, Subcategory } from '@/types'
 import type { CategoryRow, SubcategoryRow } from '@/lib/supabase/repositories/categories'
 
 /**
- * Category data-access layer — now backed by Supabase (Phase 3 integration).
+ * Category data-access layer - now backed by Supabase (Phase 3 integration).
  *
  * `getCachedCategories` is wrapped in React's `cache()` so that within a single
  * request/render pass, the many components that need a category lookup (every
@@ -24,7 +24,7 @@ function toCategory(row: CategoryRow): Category {
     color: row.color ?? 'bg-gray-50',
     displayOrder: row.display_order,
     isFeatured: row.featured,
-    offer: null, // category_promotions are banner-only (v2.1) — see getCategoryPromotions
+    offer: null, // category_promotions are banner-only (v2.1) - see getCategoryPromotions
     seo: row.seo_title ? { metaTitle: row.seo_title, metaDescription: row.seo_description ?? '' } : undefined,
   }
 }
@@ -62,7 +62,7 @@ export async function getCategoryName(slug: string): Promise<string> {
   return category?.name ?? slug
 }
 
-/** Every category slug — used by `generateStaticParams` for SSG. */
+/** Every category slug - used by `generateStaticParams` for SSG. */
 export async function getAllCategorySlugs(): Promise<string[]> {
   const all = await getCachedCategories()
   return all.map((c) => c.slug)

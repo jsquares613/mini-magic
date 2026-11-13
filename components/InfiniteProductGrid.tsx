@@ -8,7 +8,7 @@ import type { RailKind } from '@/lib/rails'
 
 /**
  * A homepage product grid that grows downwards: the next page loads as the
- * bottom comes into view, up to `autoLoadLimit` products — after that a "Show
+ * bottom comes into view, up to `autoLoadLimit` products - after that a "Show
  * more" button takes over, so the footer below stays reachable.
  */
 export default function InfiniteProductGrid({
@@ -32,7 +32,7 @@ export default function InfiniteProductGrid({
   const sentinelRef = useRef<HTMLDivElement>(null)
   const autoLoad = status === 'idle' && products.length < autoLoadLimit
 
-  // Re-armed after every page (keyed on the product count — a fast, cached response
+  // Re-armed after every page (keyed on the product count - a fast, cached response
   // can skip the "loading" render): a new observer reports straight away if the end
   // is still in reach, so a short page keeps filling the screen.
   const count = products.length
@@ -77,7 +77,7 @@ export default function InfiniteProductGrid({
             onClick={loadMore}
             className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100 transition hover:bg-blue-700 hover:text-white hover:ring-blue-700"
           >
-            {status === 'error' ? 'Couldn’t load more — try again' : 'Show more products'}
+            {status === 'error' ? 'Couldn’t load more - try again' : 'Show more products'}
           </button>
         </div>
       )}

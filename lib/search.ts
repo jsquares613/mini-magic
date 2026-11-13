@@ -6,7 +6,7 @@ import type { SearchResult } from '@/types'
 /**
  * Centralised search across products, categories and play-area content.
  * Backed by Supabase (Phase 3) via `lib/products.ts` / `lib/categories.ts` /
- * the play-area repository — async because reads now go over the network.
+ * the play-area repository - async because reads now go over the network.
  */
 
 function matches(haystack: string[], needle: string): boolean {

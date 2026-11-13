@@ -7,10 +7,10 @@ const wordmark = Montserrat({ subsets: ['latin'], weight: '600', display: 'swap'
 import { getContactInfo, getFooterQuickLinks, getFooterText } from '@/lib/settings'
 
 /**
- * Footer — a presentational `async` Server Component driven by Supabase
+ * Footer - a presentational `async` Server Component driven by Supabase
  * content (Phase 3): categories, footer quick links, socials and contact
  * info are all admin-editable data. Brand identity (wordmark/tagline-fallback)
- * and legal links stay in `config/site.ts` — there is no dedicated table for
+ * and legal links stay in `config/site.ts` - there is no dedicated table for
  * those yet (see docs/ARCHITECTURE.md scope notes).
  */
 export default async function Footer() {
@@ -22,9 +22,9 @@ export default async function Footer() {
 
   return (
     <footer className="hidden text-white md:block">
-      {/* Upper section — columns + watermark */}
+      {/* Upper section - columns + watermark */}
       <div className="relative min-h-[520px] overflow-hidden bg-blue-900 px-4 pb-0 pt-14 md:px-8 md:pt-16">
-        {/* Background watermark — live text (always spelled right, sharp at any size), anchored to the
+        {/* Background watermark - live text (always spelled right, sharp at any size), anchored to the
             bottom edge. The line height leaves room for the "g" descender, which the overflow would clip. */}
         <p
           aria-hidden="true"

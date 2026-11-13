@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { formatPrice, timeAgo } from '@/lib/format'
-import { getNewArrivalDays } from '@/lib/settings'
+import { getHiddenProductFields, getNewArrivalDays } from '@/lib/settings'
+import { getCurrentProfile } from '@/lib/supabase/auth'
+import { parseColors } from '@/lib/productColors'
 import { newArrivalSwitch } from '@/lib/newArrivals'
 import ProductForm from '@/components/admin/ProductForm'
 import ImageManager from '@/components/admin/ImageManager'
@@ -27,6 +29,8 @@ export default async function EditProductPage({ params }: { params: { id: string
     { data: images },
     { data: relatedPivots },
     newArrivalDays,
+    hiddenFields,
+    profile,
   ] = await Promise.all([
     supabase.from('products').select('*').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
@@ -39,8 +43,15 @@ export default async function EditProductPage({ params }: { params: { id: string
     // the pivot rows, then look up names separately and join in JS.
     supabase.from('product_related').select('id, related_product_id').eq('product_id', id).order('sort_order', { ascending: true }),
     getNewArrivalDays(),
+    getHiddenProductFields(),
+    getCurrentProfile(),
   ])
   if (!product) notFound()
+
+  // Colour photo sections only while the Colours field is in use.
+  const colors = hiddenFields.has('colors') ? [] : parseColors(product.colors)
+  const photoCounts: Record<string, number> = {}
+  for (const img of images ?? []) if (img.color_id) photoCounts[img.color_id] = (photoCounts[img.color_id] ?? 0) + 1
 
   // Names of the curated related products (none or a handful).
   const relatedIds = (relatedPivots ?? []).map((r) => r.related_product_id)
@@ -61,11 +72,11 @@ export default async function EditProductPage({ params }: { params: { id: string
   const margRows: [string, string][] = product.marg_code
     ? [
         ['Item code', product.marg_code],
-        ['Billing name', product.marg_name ?? '—'],
-        ['Supplier', product.marg_company ?? '—'],
-        ['MRP', product.marg_mrp != null ? formatPrice(Number(product.marg_mrp)) : '—'],
+        ['Billing name', product.marg_name ?? '-'],
+        ['Supplier', product.marg_company ?? '-'],
+        ['MRP', product.marg_mrp != null ? formatPrice(Number(product.marg_mrp)) : '-'],
         ['Stock', Number(product.marg_stock ?? 0).toLocaleString('en-IN')],
-        ['Last synced', product.marg_synced_at ? timeAgo(product.marg_synced_at) : '—'],
+        ['Last synced', product.marg_synced_at ? timeAgo(product.marg_synced_at) : '-'],
       ]
     : []
 
@@ -115,10 +126,10 @@ export default async function EditProductPage({ params }: { params: { id: string
 
       <div className={`mb-6 grid gap-6 ${product.marg_code ? 'lg:grid-cols-3' : ''}`}>
         <div className={product.marg_code ? 'lg:col-span-2' : ''}>
-          <ImageManager productId={product.id} images={images ?? []} />
+          <ImageManager productId={product.id} images={images ?? []} colors={colors} />
         </div>
         {product.marg_code && (
-          <Card title="From Marg ERP" description="Synced automatically — change these in Marg." icon={RefreshIcon} tone="blue">
+          <Card title="From Marg ERP" description="Synced automatically - change these in Marg." icon={RefreshIcon} tone="blue">
             <dl className="space-y-3 text-sm">
               {margRows.map(([k, v]) => (
                 <div key={k} className="flex items-start justify-between gap-4">
@@ -140,9 +151,12 @@ export default async function EditProductPage({ params }: { params: { id: string
         selectedAgeIds={selectedAgeIds}
         imageCount={images?.length ?? 0}
         newArrival={newArrivalSwitch(product, newArrivalDays)}
+        photoCounts={photoCounts}
+        hiddenFields={Array.from(hiddenFields)}
+        canConfigureFields={profile?.role === 'admin'}
       />
 
-      {/* Related products — curated "You may also like" picks. Optional: the
+      {/* Related products - curated "You may also like" picks. Optional: the
           storefront falls back to same-category products when empty. */}
       <Card
         className="mt-6"

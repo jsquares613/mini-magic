@@ -1,9 +1,10 @@
 import { cache } from 'react'
 import { repositories } from '@/lib/supabase'
 import { clampNewArrivalDays } from '@/lib/newArrivals'
+import { PRODUCT_FIELDS_SETTING, parseHiddenFields, type ProductFieldKey } from '@/lib/productFields'
 
 /**
- * Site settings data-access layer — backed by Supabase (Phase 3). Replaces the
+ * Site settings data-access layer - backed by Supabase (Phase 3). Replaces the
  * static `config/site.ts` for content staff actually manage day-to-day (nav,
  * contact, socials, announcements, footer). `config/site.ts` itself still
  * supplies brand-identity defaults (name/url/logo) used by `app/layout.tsx`
@@ -38,6 +39,11 @@ export const getFooterText = cache(async (): Promise<string | null> => {
   const value = await repositories.settings.getSetting<string>('footer_text')
   return value ?? null
 })
+
+/** Product fields switched off for the whole catalogue (toggles on the admin product form). */
+export const getHiddenProductFields = cache(async (): Promise<Set<ProductFieldKey>> =>
+  new Set(parseHiddenFields(await repositories.settings.getSetting<unknown>(PRODUCT_FIELDS_SETTING))),
+)
 
 /** How many days a product counts as a new arrival (Admin → Homepage → New Arrivals). */
 export const getNewArrivalDays = cache(async (): Promise<number> =>

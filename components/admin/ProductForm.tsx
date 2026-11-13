@@ -9,9 +9,14 @@ import type { Tables } from '@/lib/supabase/database.types'
 import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
 import { addProductImage, bulkUpdateProducts } from '@/app/admin/(protected)/products/actions'
 import { isActionError, unwrapAction, type ActionResult } from '@/lib/admin/actionResult'
+import { parseColors, type ProductColor } from '@/lib/productColors'
+import type { ProductFieldKey } from '@/lib/productFields'
 import ActionForm, { usePending } from './ActionForm'
 import SubmitButton from './SubmitButton'
 import Select from './Select'
+import ProductColorsField from './ProductColorsField'
+import { PhotoColorSelect, PhotoGroup, photoGroups } from './PhotoGroups'
+import { FieldOffNote, FieldToggle, FieldVisibilityProvider, OptionalField, useFieldOn } from './ProductFieldVisibility'
 import { Card, Dot, Field, FormActions, Switch, buttonClass, ui } from './ui'
 import {
   BadgePercentIcon,
@@ -20,10 +25,10 @@ import {
   GlobeIcon,
   ImagesIcon,
   PackageIcon,
+  PaletteIcon,
   ShapesIcon,
   StarIcon,
   TagIcon,
-  UploadIcon,
   XIcon,
 } from './icons'
 
@@ -35,10 +40,13 @@ type Category = Pick<Tables<'categories'>, 'id' | 'name'>
 type AgeGroup = Pick<Tables<'age_groups'>, 'id' | 'label'>
 type Subcategory = Pick<Tables<'subcategories'>, 'id' | 'name' | 'emoji' | 'category_id'>
 
+type StagedImage = { blob: Blob; name: string; preview: string; colorId: string | null }
+type CropItem = { file: File; preview: string; colorId: string | null }
+
 /**
  * "Marg: …" note under a Marg-owned field. When the admin's value overrides
  * Marg's, offers a one-click reset: it puts Marg's value back in the input and
- * saves the form — a value equal to Marg's is what hands the field back to the
+ * saves the form - a value equal to Marg's is what hands the field back to the
  * sync (see margOverrides() in the product actions).
  */
 function MargHint({
@@ -72,7 +80,7 @@ function MargHint({
       <span className="font-medium text-slate-600">Marg:</span> {display}
       {overridden ? (
         <>
-          {' — your edit is kept. '}
+          {' - your edit is kept. '}
           <button
             type="button"
             onClick={resetToMarg}
@@ -83,9 +91,55 @@ function MargHint({
           </button>
         </>
       ) : (
-        ' — follows Marg until you change it.'
+        ' - follows Marg until you change it.'
       )}
     </p>
+  )
+}
+
+/** A switch with the field's on/off tick box beside it. */
+function OptionalSwitch({
+  field,
+  name,
+  defaultChecked,
+  label,
+  description,
+}: {
+  field: ProductFieldKey
+  name: string
+  defaultChecked: boolean
+  label: string
+  description: React.ReactNode
+}) {
+  const on = useFieldOn(field)
+  return (
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        {on ? (
+          <Switch name={name} defaultChecked={defaultChecked} label={label} description={description} />
+        ) : (
+          <>
+            <span className="block text-sm font-medium text-slate-400">{label}</span>
+            <span className="mt-0.5 block text-xs text-slate-400">Turned off for all products.</span>
+          </>
+        )}
+      </div>
+      <FieldToggle field={field} className="mt-0.5" />
+    </div>
+  )
+}
+
+/** Card whose whole body is one switchable field (SEO, promo tag, colours). */
+function OptionalCard({
+  field,
+  children,
+  ...card
+}: { field: ProductFieldKey; children: React.ReactNode } & Omit<React.ComponentProps<typeof Card>, 'actions' | 'children'>) {
+  const on = useFieldOn(field)
+  return (
+    <Card {...card} description={on ? card.description : undefined} actions={<FieldToggle field={field} />}>
+      {on ? children : <FieldOffNote field={field} />}
+    </Card>
   )
 }
 
@@ -94,18 +148,9 @@ function MargHint({
  * (createProduct or updateProduct.bind(null, id)). On create, `createProduct`
  * returns the new id instead of redirecting, so any images staged below can
  * be uploaded (browser → Storage, same as `ImageManager`) before navigating
- * to the edit page — letting a new product ship with a photo in one step.
+ * to the edit page - letting a new product ship with photos in one step.
  */
-export default function ProductForm({
-  action,
-  product,
-  categories,
-  ageGroups,
-  subcategories = [],
-  selectedAgeIds = [],
-  imageCount = 0,
-  newArrival,
-}: {
+export default function ProductForm(props: {
   action: (formData: FormData) => unknown | Promise<unknown>
   product?: Product
   categories: Category[]
@@ -114,13 +159,39 @@ export default function ProductForm({
   selectedAgeIds?: string[]
   /** Photos the product already has (edit page). */
   imageCount?: number
+  /** Saved photos per colour id (edit page), shown in the Colours card. */
+  photoCounts?: Record<string, number>
   /** The "New arrival" switch, worked out on the server (newArrivalSwitch in lib/newArrivals.ts). */
   newArrival: { on: boolean; hint: string }
+  /** Fields switched off for all products (lib/productFields.ts). */
+  hiddenFields?: ProductFieldKey[]
+  /** Admins get the on/off tick boxes beside each optional field. */
+  canConfigureFields?: boolean
 }) {
+  return (
+    <FieldVisibilityProvider initialHidden={props.hiddenFields ?? []} canConfigure={props.canConfigureFields ?? false}>
+      <ProductFormInner {...props} />
+    </FieldVisibilityProvider>
+  )
+}
+
+function ProductFormInner({
+  action,
+  product,
+  categories,
+  ageGroups,
+  subcategories = [],
+  selectedAgeIds = [],
+  imageCount = 0,
+  photoCounts,
+  newArrival,
+}: React.ComponentProps<typeof ProductForm>) {
   const router = useRouter()
+  const colorsOn = useFieldOn('colors')
   const [selectedCategoryId, setSelectedCategoryId] = useState(product?.category_id ?? '')
-  const [stagedImages, setStagedImages] = useState<{ blob: Blob; name: string; preview: string }[]>([])
-  const [cropQueue, setCropQueue] = useState<{ file: File; preview: string }[]>([])
+  const [colors, setColors] = useState<ProductColor[]>(() => parseColors(product?.colors))
+  const [stagedImages, setStagedImages] = useState<StagedImage[]>([])
+  const [cropQueue, setCropQueue] = useState<CropItem[]>([])
 
   useEffect(() => {
     return () => {
@@ -130,12 +201,13 @@ export default function ProductForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function queueFilesForCrop(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    if (files.length) {
-      setCropQueue((prev) => [...prev, ...files.map((file) => ({ file, preview: URL.createObjectURL(file) }))])
-    }
-    e.target.value = ''
+  // Colours that photos can be grouped under: named ones, and only while the field is on.
+  const photoColors = colorsOn ? colors.filter((c) => c.name.trim()) : []
+  const photoColorIds = new Set(photoColors.map((c) => c.id))
+  const groupOf = (s: StagedImage) => (s.colorId && photoColorIds.has(s.colorId) ? s.colorId : null)
+
+  function queueFilesForCrop(files: File[], colorId: string | null) {
+    setCropQueue((prev) => [...prev, ...files.map((file) => ({ file, preview: URL.createObjectURL(file), colorId }))])
   }
 
   function advanceCropQueue() {
@@ -146,51 +218,58 @@ export default function ProductForm({
   }
 
   function stageCroppedImage(blob: Blob) {
-    const name = cropQueue[0].file.name
-    setStagedImages((prev) => [...prev, { blob, name, preview: URL.createObjectURL(blob) }])
+    const { file, colorId } = cropQueue[0]
+    setStagedImages((prev) => [...prev, { blob, name: file.name, preview: URL.createObjectURL(blob), colorId }])
     advanceCropQueue()
   }
 
-  function removeStagedFile(index: number) {
+  function removeStagedFile(preview: string) {
     setStagedImages((prev) => {
-      const removed = prev[index]
+      const removed = prev.find((s) => s.preview === preview)
       if (removed) URL.revokeObjectURL(removed.preview)
-      return prev.filter((_, i) => i !== index)
+      return prev.filter((s) => s.preview !== preview)
     })
   }
 
+  function moveStagedFile(preview: string, colorId: string | null) {
+    setStagedImages((prev) => prev.map((s) => (s.preview === preview ? { ...s, colorId } : s)))
+  }
+
+  // Upload order = display order: general photos first (the first one becomes the main photo), then each colour's.
+  const orderedStaged = photoGroups(photoColors).flatMap(({ colorId }) => stagedImages.filter((s) => groupOf(s) === colorId))
+
   async function createWithImages(formData: FormData) {
     // createProduct always saves a draft (publishing needs a photo, and photos
-    // attach to an existing product) — publish once the uploads are in.
+    // attach to an existing product) - publish once the uploads are in.
     const wantsPublish = formData.get('is_published') === 'on'
     const id = unwrapAction(await action(formData) as ActionResult<string>)
-    if (!id) throw new Error('Product creation returned no ID — please try again.')
+    if (!id) throw new Error('Product creation returned no ID - please try again.')
 
-    if (stagedImages.length > 0) {
+    if (orderedStaged.length > 0) {
       const supabase = await getBrowserSupabase()
       let failures = 0
-      for (const { blob, name } of stagedImages) {
+      for (const staged of orderedStaged) {
         try {
-          const path = `${id}/${Date.now()}-${name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`
-          const { error: upErr } = await supabase.storage.from('product-images').upload(path, blob)
+          const path = `${id}/${Date.now()}-${staged.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`
+          const { error: upErr } = await supabase.storage.from('product-images').upload(path, staged.blob)
           if (upErr) throw upErr
           const {
             data: { publicUrl },
           } = supabase.storage.from('product-images').getPublicUrl(path)
-          unwrapAction(await addProductImage(id, publicUrl, name))
+          unwrapAction(await addProductImage(id, publicUrl, staged.name, groupOf(staged)))
         } catch {
           failures++
         }
       }
       if (failures > 0) {
-        toast.error(`${failures} image(s) failed to upload — add them from the product's edit page`)
+        toast.error(`${failures} image(s) failed to upload - add them from the product's edit page`)
       }
     }
 
     if (wantsPublish) {
       const published = await bulkUpdateProducts({ op: 'publish', ids: [id] })
       if (isActionError(published)) toast.error(published.error)
-      else if (published.skipped > 0) toast.warning('Saved as a draft — publishing needs a category and at least one photo.')
+      else if (published.skipped > 0) toast.warning('Saved as a draft - publishing needs a category and at least one photo.')
     }
 
     router.push(`/admin/products/${id}`)
@@ -198,6 +277,8 @@ export default function ProductForm({
 
   const subsForCategory = subcategories.filter((s) => s.category_id === selectedCategoryId)
   const needsPhoto = !!product && !product.is_published && imageCount === 0
+  const stagedCounts = Object.fromEntries(photoColors.map((c) => [c.id, stagedImages.filter((s) => groupOf(s) === c.id).length]))
+  const mainPreview = orderedStaged[0]?.preview
 
   return (
     <ActionForm
@@ -210,35 +291,57 @@ export default function ProductForm({
           {!product && (
             <Card
               title="Photos"
-              description="Square photos work best (1000 × 1000 px). They upload when you create the product."
+              description={
+                photoColors.length
+                  ? 'Add photos for each colour - customers see them when they pick that colour. They upload when you create the product.'
+                  : 'Add as many as you like - square photos work best (1000 × 1000 px). They upload when you create the product.'
+              }
               icon={ImagesIcon}
               tone="violet"
             >
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {stagedImages.map((staged, i) => (
-                  <div key={staged.preview} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={staged.preview} alt="" className="aspect-square w-full object-cover" />
-                    {i === 0 && (
-                      <span className="absolute left-2 top-2 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                        Main
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeStagedFile(i)}
-                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm transition hover:bg-rose-50 hover:text-rose-600"
-                      aria-label="Remove photo"
+              <div className="space-y-6">
+                {photoGroups(photoColors).map(({ colorId, color }) => {
+                  const group = stagedImages.filter((s) => groupOf(s) === colorId)
+                  return (
+                    <PhotoGroup
+                      key={colorId ?? 'general'}
+                      color={color}
+                      showHeading={photoColors.length > 0}
+                      count={group.length}
+                      addLabel={color ? `Add ${color.name} photos` : 'Add photos'}
+                      onAddFiles={(files) => queueFilesForCrop(files, colorId)}
                     >
-                      <XIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 text-center text-xs font-medium text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-700">
-                  <UploadIcon className="h-5 w-5" />
-                  Add photos
-                  <input type="file" accept="image/*" multiple onChange={queueFilesForCrop} className="hidden" />
-                </label>
+                      {group.map((staged) => (
+                        <div key={staged.preview} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={staged.preview} alt="" className="aspect-square w-full object-cover" />
+                          {staged.preview === mainPreview && (
+                            <span className="absolute left-2 top-2 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                              Main
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeStagedFile(staged.preview)}
+                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm transition hover:bg-rose-50 hover:text-rose-600"
+                            aria-label="Remove photo"
+                          >
+                            <XIcon className="h-4 w-4" />
+                          </button>
+                          {photoColors.length > 0 && (
+                            <div className="absolute inset-x-0 bottom-0 p-1.5">
+                              <PhotoColorSelect
+                                colors={photoColors}
+                                value={groupOf(staged)}
+                                onChange={(next) => moveStagedFile(staged.preview, next)}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </PhotoGroup>
+                  )
+                })}
               </div>
 
               {cropQueue.length > 0 && (
@@ -253,6 +356,20 @@ export default function ProductForm({
             </Card>
           )}
 
+          <OptionalCard
+            field="colors"
+            title="Colours"
+            description={
+              product
+                ? 'The colours this product comes in. Customers pick one to see its photos. Save, then add each new colour’s photos in Photos above.'
+                : 'The colours this product comes in. Each colour gets its own photo section above.'
+            }
+            icon={PaletteIcon}
+            tone="violet"
+          >
+            <ProductColorsField colors={colors} onChange={setColors} photoCounts={product ? photoCounts : stagedCounts} />
+          </OptionalCard>
+
           <Card title="Basics" description="What customers see on the product page." icon={FileTextIcon}>
             <div className="space-y-5">
               <div>
@@ -263,22 +380,28 @@ export default function ProductForm({
                 <MargHint product={product} field="name" margValue={product?.marg_name ?? null} display={product?.marg_name ?? ''} />
               </div>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="URL slug" hint="Leave blank to generate it from the name.">
-                  <input name="slug" defaultValue={product?.slug} placeholder="auto from name" className={ui.input} />
-                </Field>
-                <Field label="SKU">
-                  <input name="sku" defaultValue={product?.sku ?? ''} className={ui.input} />
-                </Field>
+                <OptionalField field="slug" htmlFor="product-slug" hint="Leave blank to generate it from the name.">
+                  <input id="product-slug" name="slug" defaultValue={product?.slug} placeholder="auto from name" className={ui.input} />
+                </OptionalField>
+                <OptionalField field="sku" htmlFor="product-sku">
+                  <input id="product-sku" name="sku" defaultValue={product?.sku ?? ''} className={ui.input} />
+                </OptionalField>
               </div>
-              <Field label="Short description" hint="One line, shown on product cards.">
-                <input name="short_description" defaultValue={product?.short_description ?? ''} className={ui.input} />
-              </Field>
-              <Field label="Description">
-                <textarea name="description" rows={5} defaultValue={product?.description ?? ''} className={ui.input} />
-              </Field>
-              <Field label="Why kids love it" hint="One feature per line.">
-                <textarea name="features" rows={4} defaultValue={(product?.features ?? []).join('\n')} className={ui.input} />
-              </Field>
+              <OptionalField field="short_description" htmlFor="product-short" hint="One line, shown on product cards.">
+                <input id="product-short" name="short_description" defaultValue={product?.short_description ?? ''} className={ui.input} />
+              </OptionalField>
+              <OptionalField field="description" htmlFor="product-description">
+                <textarea id="product-description" name="description" rows={5} defaultValue={product?.description ?? ''} className={ui.input} />
+              </OptionalField>
+              <OptionalField field="features" htmlFor="product-features" hint="One feature per line.">
+                <textarea
+                  id="product-features"
+                  name="features"
+                  rows={4}
+                  defaultValue={(product?.features ?? []).join('\n')}
+                  className={ui.input}
+                />
+              </OptionalField>
             </div>
           </Card>
 
@@ -301,10 +424,10 @@ export default function ProductForm({
                   display={`₹${product?.marg_mrp} MRP`}
                 />
               </div>
-              <Field label="Sale price (₹)" hint="Leave blank when not on offer.">
-                <input name="sale_price" type="number" step="0.01" defaultValue={product?.sale_price ?? ''} className={ui.input} />
-              </Field>
-              <Field label="Price display">
+              <OptionalField field="sale_price" label="Sale price (₹)" htmlFor="product-sale" hint="Leave blank when not on offer.">
+                <input id="product-sale" name="sale_price" type="number" step="0.01" defaultValue={product?.sale_price ?? ''} className={ui.input} />
+              </OptionalField>
+              <OptionalField field="price_display">
                 <Select
                   name="price_display"
                   aria-label="Price display"
@@ -315,26 +438,20 @@ export default function ProductForm({
                     { value: 'enquire', label: 'Enquire for price', description: 'Shows “Enquire for price”' },
                   ]}
                 />
-              </Field>
+              </OptionalField>
             </div>
           </Card>
 
           <Card title="Details" description="Helps customers filter and compare." icon={ShapesIcon} tone="teal">
             <div className="space-y-5">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Material">
-                  <input name="material" defaultValue={product?.material ?? ''} className={ui.input} />
-                </Field>
-                <Field label="Colour">
-                  <input name="color" defaultValue={product?.color ?? ''} className={ui.input} />
-                </Field>
-              </div>
-              <Field label="Tags" hint="Comma separated, e.g. wooden, eco-friendly.">
-                <input name="tags" defaultValue={(product?.tags ?? []).join(', ')} className={ui.input} />
-              </Field>
-              <fieldset>
-                <legend className={ui.label}>Age groups</legend>
-                <div className="flex flex-wrap gap-2">
+              <OptionalField field="material" htmlFor="product-material">
+                <input id="product-material" name="material" defaultValue={product?.material ?? ''} className={ui.input} />
+              </OptionalField>
+              <OptionalField field="tags" htmlFor="product-tags" hint="Comma separated, e.g. wooden, eco-friendly.">
+                <input id="product-tags" name="tags" defaultValue={(product?.tags ?? []).join(', ')} className={ui.input} />
+              </OptionalField>
+              <OptionalField field="age_groups">
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Age groups">
                   {ageGroups.map((a) => (
                     <label
                       key={a.id}
@@ -351,11 +468,17 @@ export default function ProductForm({
                     </label>
                   ))}
                 </div>
-              </fieldset>
+              </OptionalField>
             </div>
           </Card>
 
-          <Card title="Search engines" description="Optional — how this product appears on Google." icon={GlobeIcon} tone="gray">
+          <OptionalCard
+            field="seo"
+            title="Search engines"
+            description="Optional - how this product appears on Google."
+            icon={GlobeIcon}
+            tone="gray"
+          >
             <div className="space-y-5">
               <Field label="Meta title">
                 <input name="seo_title" defaultValue={product?.seo_title ?? ''} className={ui.input} />
@@ -364,7 +487,7 @@ export default function ProductForm({
                 <textarea name="seo_description" rows={2} defaultValue={product?.seo_description ?? ''} className={ui.input} />
               </Field>
             </div>
-          </Card>
+          </OptionalCard>
         </div>
 
         {/* Sidebar column */}
@@ -399,7 +522,7 @@ export default function ProductForm({
                 />
               </Field>
               {subsForCategory.length > 0 && (
-                <Field label="Subcategory">
+                <OptionalField field="subcategory">
                   <Select
                     name="subcategory_id"
                     aria-label="Subcategory"
@@ -409,11 +532,11 @@ export default function ProductForm({
                       ...subsForCategory.map((s) => ({ value: s.id, label: `${s.emoji ? `${s.emoji} ` : ''}${s.name}` })),
                     ]}
                   />
-                </Field>
+                </OptionalField>
               )}
-              <Field label="Display order" hint="Lower numbers show first.">
-                <input name="display_order" type="number" defaultValue={product?.display_order ?? 0} className={ui.input} />
-              </Field>
+              <OptionalField field="display_order" htmlFor="product-order" hint="Lower numbers show first.">
+                <input id="product-order" name="display_order" type="number" defaultValue={product?.display_order ?? 0} className={ui.input} />
+              </OptionalField>
             </div>
           </Card>
 
@@ -453,12 +576,25 @@ export default function ProductForm({
 
           <Card title="Highlights" icon={StarIcon} tone="amber">
             <div className="space-y-4">
-              <Switch name="popular" defaultChecked={product?.popular ?? false} label="Popular" description="Marks a best-seller in this admin. The homepage no longer has a Most Popular section." />
-              <Switch name="new_arrival" defaultChecked={newArrival.on} label="New arrival" description={newArrival.hint} />
+              <OptionalSwitch
+                field="popular"
+                name="popular"
+                defaultChecked={product?.popular ?? false}
+                label="Popular"
+                description="Marks a best-seller in this admin. The homepage no longer has a Most Popular section."
+              />
+              <OptionalSwitch
+                field="new_arrival"
+                name="new_arrival"
+                defaultChecked={newArrival.on}
+                label="New arrival"
+                description={newArrival.hint}
+              />
             </div>
           </Card>
 
-          <Card
+          <OptionalCard
+            field="promo_tag"
             title="Promo tag"
             description="Badge on the product card. Line breaks control how it stacks."
             icon={BadgePercentIcon}
@@ -493,7 +629,7 @@ export default function ProductForm({
                 </div>
               </div>
             )}
-          </Card>
+          </OptionalCard>
         </div>
       </div>
 

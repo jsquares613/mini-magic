@@ -7,7 +7,7 @@ import type { Product } from '@/types'
 export const RAILS = ['new-arrivals', 'offers', 'all-products'] as const
 export type RailKind = (typeof RAILS)[number]
 
-/** Products per page — the first page is rendered with the homepage, the rest fetched. */
+/** Products per page - the first page is rendered with the homepage, the rest fetched. */
 export const RAIL_PAGE_SIZE = 12
 /** Deepest offset the API serves (stops pathological requests). */
 export const RAIL_MAX_OFFSET = 5000

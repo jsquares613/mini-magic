@@ -49,7 +49,7 @@ export async function updateAboutContent(formData: FormData): Promise<{ error: s
 
 /* --------------------------------- Gallery -------------------------------- */
 // `about_page.gallery` is a JSONB array of `{image, label}` (no child table, no
-// per-item id) — add/remove read-modify-write the whole array. Index-based
+// per-item id) - add/remove read-modify-write the whole array. Index-based
 // removal is fine for a single-admin-at-a-time tool; every other delete in
 // this codebase is by UUID, this is the one deliberate exception.
 async function readGallery(supabase: ReturnType<typeof createAdminSupabase>): Promise<AboutGalleryItem[]> {

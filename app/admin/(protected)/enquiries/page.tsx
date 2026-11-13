@@ -20,7 +20,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: { 
   const from = (page - 1) * PAGE_SIZE
 
   const supabase = createServerSupabase()
-  // One page of the columns the table shows (the list grows forever — never load it all).
+  // One page of the columns the table shows (the list grows forever - never load it all).
   let query = supabase
     .from('enquiries')
     .select('id, name, phone, enquiry_type, subject, channel, status, created_at', { count: 'exact' })

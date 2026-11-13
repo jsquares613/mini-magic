@@ -7,7 +7,7 @@ import { getWishlistProducts } from '@/lib/products'
 /**
  * Wishlist endpoint for anonymous shoppers (no customer auth exists). Identity
  * is an opaque `device_id` uuid, stored in a first-party httpOnly cookie and
- * created on first use — mirrors the productSlug→product_id resolution already
+ * created on first use - mirrors the productSlug→product_id resolution already
  * used by app/api/enquiries/route.ts.
  */
 

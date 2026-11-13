@@ -32,7 +32,7 @@ export default async function OffersAdminPage() {
               label="Banner media"
               defaultUrl={banner?.image ?? null}
               aspectRatio={3}
-              hint="1280 × 427 px (3:1) — image or MP4 video"
+              hint="1280 × 427 px (3:1) - image or MP4 video"
             />
           </Card>
           <Card title="Visibility" icon={EyeIcon}>

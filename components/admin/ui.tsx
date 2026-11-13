@@ -4,7 +4,7 @@ import { ChevronLeftIcon, type Icon } from './icons'
 import IntentLink from './IntentLink'
 
 /**
- * Admin design system — one place for the panel's look.
+ * Admin design system - one place for the panel's look.
  *
  * Server-safe (no hooks), so Server and Client Components share the same
  * pieces: page header, cards, KPI tiles, badges, form fields, switches,
@@ -16,7 +16,7 @@ import IntentLink from './IntentLink'
 export const ui = {
   input:
     'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500',
-  /** Compact inline control (filter bars, bulk actions) — same look as `input`, natural width. */
+  /** Compact inline control (filter bars, bulk actions) - same look as `input`, natural width. */
   control:
     'h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10',
   label: 'mb-1.5 block text-sm font-medium text-slate-700',
@@ -86,7 +86,7 @@ export function buttonClass(variant: ButtonVariant = 'primary', size: ButtonSize
   return `inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-lg font-semibold transition focus-visible:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]} ${extra}`.trim()
 }
 
-/** Square icon-only action (edit, delete, toggle…) — pair with an sr-only label. */
+/** Square icon-only action (edit, delete, toggle…) - pair with an sr-only label. */
 export function iconButtonClass(tone: 'default' | 'danger' = 'default', extra = ''): string {
   const colours =
     tone === 'danger' ? 'text-slate-400 hover:bg-rose-50 hover:text-rose-600' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'

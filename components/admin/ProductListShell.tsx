@@ -174,7 +174,7 @@ export default function ProductListShell({
     navigate(params, scroll)
   }
 
-  // The URL's search changed without us (back/forward, a link): show it in the box —
+  // The URL's search changed without us (back/forward, a link): show it in the box -
   // unless the user is mid-search, in which case this is an older result landing.
   useEffect(() => {
     if (filters.q === lastPushedQ.current) return
@@ -320,7 +320,7 @@ export default function ProductListShell({
         </div>
       </div>
 
-      {/* What the search found — and quick ways out when it found nothing */}
+      {/* What the search found - and quick ways out when it found nothing */}
       <div className={`text-sm text-slate-500 ${filters.q ? 'mb-4' : ''}`} aria-live="polite">
         {filters.q && (
           <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 transition-opacity ${pending ? 'opacity-60' : ''}`}>
@@ -351,7 +351,7 @@ export default function ProductListShell({
         )}
       </div>
 
-      {/* Needs attention — combines with the view above */}
+      {/* Needs attention - combines with the view above */}
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Needs attention</span>
         {PRODUCT_ISSUES.map((issue) => {

@@ -3,7 +3,7 @@ import InfiniteProductRail from '@/components/InfiniteProductRail'
 import SectionHeader from '@/components/SectionHeader'
 
 /**
- * Homepage "Special Offers" — every product on offer, deepest discount first, in
+ * Homepage "Special Offers" - every product on offer, deepest discount first, in
  * a row that scrolls sideways and loads more as it goes. Hidden when nothing is
  * on offer; the full list with category filters is /offers.
  */

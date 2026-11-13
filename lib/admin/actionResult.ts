@@ -1,6 +1,6 @@
 /**
  * Server Actions that cross the Next.js RSC boundary have thrown `Error`
- * messages redacted to a generic string in production builds — even for
+ * messages redacted to a generic string in production builds - even for
  * deliberate, expected errors (a blocked delete, a failed write), not just
  * unexpected crashes. Actions that need the real message to reach the admin
  * user must `return { error }` instead of throwing.

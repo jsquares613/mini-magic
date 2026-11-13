@@ -66,7 +66,7 @@ export default async function AboutAdminPage() {
                   name="hero_image"
                   label="Hero media"
                   defaultUrl={about?.hero_image ?? null}
-                  hint="1280 × 440 px — image or MP4 video"
+                  hint="1280 × 440 px - image or MP4 video"
                 />
                 <Field label="Title" hint="Optional.">
                   <input name="hero_title" defaultValue={about?.hero_title ?? ''} className={ui.input} />
@@ -94,7 +94,7 @@ export default async function AboutAdminPage() {
                   name="story_image"
                   label="Story image"
                   defaultUrl={about?.story_image ?? null}
-                  hint="640 × 480 px (4:3) — beside the story on desktop, full-width on mobile"
+                  hint="640 × 480 px (4:3) - beside the story on desktop, full-width on mobile"
                 />
               </div>
             </Card>
@@ -114,7 +114,7 @@ export default async function AboutAdminPage() {
             </Card>
           </div>
 
-          <Card title="Search engines" description="Optional — how this page appears on Google." icon={GlobeIcon} tone="gray">
+          <Card title="Search engines" description="Optional - how this page appears on Google." icon={GlobeIcon} tone="gray">
             <div className="space-y-5">
               <Field label="Meta title">
                 <input name="seo_title" defaultValue={about?.seo_title ?? ''} className={ui.input} />

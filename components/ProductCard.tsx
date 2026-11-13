@@ -10,7 +10,7 @@ import { formatPrice } from '@/lib/format'
  * (home rails, category pages, offers, related products). Replaces the four
  * divergent inline card markups that previously existed.
  *
- * No `'use client'` — it is a presentational Server Component (just a Link),
+ * No `'use client'` - it is a presentational Server Component (just a Link),
  * so it renders inside both server and client trees with zero JS cost. Keep
  * its imports browser-safe: InfiniteProductRail renders it client-side too.
  */
@@ -27,9 +27,9 @@ export default function ProductCard({ product, index = 99 }: { product: Product;
           </div>
         )}
 
-        {/* Visual: real image when available, else emoji placeholder — always square, matching the recommended 1000x1000 upload */}
+        {/* Visual: real image when available, else emoji placeholder - always square, matching the recommended 1000x1000 upload */}
         <div className={`relative flex aspect-square items-center justify-center overflow-hidden ${product.bg ?? 'bg-lightYellow'}`}>
-          {/* Promo tag — top-left corner ribbon */}
+          {/* Promo tag - top-left corner ribbon */}
           {product.promoTag && (
             <div
               className="absolute left-0 top-0 z-10 overflow-hidden rounded-br-xl shadow-[3px_3px_16px_rgba(0,0,0,0.55)]"
@@ -60,7 +60,7 @@ export default function ProductCard({ product, index = 99 }: { product: Product;
           )}
         </div>
 
-        {/* Details — white background, natural height below the image */}
+        {/* Details - white background, natural height below the image */}
         <div className="flex flex-1 flex-col justify-between gap-0.5 bg-white px-1.5 py-1 md:gap-1 md:px-3 md:py-2">
           <h3 className="line-clamp-1 text-[11px] font-semibold text-gray-900 md:mb-1 md:text-base">{product.name}</h3>
           <div className="flex items-center justify-between gap-1 md:gap-2">

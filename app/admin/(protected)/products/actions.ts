@@ -10,6 +10,14 @@ import { getNewArrivalDays } from '@/lib/settings'
 import { newSinceFromSwitch } from '@/lib/newArrivals'
 import { isActionError, type ActionResult } from '@/lib/admin/actionResult'
 import type { Tables, TablesInsert } from '@/lib/supabase/database.types'
+import { parseColors } from '@/lib/productColors'
+import {
+  PRODUCT_FIELDS,
+  PRODUCT_FIELDS_SETTING,
+  isProductFieldKey,
+  parseHiddenFields,
+  type ProductFieldKey,
+} from '@/lib/productFields'
 import {
   PUBLISHABLE_CONDITIONS,
   parseProductListFilters,
@@ -47,6 +55,7 @@ function stockOverride(fd: FormData): StockOverride | null {
 
 function parseProduct(fd: FormData): TablesInsert<'products'> {
   const name = str(fd, 'name') ?? 'Untitled'
+  const colors = parseColors(fd.get('colors'))
   return {
     name,
     slug: str(fd, 'slug') || slugify(name),
@@ -59,19 +68,53 @@ function parseProduct(fd: FormData): TablesInsert<'products'> {
     sale_price: num(fd, 'sale_price'),
     price_display: (str(fd, 'price_display') as 'show' | 'hide' | 'enquire') ?? 'show',
     material: str(fd, 'material'),
-    color: str(fd, 'color'),
+    colors,
+    // Legacy free-text column, still read by the mobile app.
+    color: colors.length ? colors.map((c) => c.name).join(', ') : null,
     available: bool(fd, 'available'),
     stock_status_override: stockOverride(fd),
     is_published: bool(fd, 'is_published'),
     tags: commaList(fd, 'tags'),
     features: lineList(fd, 'features'),
     popular: bool(fd, 'popular'),
-    // The "New arrival" switch is applied separately (newSinceFromSwitch) — it depends on the saved dates.
+    // The "New arrival" switch is applied separately (newSinceFromSwitch) - it depends on the saved dates.
     promo_tag: str(fd, 'promo_tag'),
     display_order: num(fd, 'display_order') ?? 0,
     seo_title: str(fd, 'seo_title'),
     seo_description: str(fd, 'seo_description'),
   }
+}
+
+/** Columns each switchable form field writes. */
+const FIELD_COLUMNS: Partial<Record<ProductFieldKey, (keyof TablesInsert<'products'>)[]>> = {
+  slug: ['slug'],
+  sku: ['sku'],
+  short_description: ['short_description'],
+  description: ['description'],
+  features: ['features'],
+  sale_price: ['sale_price'],
+  price_display: ['price_display'],
+  colors: ['colors', 'color'],
+  material: ['material'],
+  tags: ['tags'],
+  seo: ['seo_title', 'seo_description'],
+  subcategory: ['subcategory_id'],
+  display_order: ['display_order'],
+  popular: ['popular'],
+  promo_tag: ['promo_tag'],
+  // age_groups and new_arrival aren't plain columns - handled in the actions.
+}
+
+async function getHiddenFields(): Promise<Set<ProductFieldKey>> {
+  const { data } = await createAdminSupabase().from('site_settings').select('value').eq('key', PRODUCT_FIELDS_SETTING).maybeSingle()
+  return new Set(parseHiddenFields(data?.value))
+}
+
+/** Switched-off fields aren't on the form, so their saved values are kept as they are. */
+function dropHiddenFields(payload: TablesInsert<'products'>, hidden: Set<ProductFieldKey>) {
+  hidden.forEach((field) => {
+    for (const column of FIELD_COLUMNS[field] ?? []) delete payload[column]
+  })
 }
 
 const PUBLISH_NEEDS_CATEGORY = { error: 'Choose a category before publishing this product.' }
@@ -124,20 +167,25 @@ function revalidateStorefront(slug?: string) {
 /** Returns the new product's id (rather than redirecting) so the caller can
  *  upload any images staged on the create form before navigating away.
  *  Always creates a draft: publishing needs a photo, and photos can only be
- *  attached once the row exists — ProductForm publishes after uploading. */
+ *  attached once the row exists - ProductForm publishes after uploading. */
 export async function createProduct(formData: FormData): Promise<ActionResult<string>> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
+  const hidden = await getHiddenFields()
   const payload = { ...parseProduct(formData), is_published: false }
+  dropHiddenFields(payload, hidden)
+  if (hidden.has('slug')) payload.slug = slugify(payload.name)
   if (saleAbovePrice(payload)) return SALE_ABOVE_PRICE
   // New products are new stock by default (the column defaults to now()); the switch can opt out.
-  if (!bool(formData, 'new_arrival')) payload.new_since = null
+  if (!hidden.has('new_arrival') && !bool(formData, 'new_arrival')) payload.new_since = null
 
   const { data, error } = await supabase.from('products').insert(payload).select('id').single()
   if (error) return { error: error.message }
 
-  const syncResult = await syncAgeGroups(data.id, formData.getAll('age_group_ids').map(String))
-  if (isActionError(syncResult)) return syncResult
+  if (!hidden.has('age_groups')) {
+    const syncResult = await syncAgeGroups(data.id, formData.getAll('age_group_ids').map(String))
+    if (isActionError(syncResult)) return syncResult
+  }
 
   revalidateStorefront(payload.slug)
   return data.id
@@ -146,7 +194,9 @@ export async function createProduct(formData: FormData): Promise<ActionResult<st
 export async function updateProduct(id: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
+  const hidden = await getHiddenFields()
   const payload = parseProduct(formData)
+  dropHiddenFields(payload, hidden)
   if (payload.is_published && !payload.category_id) return PUBLISH_NEEDS_CATEGORY
   if (saleAbovePrice(payload)) return SALE_ABOVE_PRICE
 
@@ -158,8 +208,10 @@ export async function updateProduct(id: string, formData: FormData): Promise<{ e
   if (readError) return { error: readError.message }
   if (!current) return { error: 'Product not found.' }
 
-  const newSince = newSinceFromSwitch(current, bool(formData, 'new_arrival'), await getNewArrivalDays())
-  if (newSince !== undefined) payload.new_since = newSince
+  if (!hidden.has('new_arrival')) {
+    const newSince = newSinceFromSwitch(current, bool(formData, 'new_arrival'), await getNewArrivalDays())
+    if (newSince !== undefined) payload.new_since = newSince
+  }
 
   // Checked when publishing, so older published products without photos can still be edited.
   if (payload.is_published && !current.is_published) {
@@ -178,8 +230,20 @@ export async function updateProduct(id: string, formData: FormData): Promise<{ e
   const { error } = await supabase.from('products').update(payload).eq('id', id)
   if (error) return { error: error.message }
 
-  const syncResult = await syncAgeGroups(id, formData.getAll('age_group_ids').map(String))
-  if (isActionError(syncResult)) return syncResult
+  // Photos of a removed colour become general photos (shown for every colour).
+  if (payload.colors) {
+    const keep = payload.colors.map((c) => c.id)
+    const untag = supabase.from('product_images').update({ color_id: null }).eq('product_id', id).not('color_id', 'is', null)
+    const { error: untagError } = keep.length
+      ? await untag.not('color_id', 'in', `(${keep.map((k) => `"${k}"`).join(',')})`)
+      : await untag
+    if (untagError) return { error: untagError.message }
+  }
+
+  if (!hidden.has('age_groups')) {
+    const syncResult = await syncAgeGroups(id, formData.getAll('age_group_ids').map(String))
+    if (isActionError(syncResult)) return syncResult
+  }
 
   revalidateStorefront(payload.slug)
   redirect(`/admin/products/${id}`)
@@ -222,7 +286,7 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
     if (ids.length > MAX_SELECTED_IDS) return { error: `Select at most ${MAX_SELECTED_IDS} products at a time.` }
     scope = [`id.in.(${ids.join(',')})`]
   }
-  // Always a WHERE clause — "all products" is an explicit tautology, never a bare UPDATE.
+  // Always a WHERE clause - "all products" is an explicit tautology, never a bare UPDATE.
   const where = (...extra: string[]) => toLogicTree([...scope, ...extra]) ?? 'and(id.not.is.null)'
 
   let result: BulkProductResult
@@ -247,7 +311,7 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
       skipped,
       message:
         `Published ${nProducts(changed)}.` +
-        (skipped ? ` ${nProducts(skipped)} skipped — publishing needs a category and at least one photo.` : ''),
+        (skipped ? ` ${nProducts(skipped)} skipped - publishing needs a category and at least one photo.` : ''),
     }
   } else if (input.op === 'unpublish') {
     const { count, error } = await supabase
@@ -318,7 +382,7 @@ const SEARCH_LIMIT = 20
 
 /**
  * Published products matching `query`, for the related / featured product
- * pickers — they search on demand instead of shipping the whole catalogue
+ * pickers - they search on demand instead of shipping the whole catalogue
  * to the browser. Runs as the signed-in staff member (RLS applies).
  */
 export async function searchPublishedProducts(query: string, excludeIds: string[] = []): Promise<ProductSearchResult[]> {
@@ -355,7 +419,12 @@ export async function deleteProduct(id: string): Promise<{ error: string } | voi
 }
 
 /* ------------------------------- Images --------------------------------- */
-export async function addProductImage(productId: string, imageUrl: string, altText: string | null): Promise<{ error: string } | void> {
+export async function addProductImage(
+  productId: string,
+  imageUrl: string,
+  altText: string | null,
+  colorId: string | null = null,
+): Promise<{ error: string } | void> {
   await requireStaff('editor')
   const supabase = createAdminSupabase()
 
@@ -371,6 +440,7 @@ export async function addProductImage(productId: string, imageUrl: string, altTe
     alt_text: altText,
     is_primary: (count ?? 0) === 0,
     sort_order: count ?? 0,
+    color_id: colorId ? colorId.slice(0, 64) : null,
   })
   if (error) return { error: error.message }
   revalidatePath(`/admin/products/${productId}`)
@@ -408,6 +478,39 @@ export async function setPrimaryImage(imageId: string, productId: string): Promi
   revalidateStorefront()
 }
 
+/** Moves a photo to one of the product's colours, or back to general (null). */
+export async function setProductImageColor(imageId: string, productId: string, colorId: string | null): Promise<{ error: string } | void> {
+  await requireStaff('editor')
+  const supabase = createAdminSupabase()
+  if (colorId) {
+    const { data: product } = await supabase.from('products').select('colors').eq('id', productId).maybeSingle()
+    if (!parseColors(product?.colors).some((c) => c.id === colorId)) {
+      return { error: 'That colour isn’t saved on this product yet - save the product first.' }
+    }
+  }
+  const { error } = await supabase.from('product_images').update({ color_id: colorId }).eq('id', imageId).eq('product_id', productId)
+  if (error) return { error: error.message }
+  revalidatePath(`/admin/products/${productId}`)
+  revalidateStorefront()
+}
+
+/* ------------------------ Field visibility (global) ----------------------- */
+/** Switches an optional product field on or off for every product (admins only). */
+export async function setProductFieldVisible(field: string, visible: boolean): Promise<ActionResult<ProductFieldKey[]>> {
+  await requireStaff('admin')
+  if (!isProductFieldKey(field)) return { error: 'Unknown field.' }
+  const supabase = createAdminSupabase()
+  const hidden = await getHiddenFields()
+  if (visible) hidden.delete(field)
+  else hidden.add(field)
+  const value = Array.from(hidden)
+  const { error } = await supabase.from('site_settings').upsert({ key: PRODUCT_FIELDS_SETTING, value }, { onConflict: 'key' })
+  if (error) return { error: error.message }
+  revalidatePath('/admin/products', 'layout')
+  if (PRODUCT_FIELDS[field].storefront) revalidatePath('/', 'layout')
+  return value
+}
+
 /* --------------------------- Related products ---------------------------- */
 export async function addRelatedProduct(productId: string, formData: FormData): Promise<{ error: string } | void> {
   await requireStaff('editor')
@@ -423,7 +526,7 @@ export async function addRelatedProduct(productId: string, formData: FormData): 
   const { error } = await supabase
     .from('product_related')
     .insert({ product_id: productId, related_product_id: relatedProductId, sort_order: count ?? 0 })
-  // unique(product_id, related_product_id) — adding the same product twice is a no-op, not an error.
+  // unique(product_id, related_product_id) - adding the same product twice is a no-op, not an error.
   if (error && error.code !== '23505') return { error: error.message }
 
   revalidatePath(`/admin/products/${productId}`)

@@ -1,7 +1,7 @@
 import type { PlayInfoBlock, PlayZone } from '@/types'
 
 /**
- * Play Area content — the single source for the /play-area page and for the
+ * Play Area content - the single source for the /play-area page and for the
  * Play Area entries in global search. Previously hardcoded inside the page.
  */
 

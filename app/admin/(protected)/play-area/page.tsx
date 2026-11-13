@@ -40,7 +40,7 @@ export default async function PlayAreaAdminPage() {
         }
       />
 
-      {/* Hero, rules, SEO — one settings form */}
+      {/* Hero, rules, SEO - one settings form */}
       <ActionForm action={updatePlayAreaSettings} successMessage="Play Area settings saved successfully">
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
@@ -51,7 +51,7 @@ export default async function PlayAreaAdminPage() {
                   name="hero_image"
                   label="Hero media"
                   defaultUrl={playArea?.hero_image ?? null}
-                  hint="1280 × 440 px — image or MP4 video"
+                  hint="1280 × 440 px - image or MP4 video"
                 />
                 <Field label="Title" hint="Optional.">
                   <input name="hero_title" defaultValue={playArea?.hero_title ?? ''} className={ui.input} />
@@ -67,7 +67,7 @@ export default async function PlayAreaAdminPage() {
             </Card>
           </div>
 
-          <Card title="Search engines" description="Optional — how this page appears on Google." icon={GlobeIcon} tone="gray">
+          <Card title="Search engines" description="Optional - how this page appears on Google." icon={GlobeIcon} tone="gray">
             <div className="space-y-5">
               <Field label="Meta title">
                 <input name="seo_title" defaultValue={playArea?.seo_title ?? ''} className={ui.input} />
@@ -89,7 +89,7 @@ export default async function PlayAreaAdminPage() {
       {/* Gallery */}
       <Card
         title="Gallery"
-        description="Play zones shown on the page — 16:9 images or MP4 videos."
+        description="Play zones shown on the page - 16:9 images or MP4 videos."
         icon={ImagesIcon}
         tone="violet"
         footer={

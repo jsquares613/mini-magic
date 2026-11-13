@@ -7,7 +7,7 @@ import { toSupabaseTransformUrl, resolveTransformWidth } from '@/lib/supabase/im
  *
  *   SVG          → plain <img> (next/image bugs on SVGs without <?xml prolog)
  *   Supabase CDN → plain <img> with responsive srcset served directly from
- *                  Supabase's global edge (WebP, no Next.js encoding step —
+ *                  Supabase's global edge (WebP, no Next.js encoding step -
  *                  this eliminates the cold-cache AVIF encoding latency that
  *                  made images appear slow on first load)
  *   Other        → next/image with full optimization pipeline
@@ -20,14 +20,14 @@ import { toSupabaseTransformUrl, resolveTransformWidth } from '@/lib/supabase/im
  * ─── Supabase CDN srcset ─────────────────────────────────────────────────────
  *   Supabase's /storage/v1/render/image/ endpoint serves WebP from Cloudflare
  *   edge nodes worldwide. Bypassing the Next.js optimizer means:
- *     • No AVIF encoding step — images start arriving immediately on cold cache
+ *     • No AVIF encoding step - images start arriving immediately on cold cache
  *     • Supabase CDN cache is shared across all visitors (not per-server disk)
  *     • Responsive srcset at 320/640/960/1280/1920 px, browser picks best fit
  */
 
 const SRCSET_WIDTHS = [320, 640, 960, 1280, 1920]
 
-// 1×1 light-grey SVG — blur placeholder fallback when no real LQIP is available.
+// 1×1 light-grey SVG - blur placeholder fallback when no real LQIP is available.
 const GREY_PLACEHOLDER =
   'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmM2Y0ZjYiLz48L3N2Zz4='
 
@@ -63,7 +63,7 @@ export default function SafeImage({
 
   // Supabase Storage images: serve directly from Supabase's CDN edge with a
   // responsive srcset. Bypasses the Next.js optimizer so there is no
-  // server-side AVIF encoding step on cold cache — WebP arrives instantly
+  // server-side AVIF encoding step on cold cache - WebP arrives instantly
   // from the nearest Cloudflare edge node.
   if (src.includes('/storage/v1/')) {
     const bestSrc = toSupabaseTransformUrl(src, { width: resolveTransformWidth(sizes), quality: 85 })

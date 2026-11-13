@@ -3,7 +3,7 @@ import InfiniteProductRail from '@/components/InfiniteProductRail'
 import SectionHeader from '@/components/SectionHeader'
 
 /**
- * "New Arrivals" rail — every current new arrival, newest first, in a row that
+ * "New Arrivals" rail - every current new arrival, newest first, in a row that
  * scrolls sideways and loads more as it goes. Arrivals are automatic (see
  * lib/newArrivals.ts), so a newly published product appears at the front.
  */

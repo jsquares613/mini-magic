@@ -8,7 +8,7 @@ export function formatPrice(amount: number): string {
   return `₹${amount.toLocaleString('en-IN')}/-`
 }
 
-/** "just now", "5 min ago", "3 h ago", else a short date — for "last synced" style labels. */
+/** "just now", "5 min ago", "3 h ago", else a short date - for "last synced" style labels. */
 export function timeAgo(iso: string, now: number = Date.now()): string {
   const seconds = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000))
   if (seconds < 60) return 'just now'

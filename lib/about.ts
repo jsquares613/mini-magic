@@ -6,7 +6,7 @@ import type { AboutGalleryItem, AboutStatistic, TeamMember, Testimonial } from '
 import type { AboutStatisticRow, TeamMemberRow, TestimonialRow } from '@/lib/supabase/repositories/about'
 
 /**
- * About Us content data-access layer — backed by Supabase. Mirrors
+ * About Us content data-access layer - backed by Supabase. Mirrors
  * `lib/categories.ts`'s `cache()`-wrapped convention so the many components
  * that might need this content share one Supabase round trip per request.
  */
@@ -27,7 +27,7 @@ export async function getAboutContent() {
 
 /**
  * Falls back to the hardcoded `aboutHeroSlides` carousel until an admin sets
- * `hero_title` on `about_page` — mirrors `getPlayAreaHero()`'s DB-override
+ * `hero_title` on `about_page` - mirrors `getPlayAreaHero()`'s DB-override
  * pattern, but degrades to existing content instead of an empty hero.
  */
 export async function getAboutHero(): Promise<HeroSlide[]> {

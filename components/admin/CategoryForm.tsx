@@ -47,7 +47,7 @@ export default function CategoryForm({
           </div>
         </Card>
 
-        <Card title="Search engines" description="Optional — how this category appears on Google." icon={GlobeIcon} tone="gray">
+        <Card title="Search engines" description="Optional - how this category appears on Google." icon={GlobeIcon} tone="gray">
           <div className="space-y-5">
             <Field label="Meta title">
               <input name="seo_title" defaultValue={category?.seo_title ?? ''} className={ui.input} />

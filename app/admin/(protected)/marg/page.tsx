@@ -27,11 +27,11 @@ const RUN_STATUS: Record<'running' | 'success' | 'failed', { label: string; tone
 }
 
 function formatDateTime(iso: string | null) {
-  return iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : '—'
+  return iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) : '-'
 }
 
 function duration(start: string, end: string | null) {
-  if (!end) return '—'
+  if (!end) return '-'
   const s = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000)
   return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`
 }
@@ -71,7 +71,7 @@ export default async function MargSyncPage() {
     <Page>
       <PageHeader
         title="Marg Sync"
-        description="Stock, MRP, supplier and billing names come from Marg ERP. New Marg items arrive as drafts — add a name, photos and a category, then publish. Fields you edit are never overwritten."
+        description="Stock, MRP, supplier and billing names come from Marg ERP. New Marg items arrive as drafts - add a name, photos and a category, then publish. Fields you edit are never overwritten."
         meta={
           lastSuccess ? (
             <Badge tone="green" dot>

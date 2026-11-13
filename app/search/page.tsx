@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 /**
  * Server-rendered search: the query comes from the `searchParams` prop Next.js
  * passes to every page, so no `useSearchParams()`/Suspense workaround is
- * needed — `searchSite()` (Supabase-backed, Phase 3) runs server-side per request.
+ * needed - `searchSite()` (Supabase-backed, Phase 3) runs server-side per request.
  */
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
   const query = searchParams.q ?? ''

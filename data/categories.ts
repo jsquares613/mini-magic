@@ -1,7 +1,7 @@
 import type { Category } from '@/types'
 
 /**
- * The canonical category catalogue — the ONLY place categories are defined.
+ * The canonical category catalogue - the ONLY place categories are defined.
  *
  * `slug` is the URL identity (`/categories/<slug>`) and is also what every
  * product references via `Product.category`. Names/spellings are standardised
@@ -16,7 +16,7 @@ export const categories: Category[] = [
     slug: 'toys',
     name: 'Toys',
     description:
-      'Plush friends, ride-ons, building sets and more — safe, joyful toys that spark imagination at every age.',
+      'Plush friends, ride-ons, building sets and more - safe, joyful toys that spark imagination at every age.',
     emoji: '🧸',
     color: 'bg-yellow-100',
     displayOrder: 1,
@@ -25,7 +25,7 @@ export const categories: Category[] = [
     seo: {
       metaTitle: 'Toys - Minimagic | Safe & Fun Toys for Kids',
       metaDescription:
-        'Shop safe, certified toys for every age at Minimagic — plush toys, racing trucks, dolls, building blocks and more.',
+        'Shop safe, certified toys for every age at Minimagic - plush toys, racing trucks, dolls, building blocks and more.',
       keywords: ['toys', 'kids toys', 'plush toys', 'teddy bear'],
     },
   },

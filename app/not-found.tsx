@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
-/** Global 404 page — shown for any unmatched route or `notFound()` call. */
+/** Global 404 page - shown for any unmatched route or `notFound()` call. */
 export default function NotFound() {
   return (
     <>

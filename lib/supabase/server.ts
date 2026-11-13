@@ -24,7 +24,7 @@ export function createServerSupabase() {
           try {
             cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
           } catch {
-            /* called from a Server Component — ignore */
+            /* called from a Server Component - ignore */
           }
         },
       },
@@ -34,7 +34,7 @@ export function createServerSupabase() {
 
 /**
  * Service-role Supabase client for server-side admin mutations (bypasses RLS).
- * Only use AFTER verifying auth with requireStaff() — never on the client side.
+ * Only use AFTER verifying auth with requireStaff() - never on the client side.
  * Needed because RLS UPDATE/DELETE policies silently return 0 rows on failure
  * (no error), making session-based writes unreliable in Server Actions.
  */

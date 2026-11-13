@@ -30,7 +30,7 @@ async function handle(request: NextRequest) {
   const result = await runMargSync({ kind, source: 'cron' })
 
   if ('error' in result) {
-    // An overlapping run isn't a failure — report it without tripping the scheduler's alerts.
+    // An overlapping run isn't a failure - report it without tripping the scheduler's alerts.
     if (result.busy) return NextResponse.json({ ok: false, skipped: true, reason: result.error })
     return NextResponse.json({ ok: false, error: result.error }, { status: 500 })
   }

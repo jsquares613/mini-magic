@@ -20,10 +20,10 @@ export default function HeroSlideForm({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card title="Media" description="An image or MP4 video, 1280 × 440 px." icon={ImagesIcon} tone="violet">
-            <MediaUploadField bucket="hero" name="image" label="Slide media" defaultUrl={slide?.image ?? null} hint="1280 × 440 px — image or MP4 video" />
+            <MediaUploadField bucket="hero" name="image" label="Slide media" defaultUrl={slide?.image ?? null} hint="1280 × 440 px - image or MP4 video" />
           </Card>
 
-          <Card title="Text & button" description="Optional — leave blank for an image-only slide." icon={FileTextIcon}>
+          <Card title="Text & button" description="Optional - leave blank for an image-only slide." icon={FileTextIcon}>
             <div className="space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label="Title">

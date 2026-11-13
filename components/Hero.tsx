@@ -32,7 +32,7 @@ export type HeroSlide = {
   ctaLabel?: string
   ctaHref?: string
   highlights?: HeroHighlight[]
-  /** Real per-image LQIP generated server-side — passed as blurDataURL to SafeImage. */
+  /** Real per-image LQIP generated server-side - passed as blurDataURL to SafeImage. */
   blurDataURL?: string
 }
 
@@ -69,7 +69,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
   const prev = useCallback(() => setCurrent((c) => (c - 1 + count) % count), [count])
   const next = useCallback(() => setCurrent((c) => (c + 1) % count), [count])
 
-  const SWIPE_THRESHOLD = 40 // px — minimum horizontal drag before it counts as a swipe
+  const SWIPE_THRESHOLD = 40 // px - minimum horizontal drag before it counts as a swipe
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
@@ -114,7 +114,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
           The slides are stacked in a single CSS grid cell (every slide uses
           `col-start-1 row-start-1`). The grid auto-sizes to the *tallest* slide,
           so the carousel height is identical for every slide and never changes
-          when switching — eliminating size differences and layout shift (CLS)
+          when switching - eliminating size differences and layout shift (CLS)
           without any hardcoded pixel heights. Only opacity animates.
         */}
         <div
@@ -142,7 +142,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                   active ? 'opacity-100' : 'pointer-events-none opacity-0'
                 }`}
               >
-                {/* Artwork — full-bleed background behind the text, on both mobile and desktop. */}
+                {/* Artwork - full-bleed background behind the text, on both mobile and desktop. */}
                 <div className="absolute inset-0">
                   {isVideo(slide.image) ? (
                     <video
@@ -240,7 +240,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
                 </svg>
               </button>
 
-              {/* Dots (desktop) — overlaid on the image, matching the original full-bleed treatment */}
+              {/* Dots (desktop) - overlaid on the image, matching the original full-bleed treatment */}
               <div className="absolute bottom-4 left-1/2 z-20 hidden -translate-x-1/2 gap-2 md:flex">
                 {slides.map((_, idx) => (
                   <button
@@ -258,7 +258,7 @@ export default function Hero({ slides, autoPlayInterval = 5000, className = '' }
           )}
         </div>
 
-        {/* Dots (mobile) — sit below the card on the page background, matching the reference */}
+        {/* Dots (mobile) - sit below the card on the page background, matching the reference */}
         {count > 1 && (
           <div className="mt-3 flex justify-center gap-1.5 md:hidden">
             {slides.map((_, idx) => (

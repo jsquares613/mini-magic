@@ -4,9 +4,8 @@ import { notFound } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ProductGrid from '@/components/ProductGrid'
-import EnquiryButton from '@/components/EnquiryButton'
 import WishlistButton from '@/components/WishlistButton'
-import SafeImage from '@/components/SafeImage'
+import { ProductColorPicker, ProductColorProvider, ProductEnquiryButton, ProductGallery } from '@/components/ProductGallery'
 import { getProductBySlug, getRelatedProducts, withPricing } from '@/lib/products'
 import { getCategoryBySlug, getCategoryName } from '@/lib/categories'
 import { formatPrice } from '@/lib/format'
@@ -17,7 +16,7 @@ type PageProps = { params: { slug: string } }
  * ISR, not SSG: admin-managed products must appear without a full site
  * rebuild. No `generateStaticParams` (would require Supabase at *build*
  * time just to enumerate slugs); pages render on first request and are
- * cached for `revalidate` seconds — refreshed immediately on edit via the
+ * cached for `revalidate` seconds - refreshed immediately on edit via the
  * admin's `revalidatePath` calls (see app/admin/(protected)/products/actions.ts).
  */
 export const revalidate = 60
@@ -40,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 const STOCK_LABEL: Record<string, { label: string; className: string }> = {
   'in-stock': { label: 'In Stock', className: 'text-green-600' },
-  'low-stock': { label: 'Low Stock — order soon', className: 'text-orange-500' },
+  'low-stock': { label: 'Low Stock - order soon', className: 'text-orange-500' },
   'out-of-stock': { label: 'Out of Stock', className: 'text-red-500' },
   'pre-order': { label: 'Available to Pre-order', className: 'text-blue-600' },
 }
@@ -56,14 +55,42 @@ export default async function ProductDetailPage({ params }: PageProps) {
     getCategoryName(product.category),
   ])
   const stock = STOCK_LABEL[product.stockStatus] ?? STOCK_LABEL['in-stock']
-  const hasImage = product.images.length > 0
+  const gallery = product.gallery ?? product.images.map((url) => ({ url, colorId: null }))
+  const colors = product.colors ?? []
 
+  // Empty specs (or ones switched off in the admin) are left out.
   const specs: { label: string; value: string }[] = [
     { label: 'Category', value: categoryName },
     { label: 'Material', value: product.material },
     { label: 'Age Group', value: product.ageGroup },
-    { label: 'Color', value: product.color },
-  ]
+    // With colour pills below, the plain colour line would repeat them.
+    { label: 'Color', value: colors.length ? '' : product.color },
+  ].filter((s) => s.value)
+
+  const badges = (
+    <>
+      {/* Promo tag - top-left corner ribbon */}
+      {product.promoTag && (
+        <div
+          className="absolute left-0 top-0 z-10 overflow-hidden rounded-br-2xl shadow-[4px_4px_24px_rgba(0,0,0,0.6)]"
+          style={{ background: 'linear-gradient(155deg, #1e3fad 0%, #080f2e 100%)' }}
+        >
+          <div className="px-7 py-4">
+            {product.promoTag.split('\n').map((line, i) => (
+              <p key={i} className={`text-center text-3xl font-black uppercase leading-none tracking-widest drop-shadow-md ${i === 0 ? 'text-white' : 'text-yellow-400'}`}>
+                {line}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+      {isOnSale && (
+        <div className="absolute right-4 top-4 z-10 rounded-full bg-red-500 px-4 py-2 text-sm font-bold text-white">
+          -{discountPercent}% OFF
+        </div>
+      )}
+    </>
+  )
 
   return (
     <>
@@ -88,43 +115,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <span className="font-semibold text-gray-700">{product.name}</span>
           </nav>
 
-          {/* Main: image + info */}
+          {/* Main: photos + info. The provider shares the picked colour between the gallery and the pills. */}
+          <ProductColorProvider colors={colors} gallery={gallery}>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
-            {/* Product Image */}
+            {/* Product photos - slide automatically; colour pills switch the set */}
             <div className="relative">
-              <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl ${product.bg ?? 'bg-yellow-50'}`}>
-                {/* Promo tag — top-left corner ribbon */}
-                {product.promoTag && (
-                  <div
-                    className="absolute left-0 top-0 z-10 overflow-hidden rounded-br-2xl shadow-[4px_4px_24px_rgba(0,0,0,0.6)]"
-                    style={{ background: 'linear-gradient(155deg, #1e3fad 0%, #080f2e 100%)' }}
-                  >
-                    <div className="px-7 py-4">
-                      {product.promoTag.split('\n').map((line, i) => (
-                        <p key={i} className={`text-center text-3xl font-black uppercase leading-none tracking-widest drop-shadow-md ${i === 0 ? 'text-white' : 'text-yellow-400'}`}>
-                          {line}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {hasImage ? (
-                  <SafeImage
-                    src={product.images[0]}
-                    alt={product.name}
-                    priority
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover"
-                  />
-                ) : (
+              {gallery.length > 0 ? (
+                <ProductGallery name={product.name} overlay={badges} />
+              ) : (
+                <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl ${product.bg ?? 'bg-yellow-50'}`}>
+                  {badges}
                   <span className="text-[12rem] leading-none">{product.emoji ?? '🎁'}</span>
-                )}
-                {isOnSale && (
-                  <div className="absolute right-4 top-4 rounded-full bg-red-500 px-4 py-2 text-sm font-bold text-white">
-                    -{discountPercent}% OFF
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Product Information */}
@@ -143,7 +146,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </p>
               <h1 className="mb-3 text-3xl font-bold text-gray-900 md:text-4xl">{product.name}</h1>
 
-              <p className="mb-4 text-gray-600">{product.shortDescription}</p>
+              {product.shortDescription && <p className="mb-4 text-gray-600">{product.shortDescription}</p>}
 
               {/* Price */}
               <div className="mb-4 flex items-center gap-3">
@@ -158,6 +161,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {/* Availability */}
               <p className={`mb-6 font-semibold ${stock.className}`}>● {stock.label}</p>
 
+              {/* Colours - picking one shows its photos */}
+              <ProductColorPicker className="mb-6" />
+
               {/* Specs */}
               <dl className="mb-6 grid grid-cols-2 gap-x-6 gap-y-3 border-y border-gray-200 py-5">
                 {specs.map((spec) => (
@@ -169,15 +175,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </dl>
 
               {/* Full description */}
-              <p className="mb-6 leading-relaxed text-gray-600">{product.description}</p>
+              {product.description && <p className="mb-6 leading-relaxed text-gray-600">{product.description}</p>}
 
               {/* Send Enquiry CTA */}
               <div className="flex flex-wrap gap-3">
-                <EnquiryButton subject={product.name} source="product" productSlug={product.slug} />
+                <ProductEnquiryButton name={product.name} productSlug={product.slug} />
                 <WishlistButton productId={product.id} productSlug={product.slug} productName={product.name} variant="button" />
               </div>
             </div>
           </div>
+          </ProductColorProvider>
 
           {/* Why Kids Love It */}
           {product.features.length > 0 && (

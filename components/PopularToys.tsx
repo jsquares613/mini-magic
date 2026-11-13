@@ -3,7 +3,7 @@ import ProductCard from '@/components/ProductCard'
 import SectionHeader from '@/components/SectionHeader'
 
 /**
- * "Most Popular" rail — now reads real products and uses the shared
+ * "Most Popular" rail - now reads real products and uses the shared
  * ProductCard, so every card links to a working product detail page.
  */
 export default async function PopularToys({ limit = 3 }: { limit?: number }) {

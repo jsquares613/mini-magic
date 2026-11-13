@@ -290,7 +290,7 @@ export default async function DashboardPage() {
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-slate-500">Last successful sync</dt>
                 <dd className="font-medium text-slate-900">
-                  {lastSuccess ? timeAgo(lastSuccess.finished_at ?? lastSuccess.started_at) : '—'}
+                  {lastSuccess ? timeAgo(lastSuccess.finished_at ?? lastSuccess.started_at) : '-'}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4">

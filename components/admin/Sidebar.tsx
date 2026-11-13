@@ -125,7 +125,7 @@ export default function Sidebar({ email, role }: { email: string | null; role: R
           'md:sticky md:inset-auto md:top-0 md:z-auto md:h-screen md:w-60 md:flex-shrink-0 md:translate-x-0',
         ].join(' ')}
       >
-        {/* Logo — desktop only (mobile uses the fixed header above) */}
+        {/* Logo - desktop only (mobile uses the fixed header above) */}
         <Link href="/admin" className="hidden shrink-0 items-center gap-3 px-5 pb-3 pt-5 md:flex">
           <Monogram className="h-9 w-9 text-base" />
           <span>

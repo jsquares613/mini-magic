@@ -10,7 +10,7 @@ import { getAboutContent, getAboutGallery, getAboutHero, getAboutSeo, getAboutSt
 
 const FALLBACK_TITLE = 'About Us - Minimagic | Our Story, Mission & Team'
 const FALLBACK_DESCRIPTION =
-  'Learn the story behind Minimagic — a family-run brand making everyday moments magical with safe, joyful and affordable toys, stationery and essentials for every age.'
+  'Learn the story behind Minimagic - a family-run brand making everyday moments magical with safe, joyful and affordable toys, stationery and essentials for every age.'
 
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getAboutSeo()
@@ -54,7 +54,7 @@ export default async function AboutPage() {
       <Header />
 
       <main className="min-h-screen bg-[#FFFFEC]">
-        {/* 1. Hero — reuses the shared, size-consistent Hero component */}
+        {/* 1. Hero - reuses the shared, size-consistent Hero component */}
         <Hero slides={heroSlides} />
 
         {/* 2. Our Story */}

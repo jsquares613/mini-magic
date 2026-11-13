@@ -16,7 +16,7 @@ type StatCounterProps = {
 /**
  * Accessible count-up number. Animates once when scrolled into view and
  * respects `prefers-reduced-motion`. Uses `tabular-nums` so the width stays
- * stable while counting — no layout shift (CLS).
+ * stable while counting - no layout shift (CLS).
  */
 export default function StatCounter({
   value,

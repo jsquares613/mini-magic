@@ -25,7 +25,7 @@ const ImageCropModal = dynamic(() => import('./ImageCropModal'), { ssr: false })
  * Supabase Storage.
  */
 
-const MAX_UPLOAD_DIM = 2400 // px — longest edge cap for non-cropped uploads
+const MAX_UPLOAD_DIM = 2400 // px - longest edge cap for non-cropped uploads
 
 /**
  * Resizes an image file so its longest edge is at most `maxDim` pixels.

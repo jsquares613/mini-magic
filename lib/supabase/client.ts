@@ -4,14 +4,14 @@ import type { Database } from './database.types'
 /**
  * Supabase client factories.
  *
- * - `getSupabaseClient()` — anon key, RLS-enforced. Safe for public catalogue
+ * - `getSupabaseClient()` - anon key, RLS-enforced. Safe for public catalogue
  *   reads and the public enquiry insert. Usable from server or browser.
- * - `getServiceClient()` — service-role key, **bypasses RLS**. SERVER ONLY
+ * - `getServiceClient()` - service-role key, **bypasses RLS**. SERVER ONLY
  *   (admin reads/writes, enquiry management, seed). Never import into a Client
  *   Component.
  *
  * Clients are created lazily and memoised so importing a repository never
- * crashes when env vars are absent — the error is thrown only on first use.
+ * crashes when env vars are absent - the error is thrown only on first use.
  */
 export type TypedSupabaseClient = SupabaseClient<Database>
 

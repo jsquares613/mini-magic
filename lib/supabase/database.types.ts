@@ -1,5 +1,5 @@
 /**
- * Supabase database types — Architecture v2.1.
+ * Supabase database types - Architecture v2.1.
  *
  * Hand-authored to mirror exactly what `supabase gen types typescript` produces
  * from the migrations in `supabase/migrations/`. Once the database is live, REGENERATE
@@ -14,6 +14,14 @@
  */
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+/** One entry of products.colors. */
+export interface ProductColorJson {
+  id: string
+  name: string
+  /** Swatch colour, e.g. "#ef4444"; null shows a name-only pill. */
+  hex: string | null
+}
 
 export interface Database {
   public: {
@@ -111,11 +119,13 @@ export interface Database {
           sale_price: number | null
           material: string | null
           color: string | null
+          /** Colours the product comes in; photos link to one via product_images.color_id. */
+          colors: ProductColorJson[]
           available: boolean
           tags: string[]
           features: string[]
           popular: boolean
-          /** Legacy hand-ticked flag — no longer read; New Arrivals use the dates below. */
+          /** Legacy hand-ticked flag - no longer read; New Arrivals use the dates below. */
           new_arrival: boolean
           /** Became new stock (new Marg code, added by hand, or marked by staff); null = not new. */
           new_since: string | null
@@ -156,6 +166,7 @@ export interface Database {
           sale_price?: number | null
           material?: string | null
           color?: string | null
+          colors?: ProductColorJson[]
           available?: boolean
           tags?: string[]
           features?: string[]
@@ -163,7 +174,7 @@ export interface Database {
           new_arrival?: boolean
           new_since?: string | null
           first_published_at?: string | null
-          /** Generated column — the database computes it. */
+          /** Generated column - the database computes it. */
           arrived_at?: never
           promo_tag?: string | null
           display_order?: number
@@ -240,6 +251,8 @@ export interface Database {
           alt_text: string | null
           is_primary: boolean
           sort_order: number
+          /** An id from products.colors; null = shown for every colour. */
+          color_id: string | null
           created_at: string
         }
         Insert: {
@@ -249,6 +262,7 @@ export interface Database {
           alt_text?: string | null
           is_primary?: boolean
           sort_order?: number
+          color_id?: string | null
           created_at?: string
         }
         Update: Partial<Database['public']['Tables']['product_images']['Insert']>

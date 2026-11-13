@@ -11,7 +11,7 @@ interface WishlistContextValue {
 const WishlistContext = createContext<WishlistContextValue | null>(null)
 
 /**
- * Sitewide wishlist state — fetched once here instead of per-card, so every
+ * Sitewide wishlist state - fetched once here instead of per-card, so every
  * heart icon (product cards + the header badge) shares one source of truth.
  * Identity is the `device_id` cookie set by app/api/wishlist/route.ts.
  * `enabled={false}` skips the fetch on routes without hearts (the admin panel).

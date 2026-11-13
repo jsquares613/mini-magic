@@ -23,7 +23,7 @@ const formatWhen = (iso: string) => new Date(iso).toLocaleString('en-IN', { date
 
 export default async function EnquiryDetailPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase()
-  // Enquiry, notes and staff only need the URL id — fetch them together.
+  // Enquiry, notes and staff only need the URL id - fetch them together.
   const [{ data: enquiry }, { data: notes }, { data: staff }] = await Promise.all([
     supabase.from('enquiries').select('*').eq('id', params.id).maybeSingle(),
     supabase.from('enquiry_notes').select('*').eq('enquiry_id', params.id).order('created_at', { ascending: true }),

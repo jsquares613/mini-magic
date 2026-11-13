@@ -5,13 +5,13 @@ import { repositories } from '@/lib/supabase'
 import { getLqip } from '@/lib/lqip'
 
 /**
- * Homepage promotional banners — sourced from `promotional_banners`, the
+ * Homepage promotional banners - sourced from `promotional_banners`, the
  * table managed by Admin → Homepage → Promotional Banners (CRUD + scheduling
  * via starts_at/ends_at). Display/marketing only; does NOT affect product
  * prices, which come from each product's own `sale_price`.
  *
  * (Category-specific banners live in `category_promotions` and render on
- * each category's own page — see app/categories/[slug]/page.tsx.)
+ * each category's own page - see app/categories/[slug]/page.tsx.)
  */
 /** Cycled per tile index when a banner has no admin-uploaded image, matching the four reference colors. */
 const TILE_STYLES = [
@@ -28,7 +28,7 @@ export default async function Promotions() {
   if (promos.length === 0) return null
 
   // Generate real per-image LQIPs in parallel for banners that have images.
-  // getLqip is cached indefinitely — only the first call per URL hits Supabase.
+  // getLqip is cached indefinitely - only the first call per URL hits Supabase.
   const blurDataURLs = await Promise.all(
     promos.map((b) => (b.image ? getLqip(b.image) : Promise.resolve(undefined))),
   )

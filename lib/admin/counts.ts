@@ -3,7 +3,7 @@ import type { Enums } from '@/lib/supabase/database.types'
 import { ENQUIRY_STATUS_ORDER } from './enquiryLabels'
 
 /**
- * Grouped counts for admin pages — one query via the Postgres functions in
+ * Grouped counts for admin pages - one query via the Postgres functions in
  * migration 20261015100000_admin_performance.sql. If that migration isn't
  * applied yet, falls back to per-item head counts so a deploy can't break
  * the pages (slower, same numbers).

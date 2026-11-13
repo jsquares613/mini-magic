@@ -1,4 +1,4 @@
-/** `text` with the given [start, end) ranges marked — used to show why a row matched a search. */
+/** `text` with the given [start, end) ranges marked - used to show why a row matched a search. */
 export default function Highlight({ text, ranges }: { text: string; ranges: [number, number][] }) {
   if (ranges.length === 0) return <>{text}</>
   const parts: React.ReactNode[] = []

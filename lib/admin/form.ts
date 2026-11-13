@@ -23,13 +23,13 @@ export function commaList(fd: FormData, k: string): string[] {
   return (str(fd, k) ?? '').split(',').map((s) => s.trim()).filter(Boolean)
 }
 
-/** One value per line — e.g. a "Features" or "Rules" textarea. */
+/** One value per line - e.g. a "Features" or "Rules" textarea. */
 export function lineList(fd: FormData, k: string): string[] {
   return (str(fd, k) ?? '').split('\n').map((s) => s.trim()).filter(Boolean)
 }
 
 /**
- * One "Label | Value" pair per line — e.g. Play Area's Timings/Pricing textareas,
+ * One "Label | Value" pair per line - e.g. Play Area's Timings/Pricing textareas,
  * stored as a `[{label, value}]` JSONB array. Lines without a `|` are skipped.
  */
 export function pairList(fd: FormData, k: string): { label: string; value: string }[] {

@@ -41,7 +41,7 @@ export async function getSubcategoriesByCategoryId(categoryId: string): Promise<
   return ok(await sb.from('subcategories').select('*').eq('category_id', categoryId).order('display_order', { ascending: true }))
 }
 
-/** Active, in-schedule promotions (banners) for a category — or all categories. */
+/** Active, in-schedule promotions (banners) for a category - or all categories. */
 export async function getCategoryPromotions(categoryId?: string): Promise<CategoryPromotion[]> {
   const sb = getSupabaseClient()
   let q = sb.from('category_promotions').select('*').eq('active', true).order('display_order', { ascending: true })

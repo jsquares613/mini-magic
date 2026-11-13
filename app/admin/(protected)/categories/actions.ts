@@ -57,7 +57,7 @@ export async function deleteCategory(id: string): Promise<{ error: string } | vo
 
   const { error } = await supabase.from('categories').delete().eq('id', id)
   if (error) {
-    // 23503 = Postgres foreign_key_violation — products still reference
+    // 23503 = Postgres foreign_key_violation - products still reference
     // this category (on delete restrict). Any other error is unexpected.
     if (error.code === '23503') {
       return { error: 'Cannot delete: this category still has products. Reassign them first.' }

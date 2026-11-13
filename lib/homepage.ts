@@ -3,7 +3,7 @@ import type { HeroSlide } from '@/components/Hero'
 import { getLqip } from '@/lib/lqip'
 
 /**
- * Homepage content data-access layer — backed by Supabase (Phase 3).
+ * Homepage content data-access layer - backed by Supabase (Phase 3).
  *
  * Hero slides in the DB store plain text (admin-editable via a form), unlike
  * the original hardcoded `lib/hero.ts` which used per-word coloured segments.
@@ -26,7 +26,7 @@ export async function getHomeHeroSlides(): Promise<HeroSlide[]> {
 
   // Generate real LQIPs for every slide in parallel.
   // getLqip() is backed by unstable_cache (revalidate: false), so the actual
-  // Supabase fetch only happens once per unique URL per server lifetime —
+  // Supabase fetch only happens once per unique URL per server lifetime -
   // all subsequent renders are served from the Next.js file-system cache.
   const blurDataURLs = await Promise.all(slides.map((s) => getLqip(s.image)))
 

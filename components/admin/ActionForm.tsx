@@ -20,12 +20,12 @@ export function usePending() {
  * `action` prop) so we can await the result here: this lets us show a
  * loading state, a success toast, and turn thrown errors into an error toast
  * instead of the framework's default error-page behaviour. `redirect()`
- * called inside a Server Action still navigates normally either way —
+ * called inside a Server Action still navigates normally either way -
  * Next.js handles that at the RPC layer regardless of how the action was
  * invoked.
  *
  * `children` must be plain JSX (not a render-prop function) so this can be
- * rendered from Server Component pages — pending state is shared with
+ * rendered from Server Component pages - pending state is shared with
  * descendants like `SubmitButton` via context instead.
  */
 export default function ActionForm({
