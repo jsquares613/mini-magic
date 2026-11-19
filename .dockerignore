@@ -1,7 +1,7 @@
 # Version control
 .git
 .gitignore
-
+ 
 # Node dependencies (re-installed inside the image)
 node_modules
 
