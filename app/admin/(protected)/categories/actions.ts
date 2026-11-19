@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminSupabase } from '@/lib/supabase/server'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
@@ -35,7 +36,7 @@ export async function createCategory(formData: FormData): Promise<{ error: strin
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { data, error } = await supabase.from('categories').insert(parseCategory(formData)).select('id').single()
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'category') }
   revalidateStorefront()
   redirect(`/admin/categories/${data.id}`)
 }
@@ -45,7 +46,7 @@ export async function updateCategory(id: string, formData: FormData): Promise<{ 
   const supabase = createAdminSupabase()
   const payload = parseCategory(formData)
   const { error } = await supabase.from('categories').update(payload).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'category') }
   revalidateStorefront(payload.slug)
   redirect(`/admin/categories/${id}`)
 }
@@ -62,7 +63,7 @@ export async function deleteCategory(id: string): Promise<{ error: string } | vo
     if (error.code === '23503') {
       return { error: 'Cannot delete: this category still has products. Reassign them first.' }
     }
-    return { error: error.message }
+    return { error: friendlyDbError(error, 'category') }
   }
 
   await deleteStorageObjects([category?.image, category?.banner_image])
@@ -75,7 +76,7 @@ export async function setCategoryFeatured(id: string, featured: boolean): Promis
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('categories').update({ featured }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'category') }
   revalidateStorefront()
 }
 
@@ -95,7 +96,7 @@ export async function reorderCategories(ids: string[]): Promise<{ error: string 
     ids.map((id, i) => supabase.from('categories').update({ display_order: (i + 1) * 10 }).eq('id', id)),
   )
   const failed = results.find((r) => r.error)
-  if (failed?.error) return { error: failed.error.message }
+  if (failed?.error) return { error: friendlyDbError(failed.error, 'category') }
   revalidateStorefront()
 }
 
@@ -107,7 +108,7 @@ export async function updateCategoryImage(id: string, field: 'image' | 'banner_i
 
   const patch = field === 'image' ? { image: url } : { banner_image: url }
   const { error } = await supabase.from('categories').update(patch).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'category') }
 
   await deleteStorageObjectIfChanged(current?.[field], url)
   revalidatePath(`/admin/categories/${id}`)
@@ -127,7 +128,7 @@ export async function createPromotion(categoryId: string, formData: FormData): P
     active: true,
     display_order: int(formData, 'display_order'),
   })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'category') }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
@@ -136,7 +137,7 @@ export async function deletePromotion(id: string, categoryId: string): Promise<{
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('category_promotions').delete().eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'category') }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
@@ -145,7 +146,7 @@ export async function togglePromotion(id: string, categoryId: string, active: bo
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('category_promotions').update({ active }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'category') }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
@@ -162,7 +163,7 @@ export async function createSubcategory(categoryId: string, formData: FormData):
     emoji: str(formData, 'emoji'),
     display_order: int(formData, 'display_order'),
   })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'subcategory') }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
@@ -177,7 +178,7 @@ export async function updateSubcategory(id: string, categoryId: string, formData
     emoji: str(formData, 'emoji'),
     display_order: int(formData, 'display_order'),
   }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'subcategory') }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }
@@ -186,7 +187,12 @@ export async function deleteSubcategory(id: string, categoryId: string): Promise
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('subcategories').delete().eq('id', id)
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.code === '23503') {
+      return { error: 'Cannot delete: this subcategory still has products. Reassign them first.' }
+    }
+    return { error: friendlyDbError(error, 'subcategory') }
+  }
   revalidatePath(`/admin/categories/${categoryId}`)
   revalidateStorefront()
 }

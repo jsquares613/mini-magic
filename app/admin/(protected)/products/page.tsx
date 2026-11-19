@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { canWrite, getCurrentProfile } from '@/lib/supabase/auth'
 import { formatPrice, timeAgo } from '@/lib/format'

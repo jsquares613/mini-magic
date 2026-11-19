@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { friendlyUploadError } from '@/lib/admin/errors'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -78,7 +79,7 @@ export default function ImageManager({
       toast.success('Image uploaded successfully')
       router.refresh()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(friendlyUploadError(err, 'Upload failed. Please try again.'))
     } finally {
       setUploading(false)
       advanceCropQueue()
@@ -92,7 +93,7 @@ export default function ImageManager({
       toast.success(success)
       router.refresh()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : failure)
+      toast.error(friendlyUploadError(err, failure))
     } finally {
       setBusyImageId(null)
     }

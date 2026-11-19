@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { friendlyUploadError } from '@/lib/admin/errors'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -49,7 +50,7 @@ export default function CategoryImageField({
       toast.success('Image uploaded successfully')
       router.refresh()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(friendlyUploadError(err, 'Upload failed. Please try again.'))
     } finally {
       setBusy(false)
     }
@@ -74,7 +75,7 @@ export default function CategoryImageField({
       toast.success('Image removed successfully')
       router.refresh()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to remove image')
+      toast.error(friendlyUploadError(err, 'Failed to remove image'))
     } finally {
       setBusy(false)
     }

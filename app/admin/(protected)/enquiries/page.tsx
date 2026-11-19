@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { timeAgo } from '@/lib/format'
 import { ENQUIRY_CHANNEL, ENQUIRY_STATUS, ENQUIRY_STATUS_ORDER, ENQUIRY_TYPE } from '@/lib/admin/enquiryLabels'

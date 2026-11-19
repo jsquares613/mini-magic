@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useState } from 'react'
+import { friendlyAuthError } from '@/lib/admin/errors'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
 import Spinner from '@/components/admin/Spinner'
@@ -41,7 +42,7 @@ function LoginForm() {
     const supabase = await getBrowserSupabase()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError(error.message)
+      setError(friendlyAuthError(error))
       setLoading(false)
       return
     }

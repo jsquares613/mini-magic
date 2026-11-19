@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { friendlyUploadError } from '@/lib/admin/errors'
 import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
 import { getBrowserSupabase } from '@/lib/supabase/lazyBrowser'
@@ -67,7 +68,7 @@ export default function MediaUploadField({
       setUrl(publicUrl)
       toast.success('Uploaded successfully')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(friendlyUploadError(err, 'Upload failed. Please try again.'))
     } finally {
       setBusy(false)
     }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminSupabase } from '@/lib/supabase/server'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { requireStaff } from '@/lib/supabase/auth'
 import { str, bool, lineList } from '@/lib/admin/form'
 
@@ -21,7 +22,7 @@ export async function updateContactInfo(formData: FormData) {
     address:   str(formData, 'address'),
     map_url:   str(formData, 'map_url'),
   })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'setting') }
   revalidateSettings()
 }
 
@@ -36,7 +37,7 @@ export async function updateBannerSettings(formData: FormData) {
     ],
     { onConflict: 'key' },
   )
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'setting') }
   revalidateSettings()
 }
 
@@ -47,6 +48,6 @@ export async function updateFooterText(formData: FormData) {
   const { error } = await supabase
     .from('site_settings')
     .upsert({ key: 'footer_text', value }, { onConflict: 'key' })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'setting') }
   revalidateSettings()
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminSupabase } from '@/lib/supabase/server'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { requireStaff, getSessionUser } from '@/lib/supabase/auth'
 import { str, num } from '@/lib/admin/form'
 import type { Database, TablesUpdate } from '@/lib/supabase/database.types'
@@ -21,7 +22,7 @@ export async function setStatus(id: string, formData: FormData): Promise<{ error
   if (status === 'contacted') patch.contacted_at = new Date().toISOString()
   if (status === 'converted') patch.converted_at = new Date().toISOString()
   const { error } = await supabase.from('enquiries').update(patch).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'enquiry') }
   refresh(id)
 }
 
@@ -30,7 +31,7 @@ export async function assignEnquiry(id: string, formData: FormData): Promise<{ e
   const supabase = createAdminSupabase()
   const assignedTo = str(formData, 'assigned_to') // '' → unassign
   const { error } = await supabase.from('enquiries').update({ assigned_to: assignedTo }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'enquiry') }
   refresh(id)
 }
 
@@ -41,7 +42,7 @@ export async function addNote(enquiryId: string, formData: FormData): Promise<{ 
   const supabase = createAdminSupabase()
   const user = await getSessionUser()
   const { error } = await supabase.from('enquiry_notes').insert({ enquiry_id: enquiryId, note, created_by: user?.id ?? null })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'enquiry') }
   refresh(enquiryId)
 }
 
@@ -52,7 +53,7 @@ export async function markConverted(id: string, formData: FormData): Promise<{ e
     .from('enquiries')
     .update({ status: 'converted', converted_at: new Date().toISOString(), estimated_value: num(formData, 'estimated_value') })
     .eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'enquiry') }
   refresh(id)
 }
 
@@ -60,6 +61,6 @@ export async function markLost(id: string, formData: FormData): Promise<{ error:
   await requireStaff()
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('enquiries').update({ status: 'lost', outcome_reason: str(formData, 'outcome_reason') }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'enquiry') }
   refresh(id)
 }

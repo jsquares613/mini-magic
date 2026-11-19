@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminSupabase } from '@/lib/supabase/server'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged, deleteStorageObjects } from '@/lib/supabase/storage'
 import { str, int, bool, dateTime } from '@/lib/admin/form'
@@ -31,7 +32,7 @@ export async function createHeroSlide(formData: FormData): Promise<{ error: stri
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('homepage_hero_slides').insert(parseHero(formData))
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
   revalidateHome()
   redirect('/admin/homepage')
 }
@@ -43,7 +44,7 @@ export async function updateHeroSlide(id: string, formData: FormData): Promise<{
 
   const payload = parseHero(formData)
   const { error } = await supabase.from('homepage_hero_slides').update(payload).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
 
   await deleteStorageObjectIfChanged(current?.image, payload.image)
   revalidateHome()
@@ -56,7 +57,7 @@ export async function deleteHeroSlide(id: string): Promise<{ error: string } | v
   const { data: slide } = await supabase.from('homepage_hero_slides').select('image').eq('id', id).maybeSingle()
 
   const { error } = await supabase.from('homepage_hero_slides').delete().eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
 
   await deleteStorageObjects([slide?.image])
   revalidateHome()
@@ -72,7 +73,7 @@ export async function addFeaturedProduct(formData: FormData): Promise<{ error: s
   const { error } = await supabase
     .from('homepage_featured_products')
     .insert({ product_id: productId, sort_order: count ?? 0 })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
   revalidateHome()
 }
 
@@ -80,7 +81,7 @@ export async function removeFeaturedProduct(id: string): Promise<{ error: string
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('homepage_featured_products').delete().eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
   revalidateHome()
 }
 
@@ -92,7 +93,7 @@ export async function updateNewArrivalDays(formData: FormData): Promise<{ error:
   if (days < 1 || days > NEW_ARRIVAL_MAX_DAYS) return { error: `Enter a number of days from 1 to ${NEW_ARRIVAL_MAX_DAYS}.` }
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('site_settings').upsert({ key: 'new_arrival_days', value: days }, { onConflict: 'key' })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
   // Which products count as new changes everywhere they're listed.
   revalidatePath('/', 'layout')
 }
@@ -116,7 +117,7 @@ export async function createBanner(formData: FormData): Promise<{ error: string 
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('promotional_banners').insert(parseBanner(formData))
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
   revalidateHome()
   redirect('/admin/homepage')
 }
@@ -128,7 +129,7 @@ export async function updateBanner(id: string, formData: FormData): Promise<{ er
 
   const payload = parseBanner(formData)
   const { error } = await supabase.from('promotional_banners').update(payload).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
 
   await deleteStorageObjectIfChanged(current?.image, payload.image)
   revalidateHome()
@@ -141,7 +142,7 @@ export async function deleteBanner(id: string): Promise<{ error: string } | void
   const { data: banner } = await supabase.from('promotional_banners').select('image').eq('id', id).maybeSingle()
 
   const { error } = await supabase.from('promotional_banners').delete().eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
 
   await deleteStorageObjects([banner?.image])
   revalidateHome()
@@ -151,6 +152,6 @@ export async function toggleBanner(id: string, active: boolean): Promise<{ error
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('promotional_banners').update({ active }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'homepage item') }
   revalidateHome()
 }

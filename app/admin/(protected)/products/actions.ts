@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminSupabase, createServerSupabase } from '@/lib/supabase/server'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjects } from '@/lib/supabase/storage'
 import { slugify } from '@/lib/format'
@@ -144,12 +145,12 @@ function margOverrides(
 async function syncAgeGroups(productId: string, ageGroupIds: string[]): Promise<{ error: string } | void> {
   const supabase = createAdminSupabase()
   const del = await supabase.from('product_age_groups').delete().eq('product_id', productId)
-  if (del.error) return { error: del.error.message }
+  if (del.error) return { error: friendlyDbError(del.error, 'product') }
   if (ageGroupIds.length) {
     const ins = await supabase
       .from('product_age_groups')
       .insert(ageGroupIds.map((age_group_id) => ({ product_id: productId, age_group_id })))
-    if (ins.error) return { error: ins.error.message }
+    if (ins.error) return { error: friendlyDbError(ins.error, 'product') }
   }
 }
 
@@ -180,7 +181,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<st
   if (!hidden.has('new_arrival') && !bool(formData, 'new_arrival')) payload.new_since = null
 
   const { data, error } = await supabase.from('products').insert(payload).select('id').single()
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
 
   if (!hidden.has('age_groups')) {
     const syncResult = await syncAgeGroups(data.id, formData.getAll('age_group_ids').map(String))
@@ -205,7 +206,7 @@ export async function updateProduct(id: string, formData: FormData): Promise<{ e
     .select('marg_code, marg_name, marg_mrp, overridden_fields, is_published, image_count, marg_deleted_at, new_since, arrived_at')
     .eq('id', id)
     .maybeSingle()
-  if (readError) return { error: readError.message }
+  if (readError) return { error: friendlyDbError(readError, 'product') }
   if (!current) return { error: 'Product not found.' }
 
   if (!hidden.has('new_arrival')) {
@@ -228,7 +229,7 @@ export async function updateProduct(id: string, formData: FormData): Promise<{ e
   }
 
   const { error } = await supabase.from('products').update(payload).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
 
   // Photos of a removed colour become general photos (shown for every colour).
   if (payload.colors) {
@@ -237,7 +238,7 @@ export async function updateProduct(id: string, formData: FormData): Promise<{ e
     const { error: untagError } = keep.length
       ? await untag.not('color_id', 'in', `(${keep.map((k) => `"${k}"`).join(',')})`)
       : await untag
-    if (untagError) return { error: untagError.message }
+    if (untagError) return { error: friendlyDbError(untagError, 'product') }
   }
 
   if (!hidden.has('age_groups')) {
@@ -296,13 +297,13 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
       .from('products')
       .select('id', { count: 'exact', head: true })
       .or(where('is_published.is.false'))
-    if (countError) return { error: countError.message }
+    if (countError) return { error: friendlyDbError(countError, 'product') }
 
     const { count, error } = await supabase
       .from('products')
       .update({ is_published: true }, { count: 'exact' })
       .or(where('is_published.is.false', ...PUBLISHABLE_CONDITIONS))
-    if (error) return { error: error.message }
+    if (error) return { error: friendlyDbError(error, 'product') }
 
     const changed = count ?? 0
     const skipped = Math.max(0, (candidates ?? 0) - changed)
@@ -318,7 +319,7 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
       .from('products')
       .update({ is_published: false }, { count: 'exact' })
       .or(where('is_published.is.true'))
-    if (error) return { error: error.message }
+    if (error) return { error: friendlyDbError(error, 'product') }
     result = { changed: count ?? 0, skipped: 0, message: `Unpublished ${nProducts(count ?? 0)}.` }
   } else if (input.op === 'set-category') {
     const categoryId = input.categoryId ?? ''
@@ -346,7 +347,7 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
           .from('products')
           .update({ category_id: categoryId, subcategory_id: null }, { count: 'exact' })
           .or(where(`or(category_id.is.null,category_id.neq.${categoryId})`))
-    if (error) return { error: error.message }
+    if (error) return { error: friendlyDbError(error, 'product') }
     result = { changed: count ?? 0, skipped: 0, message: `Moved ${nProducts(count ?? 0)} to ${category.name}.` }
   } else if (input.op === 'mark-new') {
     // A fresh "new" period from today; drafts start theirs when published (lib/newArrivals.ts).
@@ -354,14 +355,14 @@ export async function bulkUpdateProducts(input: BulkProductUpdate): Promise<Acti
       .from('products')
       .update({ new_since: new Date().toISOString() }, { count: 'exact' })
       .or(where('marg_deleted_at.is.null'))
-    if (error) return { error: error.message }
+    if (error) return { error: friendlyDbError(error, 'product') }
     result = { changed: count ?? 0, skipped: 0, message: `Marked ${nProducts(count ?? 0)} as new arrivals.` }
   } else if (input.op === 'unmark-new') {
     const { count, error } = await supabase
       .from('products')
       .update({ new_since: null }, { count: 'exact' })
       .or(where('new_since.not.is.null'))
-    if (error) return { error: error.message }
+    if (error) return { error: friendlyDbError(error, 'product') }
     result = { changed: count ?? 0, skipped: 0, message: `Removed ${nProducts(count ?? 0)} from New Arrivals.` }
   } else {
     return { error: 'Unknown bulk action.' }
@@ -401,7 +402,7 @@ export async function searchPublishedProducts(query: string, excludeIds: string[
   if (exclude.length) req = req.not('id', 'in', `(${exclude.join(',')})`)
 
   const { data, error } = await req
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(friendlyDbError(error, 'product'))
   return data ?? []
 }
 
@@ -411,7 +412,7 @@ export async function deleteProduct(id: string): Promise<{ error: string } | voi
   const { data: images } = await supabase.from('product_images').select('image_url').eq('product_id', id)
 
   const { error } = await supabase.from('products').delete().eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
 
   await deleteStorageObjects((images ?? []).map((i) => i.image_url))
   revalidateStorefront()
@@ -442,7 +443,7 @@ export async function addProductImage(
     sort_order: count ?? 0,
     color_id: colorId ? colorId.slice(0, 64) : null,
   })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }
@@ -459,7 +460,7 @@ export async function deleteProductImage(imageId: string, productId: string): Pr
   const { data: image } = await supabase.from('product_images').select('image_url').eq('id', imageId).maybeSingle()
 
   const { error } = await supabase.from('product_images').delete().eq('id', imageId)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
 
   await deleteStorageObjects([image?.image_url])
   revalidatePath(`/admin/products/${productId}`)
@@ -471,9 +472,9 @@ export async function setPrimaryImage(imageId: string, productId: string): Promi
   const supabase = createAdminSupabase()
   // Unset all, then set the chosen one (partial unique index allows one primary).
   const unset = await supabase.from('product_images').update({ is_primary: false }).eq('product_id', productId)
-  if (unset.error) return { error: unset.error.message }
+  if (unset.error) return { error: friendlyDbError(unset.error, 'product') }
   const { error } = await supabase.from('product_images').update({ is_primary: true }).eq('id', imageId)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }
@@ -489,7 +490,7 @@ export async function setProductImageColor(imageId: string, productId: string, c
     }
   }
   const { error } = await supabase.from('product_images').update({ color_id: colorId }).eq('id', imageId).eq('product_id', productId)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }
@@ -505,7 +506,7 @@ export async function setProductFieldVisible(field: string, visible: boolean): P
   else hidden.add(field)
   const value = Array.from(hidden)
   const { error } = await supabase.from('site_settings').upsert({ key: PRODUCT_FIELDS_SETTING, value }, { onConflict: 'key' })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
   revalidatePath('/admin/products', 'layout')
   if (PRODUCT_FIELDS[field].storefront) revalidatePath('/', 'layout')
   return value
@@ -527,7 +528,7 @@ export async function addRelatedProduct(productId: string, formData: FormData): 
     .from('product_related')
     .insert({ product_id: productId, related_product_id: relatedProductId, sort_order: count ?? 0 })
   // unique(product_id, related_product_id) - adding the same product twice is a no-op, not an error.
-  if (error && error.code !== '23505') return { error: error.message }
+  if (error && error.code !== '23505') return { error: friendlyDbError(error, 'product') }
 
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
@@ -537,7 +538,7 @@ export async function removeRelatedProduct(relationId: string, productId: string
   await requireStaff('editor')
   const supabase = createAdminSupabase()
   const { error } = await supabase.from('product_related').delete().eq('id', relationId)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'product') }
   revalidatePath(`/admin/products/${productId}`)
   revalidateStorefront()
 }

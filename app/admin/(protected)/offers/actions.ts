@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminSupabase } from '@/lib/supabase/server'
+import { friendlyDbError } from '@/lib/admin/errors'
 import { requireStaff } from '@/lib/supabase/auth'
 import { deleteStorageObjectIfChanged } from '@/lib/supabase/storage'
 import { str, bool } from '@/lib/admin/form'
@@ -19,7 +20,7 @@ export async function updateOfferBanner(formData: FormData) {
       image,
       active: bool(formData, 'active'),
     })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error, 'offer') }
 
   await deleteStorageObjectIfChanged(current?.image, image)
   revalidatePath('/admin/offers')
