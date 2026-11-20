@@ -33,6 +33,7 @@ export interface ProductTableRow {
   slug: string
   name: string
   margCode: string | null
+  barcode: string | null
   /** Marg's billing name, only when it differs from the website name. */
   margName: string | null
   supplier: string | null
@@ -98,10 +99,10 @@ export default function ProductTable({
   }, [rows])
 
   /** `text` with the current search marked, if the search looks in `field`. */
-  const hl = (text: string, field: 'name' | 'marg' | 'code') => (
+  const hl = (text: string, field: 'name' | 'marg' | 'code' | 'barcode') => (
     <Highlight
       text={text}
-      ranges={filters.by === '' || filters.by === field ? matchRanges(text, filters.q, filters.match, field === 'code') : []}
+      ranges={filters.by === '' || filters.by === field ? matchRanges(text, filters.q, filters.match, field === 'code' || field === 'barcode') : []}
     />
   )
 
@@ -241,6 +242,7 @@ export default function ProductTable({
                             </p>
                           )}
                           {p.margName && <p className="truncate text-xs text-slate-400">Marg name: {hl(p.margName, 'marg')}</p>}
+                          {p.barcode && <p className="truncate font-mono text-xs text-slate-400">Barcode: {hl(p.barcode, 'barcode')}</p>}
                         </div>
                       </div>
                     </td>

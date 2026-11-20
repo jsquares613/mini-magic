@@ -377,6 +377,7 @@ export interface ProductSearchResult {
   id: string
   name: string
   marg_code: string | null
+  marg_barcode: string | null
 }
 
 const SEARCH_LIMIT = 20
@@ -394,11 +395,12 @@ export async function searchPublishedProducts(query: string, excludeIds: string[
 
   let req = supabase
     .from('products')
-    .select('id, name, marg_code')
+    .select('id, name, marg_code, marg_barcode')
     .eq('is_published', true)
     .order('name', { ascending: true })
     .limit(SEARCH_LIMIT)
-  if (q) req = req.ilike('name', `%${q}%`)
+  // Name, or an item code / barcode (what a scanner or the shop floor would type).
+  if (q) req = req.or(`name.ilike.%${q.replace(/[,()]/g, ' ')}%,marg_code.eq.${q.replace(/[,()\s]/g, '')},marg_barcode.eq.${q.replace(/[,()\s]/g, '')}`)
   if (exclude.length) req = req.not('id', 'in', `(${exclude.join(',')})`)
 
   const { data, error } = await req

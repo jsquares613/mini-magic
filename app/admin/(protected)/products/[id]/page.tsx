@@ -73,6 +73,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     ? [
         ['Item code', product.marg_code],
         ['Billing name', product.marg_name ?? '-'],
+        ['Barcode', product.marg_barcode ?? '-'],
         ['Supplier', product.marg_company ?? '-'],
         ['MRP', product.marg_mrp != null ? formatPrice(Number(product.marg_mrp)) : '-'],
         ['Stock', Number(product.marg_stock ?? 0).toLocaleString('en-IN')],

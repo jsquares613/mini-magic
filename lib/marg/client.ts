@@ -33,6 +33,8 @@ export interface MargItem {
   company: string | null
   mrp: number | null
   stock: number | null
+  /** Marg's `ENCODE` field - the item's barcode. */
+  barcode: string | null
   deleted: boolean
 }
 
@@ -62,7 +64,17 @@ export function getMargConfig(): MargConfig {
 
 /* ------------------------------ Decoding -------------------------------- */
 
+/** Marg sends failures (e.g. "Full sync limit exceeded.") as base64 + DEFLATE with no AES layer. */
+function inflatePlain(text: string): unknown {
+  return JSON.parse(inflateRawSync(Buffer.from(text, 'base64')).toString('utf8').replace(/^﻿/, ''))
+}
+
 export function decryptMargPayload(cipherText: string, key: string): unknown {
+  try {
+    return inflatePlain(cipherText)
+  } catch {
+    /* not plain - it's AES-encrypted */
+  }
   const keyBytes = Buffer.alloc(16)
   Buffer.from(key, 'utf8').copy(keyBytes, 0, 0, 16)
   const decipher = createDecipheriv('aes-128-cbc', keyBytes, keyBytes)
@@ -120,6 +132,7 @@ function toItem(row: unknown): MargItem | null {
     company: text(get(row, 'company')),
     mrp: num(get(row, 'mrp')),
     stock: num(get(row, 'stock')),
+    barcode: text(get(row, 'encode')),
     deleted: deleted === '1' || deleted?.toLowerCase() === 'true',
   }
 }
@@ -231,6 +244,7 @@ export async function fetchMargProducts(since: string | null, cfg = getMargConfi
                 company: item.company ?? prev.company,
                 mrp: item.mrp ?? prev.mrp,
                 stock: item.stock ?? prev.stock,
+                barcode: item.barcode ?? prev.barcode,
                 deleted: item.deleted || prev.deleted,
               }
             : item,

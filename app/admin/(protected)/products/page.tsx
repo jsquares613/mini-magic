@@ -62,7 +62,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   let query = supabase
     .from('products')
     .select(
-      'id, name, slug, marg_code, marg_name, marg_company, category_id, price, sale_price, price_display, marg_stock, available, stock_status_override, popular, new_since, arrived_at, is_published, marg_deleted_at, marg_missing_since',
+      'id, name, slug, marg_code, marg_barcode, marg_name, marg_company, category_id, price, sale_price, price_display, marg_stock, available, stock_status_override, popular, new_since, arrived_at, is_published, marg_deleted_at, marg_missing_since',
       { count: 'exact' },
     )
   const tree = toLogicTree(productFilterConditions(filters))
@@ -136,6 +136,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
       slug: p.slug,
       name: p.name,
       margCode: p.marg_code,
+      barcode: p.marg_barcode,
       margName: p.marg_name && p.marg_name !== p.name ? p.marg_name : null,
       supplier: p.marg_company,
       thumb: thumb ?? null,

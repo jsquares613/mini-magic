@@ -26,7 +26,7 @@ export async function searchSite(query: string): Promise<SearchResult[]> {
   ])
 
   const productResults: SearchResult[] = products
-    .filter((p) => matches([p.name, p.shortDescription, p.category, ...p.tags], q))
+    .filter((p) => matches([p.name, p.shortDescription, p.category, ...p.tags], q) || (p.barcode != null && p.barcode.toLowerCase() === q.toLowerCase()))
     .map((p) => ({
       type: 'product',
       title: p.name,

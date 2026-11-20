@@ -73,6 +73,8 @@ export interface Product {
   /** Promotional badge text shown on the product card (e.g. "BUY 1\nGET 1\nFREE"). Null when no promo applies. */
   promoTag: string | null
   tags: string[]
+  /** Item barcode from Marg - only used so shoppers can search by it; never displayed. */
+  barcode?: string
   /** "Why kids love it" bullet list. */
   features: string[]
   /** Slugs of hand-picked related products (optional curation). */

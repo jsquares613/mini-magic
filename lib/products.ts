@@ -53,6 +53,7 @@ function toProduct(
     isNew: isNewArrival(row.arrived_at, newArrivalDays),
     promoTag: row.promo_tag ?? null,
     tags: row.tags,
+    barcode: row.marg_barcode ?? undefined,
     features: row.features,
     relatedProducts: [],
     displayOrder: row.display_order,

@@ -71,6 +71,7 @@ function toApplyRow(item: MargItem) {
     company: item.company,
     mrp: item.mrp,
     stock: item.stock,
+    barcode: item.barcode,
   }
 }
 

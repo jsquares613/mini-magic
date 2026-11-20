@@ -141,6 +141,7 @@ export interface Database {
           marg_mrp: number | null
           marg_company: string | null
           marg_stock: number | null
+          marg_barcode: string | null
           marg_synced_at: string | null
           marg_deleted_at: string | null
           marg_missing_since: string | null
@@ -185,6 +186,7 @@ export interface Database {
           marg_mrp?: number | null
           marg_company?: string | null
           marg_stock?: number | null
+          marg_barcode?: string | null
           marg_synced_at?: string | null
           marg_deleted_at?: string | null
           marg_missing_since?: string | null

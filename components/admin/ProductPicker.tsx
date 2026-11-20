@@ -52,7 +52,7 @@ export default function ProductPicker({
         try {
           const rows = await searchPublishedProducts(query, excludeIds)
           if (id === latest.current) {
-            setResults(rows.map((r) => ({ value: r.id, label: r.name, description: r.marg_code ? `Marg #${r.marg_code}` : undefined })))
+            setResults(rows.map((r) => ({ value: r.id, label: r.name, description: [r.marg_code && `Marg #${r.marg_code}`, r.marg_barcode && `Barcode ${r.marg_barcode}`].filter(Boolean).join(' · ') || undefined })))
           }
         } catch {
           if (id === latest.current) setResults([])

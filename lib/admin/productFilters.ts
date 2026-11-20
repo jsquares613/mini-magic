@@ -35,10 +35,11 @@ export type ProductSource = (typeof PRODUCT_SOURCES)[number]['key']
 
 /** Which field the search box looks in (`noun` builds the box's placeholder). */
 export const SEARCH_FIELDS = [
-  { key: '', label: 'All fields', noun: 'name or Marg code' },
+  { key: '', label: 'All fields', noun: 'name, Marg code or barcode' },
   { key: 'name', label: 'Product name', noun: 'product name' },
   { key: 'marg', label: 'Marg name', noun: 'Marg name' },
   { key: 'code', label: 'Marg code', noun: 'Marg code' },
+  { key: 'barcode', label: 'Barcode', noun: 'barcode' },
 ] as const
 export type SearchField = (typeof SEARCH_FIELDS)[number]['key']
 
@@ -56,7 +57,7 @@ export interface ProductListFilters {
   source: ProductSource
   supplier: string
   q: string
-  /** Field the search applies to ('' = name, Marg name and Marg code). */
+  /** Field the search applies to ('' = name, Marg name, Marg code and barcode). */
   by: SearchField
   /** How the search must match ('' = contains). */
   match: SearchMatch
@@ -159,10 +160,11 @@ const escapeLike = (v: string) => v.replace(/[\\_]/g, '\\$&')
 
 /** Columns each search-by option looks in. */
 const SEARCH_COLUMNS: Record<SearchField, string[]> = {
-  '': ['name', 'marg_name', 'marg_code'],
+  '': ['name', 'marg_name', 'marg_code', 'marg_barcode'],
   name: ['name'],
   marg: ['marg_name'],
   code: ['marg_code'],
+  barcode: ['marg_barcode'],
 }
 
 export function parseProductListFilters(input: Record<string, unknown>): ProductListFilters {
@@ -197,8 +199,8 @@ export function productFilterConditions(f: Partial<ProductListFilters>, extra: s
       const matches = columns.map((c) => `${c}.ilike.${quote(pattern)}`)
       return matches.length === 1 ? matches[0] : `or(${matches.join(',')})`
     }
-    // Codes never contain spaces, so "12 34" is read as "1234".
-    const text = escapeLike(f.by === 'code' ? f.q.replace(/ /g, '') : f.q)
+    // Codes and barcodes never contain spaces, so "12 34" is read as "1234".
+    const text = escapeLike(f.by === 'code' || f.by === 'barcode' ? f.q.replace(/ /g, '') : f.q)
     if (f.match === 'start') conditions.push(inAnyColumn(`${text}%`))
     else if (f.match === 'exact') conditions.push(inAnyColumn(text))
     // Contains: every word must appear, in any order - "pink teddy" finds "TEDDY BEAR PINK 30CM".
