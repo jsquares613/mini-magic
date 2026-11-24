@@ -112,12 +112,20 @@ export default async function Footer() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 py-6 text-sm text-blue-100 md:flex-row">
             <p>&copy; {new Date().getFullYear()} {siteConfig.name} - All rights reserved</p>
-            <div className="flex gap-6">
+            <div className="flex items-center gap-6">
               {siteConfig.legalLinks.map((link) => (
                 <Link key={link.href} href={link.href} className="transition hover:text-white">
                   {link.label}
                 </Link>
               ))}
+              <a
+                href="https://www.jsquares.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-white"
+              >
+                Developed by <span className="font-semibold">JSQUARE</span>
+              </a>
             </div>
           </div>
         </div>
