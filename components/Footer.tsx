@@ -124,7 +124,7 @@ export default async function Footer() {
                 rel="noopener noreferrer"
                 className="transition hover:text-white"
               >
-                Developed by <span className="font-semibold">JSQUARE</span>
+                Developed by <span className="font-semibold">JSQUARE PVT. LTD.</span>
               </a>
             </div>
           </div>
